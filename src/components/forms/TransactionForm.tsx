@@ -70,7 +70,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-4 pb-24">
       {/* Type Toggle - Kraken Style Segmented Control */}
-      <div className="grid grid-cols-3 p-1 bg-[#edeef3] rounded-[12px] gap-1 border border-[#dedee5]">
+      <div className="grid grid-cols-3 p-1 bg-[#edeef3] dark:bg-[#232534] rounded-[12px] gap-1 border border-[#dedee5] dark:border-[#282937]">
         <button
           type="button"
           onClick={() => {
@@ -80,7 +80,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
           className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-all ${
             type === 'pengeluaran'
               ? 'bg-[#101114] text-white shadow-micro'
-              : 'text-[#686b82] hover:text-[#101114]'
+              : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:text-[#f3f4f8]'
           }`}
         >
           <ArrowUpRight className="w-3.5 h-3.5" />
@@ -96,7 +96,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
           className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-all ${
             type === 'transfer'
               ? 'bg-[#7132f5] text-white shadow-micro'
-              : 'text-[#686b82] hover:text-[#101114]'
+              : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:text-[#f3f4f8]'
           }`}
         >
           <ArrowLeftRight className="w-3.5 h-3.5" />
@@ -112,7 +112,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
           className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-all ${
             type === 'pemasukan'
               ? 'bg-[#149e61] text-white shadow-micro'
-              : 'text-[#686b82] hover:text-[#101114]'
+              : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:text-[#f3f4f8]'
           }`}
         >
           <ArrowDownLeft className="w-3.5 h-3.5" />
@@ -121,8 +121,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
       </div>
 
       {/* Amount Card - Clean Kraken Display */}
-      <div className="bg-white rounded-[16px] p-6 border border-[#dedee5] shadow-whisper text-center">
-        <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] block">
+      <div className="bg-white dark:bg-[#16171f] rounded-[16px] p-6 border border-[#dedee5] dark:border-[#282937] shadow-whisper text-center">
+        <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block">
           Nominal Transaksi
         </label>
         <div className="flex items-center justify-center gap-1.5 mt-2">
@@ -134,23 +134,23 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
             onChange={handleAmountChange}
             placeholder="0"
             required
-            className="w-full text-4xl font-bold text-[#101114] text-center tracking-[-1px] outline-none placeholder:text-[#9497a9]"
+            className="w-full text-4xl font-bold text-[#101114] dark:text-[#f3f4f8] text-center tracking-[-1px] outline-none placeholder:text-[#9497a9]"
           />
         </div>
       </div>
 
       {/* Form Fields Card */}
-      <div className="bg-white rounded-[16px] p-5 border border-[#dedee5] shadow-whisper space-y-4">
+      <div className="bg-white dark:bg-[#16171f] rounded-[16px] p-5 border border-[#dedee5] dark:border-[#282937] shadow-whisper space-y-4">
         {/* Source Account */}
         <div>
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] block mb-1.5">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1.5">
             {type === 'transfer' ? 'Dari Akun' : 'Akun'}
           </label>
           <select
             value={sourceAccountId}
             onChange={(e) => setSourceAccountId(e.target.value)}
             required
-            className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-sm font-medium text-[#101114] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
+            className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
           >
             <option value="">Pilih Akun Rekening / Dompet</option>
             {accounts.map((acc) => (
@@ -164,14 +164,14 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         {/* Destination Account for Transfer */}
         {type === 'transfer' && (
           <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] block mb-1.5">
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1.5">
               Ke Akun Tujuan
             </label>
             <select
               value={destinationAccountId}
               onChange={(e) => setDestinationAccountId(e.target.value)}
               required
-              className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-sm font-medium text-[#101114] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
+              className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
             >
               <option value="">Pilih Akun Tujuan</option>
               {accounts
@@ -189,11 +189,11 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         {type !== 'transfer' && (
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82]">
+              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba]">
                 Kategori
               </label>
               {selectedCategory && (
-                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-[6px] bg-[#edeef3] text-[11px] font-semibold text-[#101114]">
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-[6px] bg-[#edeef3] dark:bg-[#232534] text-[11px] font-semibold text-[#101114] dark:text-[#f3f4f8]">
                   <CategoryIcon name={selectedCategory.name} type={type} size="sm" />
                   <span>{selectedCategory.name}</span>
                 </div>
@@ -203,7 +203,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
               required
-              className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-sm font-medium text-[#101114] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
+              className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
             >
               <option value="">Pilih Kategori Transaksi</option>
               {filteredCategories.map((cat) => (
@@ -217,7 +217,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
 
         {/* Date Input */}
         <div>
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] block mb-1.5">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1.5">
             Tanggal
           </label>
           <input
@@ -225,13 +225,13 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
             value={date}
             onChange={(e) => setDate(e.target.value)}
             required
-            className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-sm font-medium text-[#101114] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
+            className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
           />
         </div>
 
         {/* Notes Input */}
         <div>
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] block mb-1.5">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1.5">
             Catatan <span className="text-[#9497a9] font-normal lowercase">(opsional)</span>
           </label>
           <textarea
@@ -239,7 +239,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Keterangan transaksi..."
             rows={2}
-            className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-sm text-[#101114] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all resize-none placeholder:text-[#9497a9]"
+            className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all resize-none placeholder:text-[#9497a9]"
           />
         </div>
       </div>

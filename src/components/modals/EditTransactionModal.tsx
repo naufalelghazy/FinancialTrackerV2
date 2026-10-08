@@ -140,12 +140,12 @@ const EditModalContent: React.FC<EditModalContentProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-xs animate-in fade-in">
       <div
-        className="bg-white rounded-[16px] w-full max-w-sm overflow-hidden shadow-whisper border border-[#dedee5] max-h-[90vh] flex flex-col"
+        className="bg-white dark:bg-[#16171f] rounded-[16px] w-full max-w-sm overflow-hidden shadow-whisper border border-[#dedee5] dark:border-[#282937] max-h-[90vh] flex flex-col transition-colors duration-200"
         role="dialog"
         aria-modal="true"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[#dedee5] shrink-0">
+        <div className="flex items-center justify-between p-4 border-b border-[#dedee5] dark:border-[#282937] shrink-0">
           <div className="flex items-center gap-2.5">
             <CategoryIcon
               name={type === 'transfer' ? 'Pindah Akun' : selectedCategory?.name}
@@ -153,15 +153,15 @@ const EditModalContent: React.FC<EditModalContentProps> = ({
               size="md"
             />
             <div>
-              <h2 className="font-bold text-base text-[#101114] tracking-[-0.5px]">
+              <h2 className="font-bold text-base text-[#101114] dark:text-[#f3f4f8] tracking-[-0.5px]">
                 Edit Transaksi
               </h2>
-              <p className="text-[11px] text-[#686b82]">Perbarui rincian transaksi</p>
+              <p className="text-[11px] text-[#686b82] dark:text-[#9ca0ba]">Perbarui rincian transaksi</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-[8px] flex items-center justify-center text-[#686b82] hover:text-[#101114] hover:bg-[#edeef3] transition-colors"
+            className="w-8 h-8 rounded-[8px] flex items-center justify-center text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8] hover:bg-[#edeef3] dark:hover:bg-[#1e202b] transition-colors"
             aria-label="Tutup"
           >
             <X className="w-4 h-4" />
@@ -187,7 +187,7 @@ const EditModalContent: React.FC<EditModalContentProps> = ({
               }}
               className={`flex-1 py-2 text-xs font-bold rounded-[9px] transition-all ${
                 type === 'pengeluaran'
-                  ? 'bg-white text-[#101114] shadow-sm'
+                  ? 'bg-white dark:bg-[#252836] text-[#101114] dark:text-[#f3f4f8] shadow-sm'
                   : 'text-[#686b82] hover:text-[#101114]'
               }`}
             >
@@ -225,7 +225,7 @@ const EditModalContent: React.FC<EditModalContentProps> = ({
 
           {/* Amount Field */}
           <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] block mb-1">
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1">
               Nominal Transaksi (Rp)
             </label>
             <input
@@ -240,7 +240,7 @@ const EditModalContent: React.FC<EditModalContentProps> = ({
 
           {/* Date Field */}
           <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] block mb-1">
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1">
               Tanggal
             </label>
             <input
@@ -248,20 +248,20 @@ const EditModalContent: React.FC<EditModalContentProps> = ({
               required
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-sm font-medium text-[#101114] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
+              className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
             />
           </div>
 
           {/* Source Account */}
           <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] block mb-1">
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1">
               {type === 'transfer' ? 'Dari Rekening' : 'Rekening / Dompet'}
             </label>
             <select
               value={sourceAccountId}
               onChange={(e) => setSourceAccountId(e.target.value)}
               required
-              className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-sm font-medium text-[#101114] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
+              className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
             >
               <option value="">Pilih Rekening</option>
               {accounts.map((acc) => (
@@ -275,14 +275,14 @@ const EditModalContent: React.FC<EditModalContentProps> = ({
           {/* Destination Account (if transfer) */}
           {type === 'transfer' && (
             <div>
-              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] block mb-1">
+              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1">
                 Rekening Tujuan
               </label>
               <select
                 value={destinationAccountId}
                 onChange={(e) => setDestinationAccountId(e.target.value)}
                 required
-                className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-sm font-medium text-[#101114] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
+                className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
               >
                 <option value="">Pilih Rekening Tujuan</option>
                 {accounts
@@ -314,7 +314,7 @@ const EditModalContent: React.FC<EditModalContentProps> = ({
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
                 required
-                className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-sm font-medium text-[#101114] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
+                className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
               >
                 <option value="">Pilih Kategori</option>
                 {categories
@@ -330,7 +330,7 @@ const EditModalContent: React.FC<EditModalContentProps> = ({
 
           {/* Notes */}
           <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] block mb-1">
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1">
               Catatan
             </label>
             <input
@@ -338,7 +338,7 @@ const EditModalContent: React.FC<EditModalContentProps> = ({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Contoh: Beli bensin, bayar listrik..."
-              className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-sm font-medium text-[#101114] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
+              className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
             />
           </div>
 

@@ -23,7 +23,7 @@ export const AccountAvatar: React.FC<{ acc: Account }> = ({ acc }) => {
         src={candidateUrl}
         alt={acc.name}
         onError={() => setHasError(true)}
-        className="w-10 h-10 object-contain rounded-[8px] bg-white p-1 border border-[#dedee5] shadow-sm shrink-0"
+        className="w-10 h-10 object-contain rounded-[8px] bg-white dark:bg-[#252836] p-1 border border-[#dedee5] dark:border-[#282937] shadow-sm shrink-0"
       />
     );
   }
@@ -33,13 +33,13 @@ export const AccountAvatar: React.FC<{ acc: Account }> = ({ acc }) => {
       <img
         src={localFallback}
         alt={acc.name}
-        className="w-10 h-10 object-contain rounded-[8px] bg-white p-1 border border-[#dedee5] shadow-sm shrink-0"
+        className="w-10 h-10 object-contain rounded-[8px] bg-white dark:bg-[#252836] p-1 border border-[#dedee5] dark:border-[#282937] shadow-sm shrink-0"
       />
     );
   }
 
   return (
-    <div className="w-10 h-10 rounded-[8px] bg-[#f1edfe] text-[#7132f5] flex items-center justify-center text-xs font-bold border border-[#dedee5] shrink-0">
+    <div className="w-10 h-10 rounded-[8px] bg-[#f1edfe] text-[#7132f5] flex items-center justify-center text-xs font-bold border border-[#dedee5] dark:border-[#282937] shrink-0">
       {acc.name.slice(0, 3).toUpperCase()}
     </div>
   );
@@ -82,7 +82,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
       {/* Account List Grid */}
       <div className="space-y-3">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-[#686b82]">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba]">
             Daftar Rekening & Dompet ({bankAccounts.length})
           </h3>
         </div>
@@ -92,7 +92,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
             <div
               key={acc.id}
               onClick={() => onEditAccount(acc)}
-              className="group flex items-center justify-between p-3.5 bg-white rounded-[12px] border border-[#dedee5] shadow-micro hover:border-[#7132f5]/50 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
+              className="group flex items-center justify-between p-3.5 bg-white dark:bg-[#16171f] rounded-[12px] border border-[#dedee5] dark:border-[#282937] shadow-micro hover:border-[#7132f5]/50 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
@@ -105,10 +105,10 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               <div className="flex items-center gap-3 min-w-0">
                 <AccountAvatar acc={acc} />
                 <div className="min-w-0">
-                  <span className="font-bold text-sm text-[#101114] block tracking-tight group-hover:text-[#7132f5] transition-colors truncate">
+                  <span className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8] block tracking-tight group-hover:text-[#7132f5] transition-colors truncate">
                     {acc.name}
                   </span>
-                  <span className="text-[11px] text-[#686b82] capitalize font-medium">
+                  <span className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] capitalize font-medium">
                     {acc.type}
                   </span>
                 </div>
@@ -117,7 +117,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
               <div className="flex items-center gap-2 shrink-0">
                 <span
                   className={`font-bold text-sm tracking-tight tabular-nums ${
-                    acc.balance >= 0 ? 'text-[#101114]' : 'text-[#e53e3e]'
+                    acc.balance >= 0 ? 'text-[#101114] dark:text-[#f3f4f8]' : 'text-[#e53e3e]'
                   }`}
                 >
                   {formatCurrency(acc.balance)}

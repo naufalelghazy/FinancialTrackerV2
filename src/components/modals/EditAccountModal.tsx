@@ -136,28 +136,28 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/45 backdrop-blur-xs animate-in fade-in">
       <div
-        className="bg-white rounded-[16px] w-full max-w-sm overflow-hidden shadow-whisper border border-[#dedee5]"
+        className="bg-white dark:bg-[#16171f] rounded-[16px] w-full max-w-sm overflow-hidden shadow-whisper border border-[#dedee5] dark:border-[#282937] transition-colors duration-200"
         role="dialog"
         aria-modal="true"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[#dedee5]">
+        <div className="flex items-center justify-between p-4 border-b border-[#dedee5] dark:border-[#282937]">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-[8px] bg-[#855bfb]/15 flex items-center justify-center text-[#7132f5]">
               <Landmark className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="font-bold text-base text-[#101114] tracking-[-0.5px]">
+              <h2 className="font-bold text-base text-[#101114] dark:text-[#f3f4f8] tracking-[-0.5px]">
                 {isEditing ? 'Kelola Akun & Saldo' : 'Tambah Akun Baru'}
               </h2>
-              <p className="text-[11px] text-[#686b82]">
+              <p className="text-[11px] text-[#686b82] dark:text-[#9ca0ba]">
                 {isEditing ? 'Perbarui informasi atau koreksi saldo' : 'Daftarkan rekening atau dompet baru'}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-[8px] flex items-center justify-center text-[#686b82] hover:text-[#101114] hover:bg-[#edeef3] transition-colors"
+            className="w-8 h-8 rounded-[8px] flex items-center justify-center text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8] hover:bg-[#edeef3] dark:hover:bg-[#1e202b] transition-colors"
             aria-label="Tutup"
           >
             <X className="w-4 h-4" />
@@ -175,12 +175,12 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
 
           {/* Current Balance Display (if editing) */}
           {isEditing && account && (
-            <div className="p-3.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] flex items-center justify-between">
+            <div className="p-3.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#1e202b] border border-[#dedee5] dark:border-[#282937] flex items-center justify-between">
               <div>
-                <span className="text-[11px] text-[#686b82] block font-medium uppercase tracking-wider">
+                <span className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] block font-medium uppercase tracking-wider">
                   Saldo Berjalan Saat Ini
                 </span>
-                <span className="text-base font-bold text-[#101114]">
+                <span className="text-base font-bold text-[#101114] dark:text-[#f3f4f8]">
                   {formatCurrency(account.balance)}
                 </span>
               </div>
@@ -197,7 +197,7 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
 
           {/* Name Field */}
           <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] block mb-1">
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1">
               Nama Akun
             </label>
             <input
@@ -206,7 +206,7 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Contoh: BCA Utama, Dompet Saku"
-              className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-sm font-medium text-[#101114] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
+              className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
             />
           </div>
 
@@ -225,11 +225,11 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
                 placeholder="Contoh: doku.com atau bca.co.id"
-                className="w-full pl-3.5 pr-11 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-sm font-medium text-[#101114] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
+                className="w-full pl-3.5 pr-11 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
               />
               {/* Live Logo Preview icon */}
               <div
-                className="absolute right-2.5 w-7 h-7 rounded-[7px] bg-white border border-[#dedee5] p-0.5 flex items-center justify-center shadow-micro overflow-hidden"
+                className="absolute right-2.5 w-7 h-7 rounded-[7px] bg-white dark:bg-[#1e202b] border border-[#dedee5] dark:border-[#35374d] p-0.5 flex items-center justify-center shadow-micro overflow-hidden"
                 title={previewLogoSrc ? 'Preview Logo CDN' : 'Logo Default'}
               >
                 {previewLogoSrc ? (
@@ -251,13 +251,13 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
 
           {/* Type Field */}
           <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] block mb-1">
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1">
               Tipe Akun
             </label>
             <select
               value={type}
               onChange={(e) => setType(e.target.value as AccountType)}
-              className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-sm font-medium text-[#101114] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
+              className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
             >
               <option value="bank">Bank (Tabungan / Giro)</option>
               <option value="ewallet">E-Wallet (Gopay, Dana, OVO, dll)</option>
@@ -288,7 +288,7 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
             </div>
           ) : (
             <div>
-              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] block mb-1">
+              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1">
                 Saldo Awal Rekening (Rp)
               </label>
               <input
@@ -296,7 +296,7 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
                 value={initialBalanceDisplay}
                 onChange={(e) => setInitialBalanceDisplay(formatNumberInput(e.target.value))}
                 placeholder="0"
-                className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-sm font-bold text-[#101114] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
+                className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-bold text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
               />
             </div>
           )}

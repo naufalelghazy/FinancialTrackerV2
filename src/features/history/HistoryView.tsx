@@ -119,17 +119,17 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
   return (
     <div className="space-y-4 pb-24">
       {/* Search & Filter Header Card */}
-      <div className="bg-white p-4 sm:p-5 rounded-[16px] border border-[#dedee5] shadow-whisper space-y-3.5">
+      <div className="bg-white dark:bg-[#16171f] p-4 sm:p-5 rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper space-y-3.5">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold text-[#101114] tracking-[-0.5px]">
+            <h2 className="text-base font-bold text-[#101114] dark:text-[#f3f4f8] tracking-[-0.5px]">
               Riwayat Transaksi
             </h2>
-            <p className="text-[11px] text-[#686b82]">
+            <p className="text-[11px] text-[#686b82] dark:text-[#9ca0ba]">
               Daftar seluruh mutasi, pengeluaran & pemasukan
             </p>
           </div>
-          <span className="px-2.5 py-1 rounded-[8px] bg-[#edeef3] text-xs font-bold text-[#101114]">
+          <span className="px-2.5 py-1 rounded-[8px] bg-[#edeef3] dark:bg-[#232534] text-xs font-bold text-[#101114] dark:text-[#f3f4f8]">
             {stats.count} Transaksi
           </span>
         </div>
@@ -142,12 +142,12 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari transaksi, rekening, kategori, atau catatan..."
-            className="w-full pl-9 pr-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-sm text-[#101114] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 placeholder:text-[#9497a9] transition-all"
+            className="w-full pl-9 pr-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 placeholder:text-[#9497a9] transition-all"
           />
         </div>
 
         {/* Filter Segmented Control */}
-        <div className="flex bg-[#edeef3] p-1 rounded-[10px] gap-1 text-xs">
+        <div className="flex bg-[#edeef3] dark:bg-[#232534] p-1 rounded-[10px] gap-1 text-xs">
           {[
             { id: 'all', label: 'Semua', icon: null },
             { id: 'pengeluaran', label: 'Keluar', icon: ArrowUpRight },
@@ -162,8 +162,8 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                 onClick={() => setFilterType(tab.id)}
                 className={`flex-1 py-1.5 px-2 rounded-[8px] font-semibold flex items-center justify-center gap-1 transition-all ${
                   isActive
-                    ? 'bg-white text-[#101114] shadow-micro'
-                    : 'text-[#686b82] hover:text-[#101114]'
+                    ? 'bg-white dark:bg-[#282937] text-[#101114] dark:text-[#f3f4f8] shadow-micro'
+                    : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:text-[#f3f4f8]'
                 }`}
               >
                 {Icon && <Icon className="w-3.5 h-3.5 shrink-0" />}
@@ -175,17 +175,17 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
 
         {/* Quick Filter Metrics */}
         {(filterType === 'all' || filterType === 'pengeluaran' || filterType === 'pemasukan') && (
-          <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#dedee5]/70 text-xs">
-            <div className="bg-[#fafbfe] p-2.5 rounded-[10px] border border-[#dedee5]/60">
-              <span className="text-[10px] uppercase font-bold text-[#686b82] block tracking-wider">
+          <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#dedee5] dark:border-[#282937]/70 text-xs">
+            <div className="bg-[#fafbfe] dark:bg-[#13141c] p-2.5 rounded-[10px] border border-[#dedee5] dark:border-[#282937]/60">
+              <span className="text-[10px] uppercase font-bold text-[#686b82] dark:text-[#9ca0ba] block tracking-wider">
                 Total Keluar
               </span>
               <span className="text-sm font-bold text-[#e53e3e] tracking-tight">
                 -{formatCurrency(stats.totalExpense)}
               </span>
             </div>
-            <div className="bg-[#fafbfe] p-2.5 rounded-[10px] border border-[#dedee5]/60">
-              <span className="text-[10px] uppercase font-bold text-[#686b82] block tracking-wider">
+            <div className="bg-[#fafbfe] dark:bg-[#13141c] p-2.5 rounded-[10px] border border-[#dedee5] dark:border-[#282937]/60">
+              <span className="text-[10px] uppercase font-bold text-[#686b82] dark:text-[#9ca0ba] block tracking-wider">
                 Total Masuk
               </span>
               <span className="text-sm font-bold text-[#026b3f] tracking-tight">
@@ -198,9 +198,9 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
 
       {/* Grouped Transaction Lists */}
       {groupedByDate.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-[16px] border border-[#dedee5] p-6 text-[#9497a9] shadow-whisper">
-          <Calendar className="w-8 h-8 mx-auto mb-2 opacity-40 text-[#686b82]" />
-          <p className="text-sm font-semibold text-[#101114]">Tidak ada transaksi ditemukan</p>
+        <div className="text-center py-12 bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] p-6 text-[#9497a9] dark:text-[#7d8299] shadow-whisper">
+          <Calendar className="w-8 h-8 mx-auto mb-2 opacity-40 text-[#686b82] dark:text-[#9ca0ba]" />
+          <p className="text-sm font-semibold text-[#101114] dark:text-[#f3f4f8]">Tidak ada transaksi ditemukan</p>
           <p className="text-xs text-[#9497a9] mt-1">Coba ubah kata kunci pencarian atau filter</p>
         </div>
       ) : (
@@ -208,28 +208,28 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
           {groupedByDate.map((group) => (
             <div
               key={group.date}
-              className="bg-white rounded-[14px] border border-[#dedee5] shadow-whisper overflow-hidden"
+              className="bg-white dark:bg-[#16171f] rounded-[14px] border border-[#dedee5] dark:border-[#282937] shadow-whisper overflow-hidden"
             >
               {/* Date Header: Clear separation of date & daily flow */}
-              <div className="flex items-center justify-between px-4 py-2.5 bg-[#f8f9fc] border-b border-[#dedee5]">
+              <div className="flex items-center justify-between px-4 py-2.5 bg-[#f8f9fc] dark:bg-[#1e202b] border-b border-[#dedee5] dark:border-[#282937]">
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 rounded-[6px] bg-[#855bfb]/12 flex items-center justify-center text-[#7132f5]">
                     <Calendar className="w-3.5 h-3.5" />
                   </div>
-                  <span className="text-xs font-bold text-[#101114] tracking-tight">
+                  <span className="text-xs font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
                     {formatIndonesianDate(group.date)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-semibold text-[#686b82]">
+                  <span className="text-[11px] font-semibold text-[#686b82] dark:text-[#9ca0ba]">
                     {group.items.length} transaksi
                   </span>
                   {group.dayTotal !== 0 && (
                     <span
                       className={`text-xs font-bold px-2 py-0.5 rounded-[6px] ${
                         group.dayTotal < 0
-                          ? 'bg-[#fee2e2] text-[#b91c1c]'
-                          : 'bg-[#d1fae5] text-[#026b3f]'
+                          ? 'bg-[#fee2e2] dark:bg-[#e53e3e]/20 text-[#b91c1c] dark:text-[#fca5a5]'
+                          : 'bg-[#d1fae5] dark:bg-[#149e61]/20 text-[#026b3f] dark:text-[#34d399]'
                       }`}
                     >
                       {group.dayTotal < 0 ? '-' : '+'}
@@ -240,7 +240,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
               </div>
 
               {/* Transactions List within this Date */}
-              <div className="divide-y divide-[#dedee5]/60">
+              <div className="divide-y divide-[#dedee5] dark:divide-[#282937]/60">
                 {group.items.map((t) => {
                   const isExpense = t.type === 'pengeluaran';
                   const isIncome = t.type === 'pemasukan';
@@ -254,7 +254,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                     <div
                       key={t.id}
                       onClick={() => onEditTransaction(t)}
-                      className="group px-4 py-3 flex items-start sm:items-center justify-between gap-3 hover:bg-[#fafbfe] active:bg-[#f4f5f8] cursor-pointer transition-colors"
+                      className="group px-4 py-3 flex items-start sm:items-center justify-between gap-3 hover:bg-[#fafbfe] dark:hover:bg-[#1e202b] dark:bg-[#13141c] active:bg-[#f4f5f8] cursor-pointer transition-colors"
                       role="button"
                       tabIndex={0}
                       onKeyDown={(e) => {
@@ -277,17 +277,17 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                       <div className="flex-1 min-w-0 space-y-1">
                         {/* Top Line: Kategori Title + Akun Badge */}
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-bold text-sm text-[#101114] tracking-tight group-hover:text-[#7132f5] transition-colors">
+                          <span className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8] tracking-tight group-hover:text-[#7132f5] transition-colors">
                             {isTransfer ? 'Pindah Akun' : categoryName}
                           </span>
 
                           {/* Distinct Account Badge */}
-                          <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] bg-[#f0f1f5] border border-[#dedee5]/80 text-[11px] font-semibold text-[#484b5e]">
+                          <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] bg-[#f0f1f5] border border-[#dedee5] dark:border-[#282937]/80 text-[11px] font-semibold text-[#484b5e]">
                             {isTransfer ? (
                               <>
-                                <span className="text-[#101114] font-bold">{sourceName}</span>
+                                <span className="text-[#101114] dark:text-[#f3f4f8] font-bold">{sourceName}</span>
                                 <ArrowRight className="w-2.5 h-2.5 text-[#7132f5] shrink-0" />
-                                <span className="text-[#101114] font-bold">{destName}</span>
+                                <span className="text-[#101114] dark:text-[#f3f4f8] font-bold">{destName}</span>
                               </>
                             ) : (
                               <span>{sourceName}</span>
@@ -297,7 +297,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
 
                         {/* Bottom Line: Catatan (Notes) distinctly presented */}
                         {t.notes ? (
-                          <p className="text-xs text-[#686b82] leading-snug line-clamp-2">
+                          <p className="text-xs text-[#686b82] dark:text-[#9ca0ba] leading-snug line-clamp-2">
                             {t.notes}
                           </p>
                         ) : (

@@ -229,7 +229,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fafbfe] text-[#101114] flex flex-col md:flex-row font-sans selection:bg-[#855bfb]/20 selection:text-[#7132f5]">
+    <div className="min-h-screen bg-[#fafbfe] dark:bg-[#0d0e12] text-[#101114] dark:text-[#f3f4f8] flex flex-col md:flex-row font-sans selection:bg-[#855bfb]/20 selection:text-[#7132f5] transition-colors duration-200">
       {/* Desktop Left Sidebar (Visible on md and above) */}
       <Sidebar
         activeTab={activeTab}

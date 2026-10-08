@@ -18,7 +18,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onChangeTab }) 
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-[#dedee5] shadow-whisper">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-[#16171f]/95 backdrop-blur-md border-t border-[#dedee5] dark:border-[#282937] shadow-whisper transition-colors duration-200">
       <div className="max-w-md mx-auto grid grid-cols-5 px-1 py-1.5 safe-bottom">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -41,7 +41,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onChangeTab }) 
                 >
                   <Icon className="w-5 h-5 stroke-[2.5]" />
                 </div>
-                <span className="text-[10px] mt-1 font-bold text-[#7132f5]">
+                <span className="text-[10px] mt-1 font-bold text-[#7132f5] dark:text-[#a78bfa]">
                   Catat
                 </span>
               </button>
@@ -54,13 +54,13 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onChangeTab }) 
               onClick={() => onChangeTab(tab.id)}
               className={`flex flex-col items-center justify-center py-1 rounded-[10px] transition-all ${
                 isActive
-                  ? 'text-[#7132f5] font-bold'
-                  : 'text-[#686b82] hover:text-[#101114] font-medium'
+                  ? 'text-[#7132f5] dark:text-[#a78bfa] font-bold'
+                  : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8] font-medium'
               }`}
             >
               <div
                 className={`p-1 rounded-[8px] transition-colors ${
-                  isActive ? 'bg-[#855bfb]/15 text-[#7132f5]' : ''
+                  isActive ? 'bg-[#855bfb]/15 text-[#7132f5] dark:text-[#a78bfa]' : ''
                 }`}
               >
                 <Icon className="w-4.5 h-4.5" />

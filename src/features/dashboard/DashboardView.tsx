@@ -164,9 +164,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         {/* Arus Kas Bulan Ini (White Card with Cashflow metrics) */}
-        <div className="bg-white rounded-[16px] p-5 sm:p-6 shadow-whisper border border-[#dedee5] flex flex-col justify-between">
+        <div className="bg-white dark:bg-[#16171f] rounded-[16px] p-5 sm:p-6 shadow-whisper border border-[#dedee5] dark:border-[#282937] flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[#686b82] text-[11px] font-semibold uppercase tracking-wider flex items-center gap-1.5">
+            <span className="text-[#686b82] dark:text-[#9ca0ba] text-[11px] font-semibold uppercase tracking-wider flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-[#7132f5]" />
               Arus Kas ({currentMonthLabel})
             </span>
@@ -187,7 +187,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <div className="w-6 h-6 rounded-[6px] bg-[#149e61]/15 text-[#026b3f] flex items-center justify-center">
                   <TrendingUp className="w-3.5 h-3.5" />
                 </div>
-                <span className="text-xs text-[#686b82]">Pemasukan</span>
+                <span className="text-xs text-[#686b82] dark:text-[#9ca0ba]">Pemasukan</span>
               </div>
               <span className="text-sm font-bold text-[#026b3f]">
                 +{formatCurrency(monthIncome)}
@@ -199,7 +199,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <div className="w-6 h-6 rounded-[6px] bg-[#e53e3e]/12 text-[#b91c1c] flex items-center justify-center">
                   <TrendingDown className="w-3.5 h-3.5" />
                 </div>
-                <span className="text-xs text-[#686b82]">Pengeluaran</span>
+                <span className="text-xs text-[#686b82] dark:text-[#9ca0ba]">Pengeluaran</span>
               </div>
               <span className="text-sm font-bold text-[#e53e3e]">
                 -{formatCurrency(monthExpense)}
@@ -207,8 +207,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
-          <div className="pt-2 border-t border-[#dedee5] flex items-center justify-between text-xs">
-            <span className="text-[#686b82]">Selisih Bersih</span>
+          <div className="pt-2 border-t border-[#dedee5] dark:border-[#282937] flex items-center justify-between text-xs">
+            <span className="text-[#686b82] dark:text-[#9ca0ba]">Selisih Bersih</span>
             <span
               className={`font-bold tracking-tight ${
                 netCashflow >= 0 ? 'text-[#026b3f]' : 'text-[#b91c1c]'
@@ -257,16 +257,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* ===================== QUICK ACTIONS BAR ===================== */}
-      <div className="bg-white rounded-[14px] p-3.5 sm:p-4 border border-[#dedee5] shadow-whisper flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-white dark:bg-[#16171f] rounded-[14px] p-3.5 sm:p-4 border border-[#dedee5] dark:border-[#282937] shadow-whisper flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-[8px] bg-[#855bfb]/15 text-[#7132f5] flex items-center justify-center">
             <PlusCircle className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="text-xs sm:text-sm font-bold text-[#101114]">
+            <h3 className="text-xs sm:text-sm font-bold text-[#101114] dark:text-[#f3f4f8]">
               Aksi Cepat
             </h3>
-            <p className="text-[11px] text-[#686b82] hidden sm:block">
+            <p className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] hidden sm:block">
               Catat atau kelola mutasi keuangan Anda
             </p>
           </div>
@@ -283,17 +283,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
           <button
             onClick={() => onNavigateTab('saldo')}
-            className="flex-1 sm:flex-initial py-2 px-3.5 rounded-[12px] bg-[#edeef3] hover:bg-[#dedee5] text-[#101114] text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+            className="flex-1 sm:flex-initial py-2 px-3.5 rounded-[12px] bg-[#edeef3] dark:bg-[#232534] hover:bg-[#dedee5] dark:hover:bg-[#2d3042] text-[#101114] dark:text-[#f3f4f8] text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
           >
-            <Wallet className="w-3.5 h-3.5 text-[#686b82]" />
+            <Wallet className="w-3.5 h-3.5 text-[#686b82] dark:text-[#9ca0ba]" />
             <span>Kelola Saldo</span>
           </button>
 
           <button
             onClick={() => onNavigateTab('riwayat')}
-            className="flex-1 sm:flex-initial py-2 px-3.5 rounded-[12px] bg-[#edeef3] hover:bg-[#dedee5] text-[#101114] text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+            className="flex-1 sm:flex-initial py-2 px-3.5 rounded-[12px] bg-[#edeef3] dark:bg-[#232534] hover:bg-[#dedee5] dark:hover:bg-[#2d3042] text-[#101114] dark:text-[#f3f4f8] text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
           >
-            <History className="w-3.5 h-3.5 text-[#686b82]" />
+            <History className="w-3.5 h-3.5 text-[#686b82] dark:text-[#9ca0ba]" />
             <span>Riwayat</span>
           </button>
         </div>
@@ -304,22 +304,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Left Column (7 cols): Top Categories Breakdown & Recent Transactions */}
         <div className="lg:col-span-7 space-y-6">
           {/* Top Spending Categories */}
-          <div className="bg-white rounded-[16px] border border-[#dedee5] shadow-whisper p-5 space-y-4">
+          <div className="bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-5 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-[8px] bg-[#f59e0b]/15 text-[#b45309] flex items-center justify-center">
                   <PieChart className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-[#101114] tracking-tight">
+                  <h3 className="text-sm font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
                     Pengeluaran Terbesar ({currentMonthLabel})
                   </h3>
-                  <p className="text-[11px] text-[#686b82]">
+                  <p className="text-[11px] text-[#686b82] dark:text-[#9ca0ba]">
                     Kategori dengan belanja tertinggi
                   </p>
                 </div>
               </div>
-              <span className="text-xs font-bold text-[#101114]">
+              <span className="text-xs font-bold text-[#101114] dark:text-[#f3f4f8]">
                 Total: {formatCurrency(monthExpense)}
               </span>
             </div>
@@ -335,17 +335,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     <div className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">
                         <CategoryIcon name={cat.name} type="pengeluaran" size="sm" />
-                        <span className="font-semibold text-[#101114]">{cat.name}</span>
-                        <span className="text-[11px] text-[#686b82]">
+                        <span className="font-semibold text-[#101114] dark:text-[#f3f4f8]">{cat.name}</span>
+                        <span className="text-[11px] text-[#686b82] dark:text-[#9ca0ba]">
                           ({cat.percentage}%)
                         </span>
                       </div>
-                      <span className="font-bold text-[#101114] tabular-nums">
+                      <span className="font-bold text-[#101114] dark:text-[#f3f4f8] tabular-nums">
                         {formatCurrency(cat.amount)}
                       </span>
                     </div>
                     {/* Kraken Progress Bar */}
-                    <div className="w-full h-2 rounded-full bg-[#edeef3] overflow-hidden">
+                    <div className="w-full h-2 rounded-full bg-[#edeef3] dark:bg-[#232534] overflow-hidden">
                       <div
                         className="h-full rounded-full bg-[#7132f5] transition-all duration-500"
                         style={{ width: `${cat.percentage}%` }}
@@ -358,17 +358,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           {/* Recent Transactions List */}
-          <div className="bg-white rounded-[16px] border border-[#dedee5] shadow-whisper overflow-hidden">
-            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[#dedee5] bg-[#fafbfe]">
+          <div className="bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper overflow-hidden">
+            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[#dedee5] dark:border-[#282937] bg-[#fafbfe] dark:bg-[#1e202b]">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-[8px] bg-[#855bfb]/15 text-[#7132f5] flex items-center justify-center">
                   <History className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-[#101114] tracking-tight">
+                  <h3 className="text-sm font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
                     Transaksi Terakhir
                   </h3>
-                  <p className="text-[11px] text-[#686b82]">
+                  <p className="text-[11px] text-[#686b82] dark:text-[#9ca0ba]">
                     5 aktivitas mutasi terbaru
                   </p>
                 </div>
@@ -382,7 +382,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </button>
             </div>
 
-            <div className="divide-y divide-[#dedee5]/70">
+            <div className="divide-y divide-[#dedee5] dark:divide-[#282937]/70">
               {recentTransactions.map((t) => {
                 const isExpense = t.type === 'pengeluaran';
                 const isIncome = t.type === 'pemasukan';
@@ -394,7 +394,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <div
                     key={t.id}
                     onClick={() => onEditTransaction(t)}
-                    className="p-3.5 sm:px-4 flex items-center justify-between gap-3 hover:bg-[#fafbfe] active:bg-[#f0f1f5] cursor-pointer transition-colors"
+                    className="p-3.5 sm:px-4 flex items-center justify-between gap-3 hover:bg-[#fafbfe] dark:hover:bg-[#1e202b] dark:bg-[#1e202b] active:bg-[#f0f1f5] cursor-pointer transition-colors"
                     role="button"
                     tabIndex={0}
                   >
@@ -406,14 +406,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       />
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-bold text-xs sm:text-sm text-[#101114] truncate">
+                          <span className="font-bold text-xs sm:text-sm text-[#101114] dark:text-[#f3f4f8] truncate">
                             {isTransfer ? 'Pindah Akun' : categoryName}
                           </span>
-                          <span className="px-1.5 py-0.5 rounded-[5px] bg-[#f0f1f5] border border-[#dedee5] text-[10px] font-semibold text-[#484b5e]">
+                          <span className="px-1.5 py-0.5 rounded-[5px] bg-[#f0f1f5] border border-[#dedee5] dark:border-[#282937] text-[10px] font-semibold text-[#484b5e]">
                             {sourceName}
                           </span>
                         </div>
-                        <p className="text-[11px] text-[#686b82] truncate mt-0.5">
+                        <p className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] truncate mt-0.5">
                           {t.date} {t.notes ? `• ${t.notes}` : ''}
                         </p>
                       </div>
@@ -443,13 +443,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Right Column (5 cols): Accounts Snapshot & Tagihan Info */}
         <div className="lg:col-span-5 space-y-6">
           {/* Ringkasan Rekening & Dompet Snapshot */}
-          <div className="bg-white rounded-[16px] border border-[#dedee5] shadow-whisper p-5 space-y-3.5">
+          <div className="bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-5 space-y-3.5">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-bold text-[#101114] tracking-tight">
+                <h3 className="text-sm font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
                   Rekening & Dompet
                 </h3>
-                <p className="text-[11px] text-[#686b82]">
+                <p className="text-[11px] text-[#686b82] dark:text-[#9ca0ba]">
                   Saldo akun aktif Anda
                 </p>
               </div>
@@ -466,22 +466,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               {liquidAccounts.slice(0, 5).map((acc) => (
                 <div
                   key={acc.id}
-                  className="flex items-center justify-between p-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5]/80 hover:border-[#7132f5]/40 transition-all"
+                  className="flex items-center justify-between p-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#1e202b] border border-[#dedee5] dark:border-[#282937]/80 hover:border-[#7132f5]/40 transition-all"
                 >
                   <div className="flex items-center gap-2.5">
                     <AccountAvatar acc={acc} />
                     <div>
-                      <span className="font-bold text-xs text-[#101114] block">
+                      <span className="font-bold text-xs text-[#101114] dark:text-[#f3f4f8] block">
                         {acc.name}
                       </span>
-                      <span className="text-[10px] text-[#686b82] uppercase">
+                      <span className="text-[10px] text-[#686b82] dark:text-[#9ca0ba] uppercase">
                         {acc.type}
                       </span>
                     </div>
                   </div>
                   <span
                     className={`font-bold text-xs sm:text-sm tabular-nums ${
-                      acc.balance < 0 ? 'text-[#e53e3e]' : 'text-[#101114]'
+                      acc.balance < 0 ? 'text-[#e53e3e]' : 'text-[#101114] dark:text-[#f3f4f8]'
                     }`}
                   >
                     {formatCurrency(acc.balance)}
@@ -492,17 +492,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           {/* Tagihan & Pinjaman Alert Card */}
-          <div className="bg-white rounded-[16px] border border-[#dedee5] shadow-whisper p-5 space-y-3.5">
+          <div className="bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-5 space-y-3.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-[8px] bg-[#e11d48]/12 text-[#be123c] flex items-center justify-center">
                   <CreditCard className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-[#101114] tracking-tight">
+                  <h3 className="text-sm font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
                     Tagihan & Pinjaman
                   </h3>
-                  <p className="text-[11px] text-[#686b82]">
+                  <p className="text-[11px] text-[#686b82] dark:text-[#9ca0ba]">
                     Kewajiban berjalan
                   </p>
                 </div>
@@ -518,15 +518,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 return (
                   <div
                     key={acc.id}
-                    className="flex items-center justify-between p-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5]/80"
+                    className="flex items-center justify-between p-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#1e202b] border border-[#dedee5] dark:border-[#282937]/80"
                   >
                     <div className="flex items-center gap-2.5">
                       <AccountAvatar acc={acc} />
                       <div>
-                        <span className="font-bold text-xs text-[#101114] block">
+                        <span className="font-bold text-xs text-[#101114] dark:text-[#f3f4f8] block">
                           {acc.name}
                         </span>
-                        <span className="text-[10px] text-[#686b82]">
+                        <span className="text-[10px] text-[#686b82] dark:text-[#9ca0ba]">
                           {debtAmount > 0 ? 'Ada Tagihan' : 'Lunas'}
                         </span>
                       </div>
@@ -545,7 +545,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             <button
               onClick={() => onNavigateTab('tagihan')}
-              className="w-full py-2.5 rounded-[12px] bg-[#edeef3] hover:bg-[#dedee5] text-[#101114] text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
+              className="w-full py-2.5 rounded-[12px] bg-[#edeef3] dark:bg-[#232534] hover:bg-[#dedee5] dark:hover:bg-[#2d3042] text-[#101114] dark:text-[#f3f4f8] text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
             >
               <span>Bayar & Perbarui Tagihan</span>
               <ArrowRight className="w-3.5 h-3.5" />
