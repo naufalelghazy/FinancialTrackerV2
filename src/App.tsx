@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Header } from './components/layout/Header';
 import { BottomNav } from './components/layout/BottomNav';
 import type { NavTab } from './components/layout/BottomNav';
+import { DashboardView } from './features/dashboard/DashboardView';
 import { TransactionForm } from './components/forms/TransactionForm';
 import { AccountsView } from './features/accounts/AccountsView';
 import { BillsView } from './features/accounts/BillsView';
@@ -21,10 +22,9 @@ import {
   calculateAccountBalances,
 } from './services/financialService';
 import type { Account, AccountType, Category, Transaction, TransactionType } from './types';
-import { RefreshCw } from 'lucide-react';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<NavTab>('saldo');
+  const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -58,27 +58,41 @@ export function App() {
   // Categories state
   const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
 
-  // Fetch initial data from Supabase
-  const fetchData = useCallback(async (showRefreshing = false) => {
-    if (showRefreshing) setIsRefreshing(true);
-    try {
-      const res = await loadFinancialData();
-      setAccounts(res.accounts);
-      setCategories(res.categories);
-      setTransactions(res.transactions);
-    } catch (err) {
-      console.error('Fetch error:', err);
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
+  // Load from Supabase on mount
+  useEffect(() => {
+    async function init() {
+      setIsLoading(true);
+      try {
+        const data = await loadFinancialData();
+        setAccounts(data.accounts);
+        setCategories(data.categories);
+        setTransactions(data.transactions);
+      } catch (err) {
+        console.error('Failed to initialize data:', err);
+      } finally {
+        setIsLoading(false);
+      }
     }
+    init();
   }, []);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  // Sync / Refresh data
+  const handleRefresh = useCallback(async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      const data = await loadFinancialData();
+      setAccounts(data.accounts);
+      setCategories(data.categories);
+      setTransactions(data.transactions);
+    } catch (err) {
+      console.error('Refresh failed:', err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [isRefreshing]);
 
-  // Handle new transaction
+  // Handle create transaction
   const handleAddTransaction = async (data: {
     type: TransactionType;
     amount: number;
@@ -88,40 +102,38 @@ export function App() {
     date: string;
     notes: string;
   }) => {
-    const tempTx: Transaction = {
-      id: crypto.randomUUID(),
-      date: data.date,
-      type: data.type,
-      amount: data.amount,
-      sourceAccountId: data.sourceAccountId,
-      destinationAccountId: data.destinationAccountId,
-      categoryId: data.categoryId,
-      notes: data.notes,
-      createdAt: new Date().toISOString(),
-    };
-
-    const nextTransactions = [tempTx, ...transactions];
-    const nextAccounts = calculateAccountBalances(accounts, nextTransactions);
-
-    setTransactions(nextTransactions);
-    setAccounts(nextAccounts);
-    setActiveTab('saldo');
-
     try {
-      const saved = await addTransactionToDatabase(data);
-      setTransactions((prev) =>
-        prev.map((t) => (t.id === tempTx.id ? { ...t, id: saved.id } : t))
-      );
+      const newTx = await addTransactionToDatabase(data);
+      const nextTransactions = [newTx, ...transactions];
+      const nextAccounts = calculateAccountBalances(accounts, nextTransactions);
+      setTransactions(nextTransactions);
+      setAccounts(nextAccounts);
     } catch (err) {
-      console.error('Failed to persist transaction:', err);
+      console.error('Error adding transaction:', err);
+      const fallbackTx: Transaction = {
+        id: crypto.randomUUID(),
+        type: data.type,
+        amount: data.amount,
+        sourceAccountId: data.sourceAccountId,
+        destinationAccountId: data.destinationAccountId,
+        categoryId: data.categoryId,
+        notes: data.notes,
+        date: data.date,
+        createdAt: new Date().toISOString(),
+      };
+      const nextTransactions = [fallbackTx, ...transactions];
+      const nextAccounts = calculateAccountBalances(accounts, nextTransactions);
+      setTransactions(nextTransactions);
+      setAccounts(nextAccounts);
+      localStorage.setItem('ft_transactions', JSON.stringify(nextTransactions));
     }
   };
 
   // Handle edit transaction
   const handleSaveTransaction = async (updated: {
     id: string;
-    type: TransactionType;
     amount: number;
+    type: TransactionType;
     sourceAccountId: string;
     destinationAccountId?: string;
     categoryId?: string;
@@ -205,59 +217,58 @@ export function App() {
   // Handle delete account
   const handleDeleteAccount = async (id: string) => {
     const nextAccounts = accounts.filter((a) => a.id !== id);
-    const recomputed = calculateAccountBalances(nextAccounts, transactions);
-    setAccounts(recomputed);
-
+    setAccounts(nextAccounts);
     await deleteAccountFromDatabase(id);
   };
 
   return (
-    <div className="min-h-screen bg-[#fafbfe] flex flex-col justify-between text-[#101114]">
-      {/* Header */}
-      <Header onOpenSettings={() => setIsSettingsOpen(true)} />
+    <div className="min-h-screen bg-[#fafbfe] text-[#101114] flex flex-col font-sans selection:bg-[#855bfb]/20 selection:text-[#7132f5]">
+      {/* Top Header - Responsive desktop & mobile */}
+      <Header
+        activeTab={activeTab}
+        onChangeTab={setActiveTab}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        isRefreshing={isRefreshing}
+        isLoading={isLoading}
+        onSync={handleRefresh}
+      />
 
-      {/* Sync Status Bar */}
-      <div className="max-w-md w-full mx-auto px-4 pt-2 flex items-center justify-between text-xs text-[#686b82]">
-        <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-[#149e61]" />
-          <span>
-            {isLoading
-              ? 'Memuat data dari Supabase...'
-              : `${transactions.length} transaksi aktif`}
-          </span>
-        </div>
-        <button
-          onClick={() => fetchData(true)}
-          disabled={isRefreshing || isLoading}
-          className="flex items-center gap-1 text-[#7132f5] hover:text-[#5741d8] font-medium transition-colors disabled:opacity-50"
-        >
-          <RefreshCw
-            className={`w-3 h-3 ${isRefreshing || isLoading ? 'animate-spin' : ''}`}
-          />
-          <span>{isRefreshing ? 'Sinkron...' : 'Sinkronkan'}</span>
-        </button>
-      </div>
-
-      {/* Main Content Area */}
-      <main className="max-w-md w-full mx-auto px-4 pt-3 flex-1">
+      {/* Main Content Area - Full Responsive Grid Container */}
+      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex-1">
         {isLoading && accounts.length === 0 ? (
-          <div className="py-20 flex flex-col items-center justify-center text-center space-y-3">
+          <div className="py-24 flex flex-col items-center justify-center text-center space-y-3">
             <div className="w-10 h-10 border-3 border-[#7132f5]/20 border-t-[#7132f5] rounded-full animate-spin" />
             <p className="text-sm font-semibold text-[#101114]">
               Menghubungkan ke Supabase...
             </p>
             <p className="text-xs text-[#686b82]">
-              Menghitung saldo dari 1.400+ riwayat transaksi
+              Menghitung saldo dari seluruh riwayat transaksi
             </p>
           </div>
         ) : (
           <>
-            {activeTab === 'input' && (
-              <TransactionForm
+            {activeTab === 'dashboard' && (
+              <DashboardView
                 accounts={accounts}
+                transactions={transactions}
                 categories={categories}
-                onSubmit={handleAddTransaction}
+                onNavigateTab={setActiveTab}
+                onEditTransaction={(t) => {
+                  setSelectedTransaction(t);
+                  setIsTxModalOpen(true);
+                }}
+                onAddTransaction={() => setActiveTab('input')}
               />
+            )}
+
+            {activeTab === 'input' && (
+              <div className="max-w-xl mx-auto">
+                <TransactionForm
+                  accounts={accounts}
+                  categories={categories}
+                  onSubmit={handleAddTransaction}
+                />
+              </div>
             )}
 
             {activeTab === 'saldo' && (
@@ -285,21 +296,23 @@ export function App() {
             )}
 
             {activeTab === 'riwayat' && (
-              <HistoryView
-                transactions={transactions}
-                accounts={accounts}
-                categories={categories}
-                onEditTransaction={(t) => {
-                  setSelectedTransaction(t);
-                  setIsTxModalOpen(true);
-                }}
-              />
+              <div className="max-w-4xl mx-auto">
+                <HistoryView
+                  transactions={transactions}
+                  accounts={accounts}
+                  categories={categories}
+                  onEditTransaction={(t) => {
+                    setSelectedTransaction(t);
+                    setIsTxModalOpen(true);
+                  }}
+                />
+              </div>
             )}
           </>
         )}
       </main>
 
-      {/* Bottom Navigation */}
+      {/* Mobile Bottom Navigation (Hidden on Desktop) */}
       <BottomNav activeTab={activeTab} onChangeTab={setActiveTab} />
 
       {/* Settings Modal */}
@@ -308,7 +321,7 @@ export function App() {
         onClose={() => setIsSettingsOpen(false)}
       />
 
-      {/* Edit Account Modal */}
+      {/* Edit / Add Account Modal */}
       <EditAccountModal
         isOpen={isAccountModalOpen}
         account={selectedAccount}
