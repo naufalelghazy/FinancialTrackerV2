@@ -1,4 +1,4 @@
-﻿export type TransactionType = 'pengeluaran' | 'pemasukan' | 'transfer';
+export type TransactionType = 'pengeluaran' | 'pemasukan' | 'transfer';
 export type AccountType = 'bank' | 'ewallet' | 'credit' | 'cash';
 
 export interface Account {
@@ -7,6 +7,7 @@ export interface Account {
   type: AccountType;
   icon?: string;
   emoji?: string;
+  initialBalance?: number;
   balance: number;
 }
 

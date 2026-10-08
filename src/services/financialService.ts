@@ -1,5 +1,5 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import type { Account, Category, Transaction, TransactionType } from '../types';
+import type { Account, AccountType, Category, Transaction, TransactionType } from '../types';
 import { INITIAL_ACCOUNTS, INITIAL_CATEGORIES } from '../lib/constants';
 
 export interface FinancialData {
@@ -47,7 +47,7 @@ export function calculateAccountBalances(
   const balanceMap: Record<string, number> = {};
 
   rawAccounts.forEach((acc) => {
-    balanceMap[acc.id] = acc.balance || 0;
+    balanceMap[acc.id] = Number(acc.initialBalance || 0);
   });
 
   transactions.forEach((tx) => {
@@ -82,7 +82,6 @@ export function calculateAccountBalances(
  */
 export async function loadFinancialData(): Promise<FinancialData> {
   if (!isSupabaseConfigured || !supabase) {
-    console.warn('Supabase not configured, using local fallback.');
     const savedAcc = localStorage.getItem('ft_accounts');
     const savedTx = localStorage.getItem('ft_transactions');
     const localAccounts = savedAcc ? JSON.parse(savedAcc) : INITIAL_ACCOUNTS;
@@ -109,7 +108,7 @@ export async function loadFinancialData(): Promise<FinancialData> {
       .order('name');
     if (catErr) throw catErr;
 
-    // 3. Fetch Transactions with pagination loop (bypasses 1000 row PostgREST limit)
+    // 3. Fetch Transactions with pagination loop
     let allTxs: any[] = [];
     let from = 0;
     const pageSize = 1000;
@@ -152,12 +151,12 @@ export async function loadFinancialData(): Promise<FinancialData> {
       name: a.name,
       type: a.type,
       icon: getAccountIcon(a.name, a.icon_url),
+      initialBalance: Number(a.initial_balance || 0),
       balance: Number(a.initial_balance || 0),
     }));
 
     const accountsWithBalances = calculateAccountBalances(rawAccounts, transactions);
 
-    // Save to localStorage as cache
     localStorage.setItem('ft_accounts', JSON.stringify(accountsWithBalances));
     localStorage.setItem('ft_transactions', JSON.stringify(transactions));
 
@@ -181,7 +180,7 @@ export async function loadFinancialData(): Promise<FinancialData> {
 }
 
 /**
- * Creates a new transaction in Supabase (or locally).
+ * Creates a new transaction in Supabase.
  */
 export async function addTransactionToDatabase(txData: {
   date: string;
@@ -241,4 +240,154 @@ export async function addTransactionToDatabase(txData: {
     notes: txData.notes,
     createdAt,
   };
+}
+
+/**
+ * Updates an existing transaction in Supabase.
+ */
+export async function updateTransactionInDatabase(
+  id: string,
+  txData: {
+    date: string;
+    type: TransactionType;
+    amount: number;
+    sourceAccountId: string;
+    destinationAccountId?: string;
+    categoryId?: string;
+    notes: string;
+  }
+): Promise<void> {
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase
+      .from('transactions')
+      .update({
+        date: txData.date,
+        type: txData.type,
+        amount: txData.amount,
+        source_account_id: txData.sourceAccountId,
+        destination_account_id: txData.destinationAccountId || null,
+        category_id: txData.categoryId || null,
+        notes: txData.notes,
+      })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Failed to update transaction in Supabase:', error);
+      throw error;
+    }
+  }
+}
+
+/**
+ * Deletes a transaction from Supabase.
+ */
+export async function deleteTransactionFromDatabase(id: string): Promise<void> {
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase
+      .from('transactions')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Failed to delete transaction from Supabase:', error);
+      throw error;
+    }
+  }
+}
+
+/**
+ * Updates an account in Supabase (name, type, initial_balance).
+ */
+export async function updateAccountInDatabase(
+  id: string,
+  updates: {
+    name: string;
+    type: AccountType;
+    initialBalance?: number;
+  }
+): Promise<void> {
+  if (isSupabaseConfigured && supabase) {
+    const iconUrl = getAccountIcon(updates.name);
+    const payload: any = {
+      name: updates.name,
+      type: updates.type,
+      icon_url: iconUrl,
+    };
+    if (updates.initialBalance !== undefined) {
+      payload.initial_balance = updates.initialBalance;
+    }
+
+    const { error } = await supabase
+      .from('accounts')
+      .update(payload)
+      .eq('id', id);
+
+    if (error) {
+      console.error('Failed to update account in Supabase:', error);
+      throw error;
+    }
+  }
+}
+
+/**
+ * Creates a new account in Supabase.
+ */
+export async function addAccountToDatabase(account: {
+  name: string;
+  type: AccountType;
+  initialBalance: number;
+}): Promise<Account> {
+  const iconUrl = getAccountIcon(account.name);
+  if (isSupabaseConfigured && supabase) {
+    const { data, error } = await supabase
+      .from('accounts')
+      .insert({
+        name: account.name,
+        type: account.type,
+        icon_url: iconUrl,
+        initial_balance: account.initialBalance,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Failed to insert account in Supabase:', error);
+      throw error;
+    }
+
+    return {
+      id: data.id,
+      name: data.name,
+      type: data.type,
+      icon: iconUrl,
+      initialBalance: Number(data.initial_balance || 0),
+      balance: Number(data.initial_balance || 0),
+    };
+  }
+
+  return {
+    id: crypto.randomUUID(),
+    name: account.name,
+    type: account.type,
+    icon: iconUrl,
+    initialBalance: account.initialBalance,
+    balance: account.initialBalance,
+  };
+}
+
+/**
+ * Deletes an account from Supabase.
+ */
+export async function deleteAccountFromDatabase(id: string): Promise<void> {
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase
+      .from('accounts')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Failed to delete account from Supabase:', error);
+      throw error;
+    }
+  }
 }

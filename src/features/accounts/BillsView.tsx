@@ -1,14 +1,15 @@
 import React from 'react';
 import type { Account } from '../../types';
 import { formatCurrency } from '../../lib/formatters';
-import { CreditCard, CheckCircle2 } from 'lucide-react';
+import { CreditCard, CheckCircle2, Edit2 } from 'lucide-react';
 import { AccountAvatar } from './AccountsView';
 
 interface BillsViewProps {
   accounts: Account[];
+  onEditAccount?: (account: Account) => void;
 }
 
-export const BillsView: React.FC<BillsViewProps> = ({ accounts }) => {
+export const BillsView: React.FC<BillsViewProps> = ({ accounts, onEditAccount }) => {
   const creditAccounts = accounts.filter((a) => a.type === 'credit');
   const totalDebt = creditAccounts.reduce(
     (sum, a) => sum + (a.balance < 0 ? Math.abs(a.balance) : 0),
@@ -41,30 +42,44 @@ export const BillsView: React.FC<BillsViewProps> = ({ accounts }) => {
           return (
             <div
               key={acc.id}
-              className="flex items-center justify-between p-3.5 bg-white rounded-[12px] border border-[#dedee5] shadow-micro hover:border-[#686b82]/40 transition-all"
+              onClick={() => onEditAccount && onEditAccount(acc)}
+              className="group flex items-center justify-between p-3.5 bg-white rounded-[12px] border border-[#dedee5] shadow-micro hover:border-[#7132f5]/50 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if ((e.key === 'Enter' || e.key === ' ') && onEditAccount) {
+                  e.preventDefault();
+                  onEditAccount(acc);
+                }
+              }}
             >
               <div className="flex items-center gap-3">
                 <AccountAvatar acc={acc} />
                 <div>
-                  <span className="font-bold text-sm text-[#101114] block tracking-tight">
+                  <span className="font-bold text-sm text-[#101114] block tracking-tight group-hover:text-[#7132f5] transition-colors">
                     {acc.name}
                   </span>
                   <span className="text-[11px] text-[#686b82] font-medium">Tagihan berjalan</span>
                 </div>
               </div>
-              <div className="text-right">
-                <span
-                  className={`font-bold text-sm block tracking-tight ${
-                    debt > 0 ? 'text-[#e53e3e]' : 'text-[#026b3f]'
-                  }`}
-                >
-                  {debt > 0 ? formatCurrency(debt) : 'Rp 0'}
-                </span>
-                {debt === 0 && (
-                  <span className="inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 bg-[#149e61]/15 text-[#026b3f] text-[10px] font-semibold rounded-[6px]">
-                    <CheckCircle2 className="w-2.5 h-2.5" /> Lunas
+              <div className="flex items-center gap-2">
+                <div className="text-right">
+                  <span
+                    className={`font-bold text-sm block tracking-tight ${
+                      debt > 0 ? 'text-[#e53e3e]' : 'text-[#026b3f]'
+                    }`}
+                  >
+                    {debt > 0 ? formatCurrency(debt) : 'Rp 0'}
                   </span>
-                )}
+                  {debt === 0 && (
+                    <span className="inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 bg-[#149e61]/15 text-[#026b3f] text-[10px] font-semibold rounded-[6px]">
+                      <CheckCircle2 className="w-2.5 h-2.5" /> Lunas
+                    </span>
+                  )}
+                </div>
+                <div className="w-7 h-7 rounded-[6px] flex items-center justify-center text-[#9497a9] group-hover:text-[#7132f5] group-hover:bg-[#855bfb]/10 transition-all">
+                  <Edit2 className="w-3.5 h-3.5" />
+                </div>
               </div>
             </div>
           );

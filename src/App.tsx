@@ -7,13 +7,20 @@ import { AccountsView } from './features/accounts/AccountsView';
 import { BillsView } from './features/accounts/BillsView';
 import { HistoryView } from './features/history/HistoryView';
 import { SettingsModal } from './components/modals/SettingsModal';
+import { EditAccountModal } from './components/modals/EditAccountModal';
+import { EditTransactionModal } from './components/modals/EditTransactionModal';
 import { INITIAL_ACCOUNTS, INITIAL_CATEGORIES } from './lib/constants';
 import {
   loadFinancialData,
   addTransactionToDatabase,
+  updateTransactionInDatabase,
+  deleteTransactionFromDatabase,
+  updateAccountInDatabase,
+  addAccountToDatabase,
+  deleteAccountFromDatabase,
   calculateAccountBalances,
 } from './services/financialService';
-import type { Account, Category, Transaction, TransactionType } from './types';
+import type { Account, AccountType, Category, Transaction, TransactionType } from './types';
 import { RefreshCw } from 'lucide-react';
 
 export function App() {
@@ -21,6 +28,12 @@ export function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Modal States
+  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [isTxModalOpen, setIsTxModalOpen] = useState(false);
 
   // Accounts state
   const [accounts, setAccounts] = useState<Account[]>(() => {
@@ -75,7 +88,6 @@ export function App() {
     date: string;
     notes: string;
   }) => {
-    // 1. Optimistic local update
     const tempTx: Transaction = {
       id: crypto.randomUUID(),
       date: data.date,
@@ -89,24 +101,114 @@ export function App() {
     };
 
     const nextTransactions = [tempTx, ...transactions];
-    const nextAccounts = calculateAccountBalances(accounts, [tempTx]);
+    const nextAccounts = calculateAccountBalances(accounts, nextTransactions);
 
     setTransactions(nextTransactions);
     setAccounts(nextAccounts);
-
-    // Automatically switch to saldo view so user sees updated balance
     setActiveTab('saldo');
 
-    // 2. Persist to Supabase in background
     try {
       const saved = await addTransactionToDatabase(data);
-      // Replace temporary ID with database ID
       setTransactions((prev) =>
         prev.map((t) => (t.id === tempTx.id ? { ...t, id: saved.id } : t))
       );
     } catch (err) {
       console.error('Failed to persist transaction:', err);
     }
+  };
+
+  // Handle edit transaction
+  const handleSaveTransaction = async (updated: {
+    id: string;
+    type: TransactionType;
+    amount: number;
+    sourceAccountId: string;
+    destinationAccountId?: string;
+    categoryId?: string;
+    date: string;
+    notes: string;
+  }) => {
+    const nextTransactions = transactions.map((t) =>
+      t.id === updated.id
+        ? {
+            ...t,
+            type: updated.type,
+            amount: updated.amount,
+            sourceAccountId: updated.sourceAccountId,
+            destinationAccountId: updated.destinationAccountId,
+            categoryId: updated.categoryId,
+            date: updated.date,
+            notes: updated.notes,
+          }
+        : t
+    );
+
+    const nextAccounts = calculateAccountBalances(accounts, nextTransactions);
+    setTransactions(nextTransactions);
+    setAccounts(nextAccounts);
+
+    await updateTransactionInDatabase(updated.id, updated);
+  };
+
+  // Handle delete transaction
+  const handleDeleteTransaction = async (id: string) => {
+    const nextTransactions = transactions.filter((t) => t.id !== id);
+    const nextAccounts = calculateAccountBalances(accounts, nextTransactions);
+
+    setTransactions(nextTransactions);
+    setAccounts(nextAccounts);
+
+    await deleteTransactionFromDatabase(id);
+  };
+
+  // Handle edit or add account
+  const handleSaveAccount = async (data: {
+    id?: string;
+    name: string;
+    type: AccountType;
+    initialBalance: number;
+  }) => {
+    if (data.id) {
+      // Update existing
+      const nextAccounts = accounts.map((a) =>
+        a.id === data.id
+          ? {
+              ...a,
+              name: data.name,
+              type: data.type,
+              initialBalance: data.initialBalance,
+            }
+          : a
+      );
+      const recomputed = calculateAccountBalances(nextAccounts, transactions);
+      setAccounts(recomputed);
+
+      await updateAccountInDatabase(data.id, {
+        name: data.name,
+        type: data.type,
+        initialBalance: data.initialBalance,
+      });
+    } else {
+      // Add new
+      const created = await addAccountToDatabase({
+        name: data.name,
+        type: data.type,
+        initialBalance: data.initialBalance,
+      });
+
+      const nextAccounts = [...accounts, created];
+      const recomputed = calculateAccountBalances(nextAccounts, transactions);
+      setAccounts(recomputed);
+    }
+  };
+
+  // Handle delete account
+  const handleDeleteAccount = async (id: string) => {
+    const nextAccounts = accounts.filter((a) => a.id !== id);
+    const recomputed = calculateAccountBalances(nextAccounts, transactions);
+    setAccounts(recomputed);
+
+    await deleteAccountFromDatabase(id);
   };
 
   return (
@@ -158,15 +260,39 @@ export function App() {
               />
             )}
 
-            {activeTab === 'saldo' && <AccountsView accounts={accounts} />}
+            {activeTab === 'saldo' && (
+              <AccountsView
+                accounts={accounts}
+                onEditAccount={(acc) => {
+                  setSelectedAccount(acc);
+                  setIsAccountModalOpen(true);
+                }}
+                onAddAccount={() => {
+                  setSelectedAccount(null);
+                  setIsAccountModalOpen(true);
+                }}
+              />
+            )}
 
-            {activeTab === 'tagihan' && <BillsView accounts={accounts} />}
+            {activeTab === 'tagihan' && (
+              <BillsView
+                accounts={accounts}
+                onEditAccount={(acc) => {
+                  setSelectedAccount(acc);
+                  setIsAccountModalOpen(true);
+                }}
+              />
+            )}
 
             {activeTab === 'riwayat' && (
               <HistoryView
                 transactions={transactions}
                 accounts={accounts}
                 categories={categories}
+                onEditTransaction={(t) => {
+                  setSelectedTransaction(t);
+                  setIsTxModalOpen(true);
+                }}
               />
             )}
           </>
@@ -180,6 +306,26 @@ export function App() {
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+      />
+
+      {/* Edit Account Modal */}
+      <EditAccountModal
+        isOpen={isAccountModalOpen}
+        account={selectedAccount}
+        onClose={() => setIsAccountModalOpen(false)}
+        onSave={handleSaveAccount}
+        onDelete={handleDeleteAccount}
+      />
+
+      {/* Edit Transaction Modal */}
+      <EditTransactionModal
+        isOpen={isTxModalOpen}
+        transaction={selectedTransaction}
+        accounts={accounts}
+        categories={categories}
+        onClose={() => setIsTxModalOpen(false)}
+        onSave={handleSaveTransaction}
+        onDelete={handleDeleteTransaction}
       />
     </div>
   );
