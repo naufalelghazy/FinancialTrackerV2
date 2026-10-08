@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Header } from './components/layout/Header';
 import { BottomNav } from './components/layout/BottomNav';
 import type { NavTab } from './components/layout/BottomNav';
@@ -8,11 +8,19 @@ import { BillsView } from './features/accounts/BillsView';
 import { HistoryView } from './features/history/HistoryView';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { INITIAL_ACCOUNTS, INITIAL_CATEGORIES } from './lib/constants';
-import type { Account, Transaction, TransactionType } from './types';
+import {
+  loadFinancialData,
+  addTransactionToDatabase,
+  calculateAccountBalances,
+} from './services/financialService';
+import type { Account, Category, Transaction, TransactionType } from './types';
+import { RefreshCw } from 'lucide-react';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<NavTab>('input');
+  const [activeTab, setActiveTab] = useState<NavTab>('saldo');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Accounts state
   const [accounts, setAccounts] = useState<Account[]>(() => {
@@ -35,19 +43,30 @@ export function App() {
   });
 
   // Categories state
-  const [categories] = useState(INITIAL_CATEGORIES);
+  const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
 
-  // Save to localStorage
-  useEffect(() => {
-    localStorage.setItem('ft_accounts', JSON.stringify(accounts));
-  }, [accounts]);
+  // Fetch initial data from Supabase
+  const fetchData = useCallback(async (showRefreshing = false) => {
+    if (showRefreshing) setIsRefreshing(true);
+    try {
+      const res = await loadFinancialData();
+      setAccounts(res.accounts);
+      setCategories(res.categories);
+      setTransactions(res.transactions);
+    } catch (err) {
+      console.error('Fetch error:', err);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem('ft_transactions', JSON.stringify(transactions));
-  }, [transactions]);
+    fetchData();
+  }, [fetchData]);
 
   // Handle new transaction
-  const handleAddTransaction = (data: {
+  const handleAddTransaction = async (data: {
     type: TransactionType;
     amount: number;
     sourceAccountId: string;
@@ -56,7 +75,8 @@ export function App() {
     date: string;
     notes: string;
   }) => {
-    const newTx: Transaction = {
+    // 1. Optimistic local update
+    const tempTx: Transaction = {
       id: crypto.randomUUID(),
       date: data.date,
       type: data.type,
@@ -68,35 +88,25 @@ export function App() {
       createdAt: new Date().toISOString(),
     };
 
-    // Update balances
-    setAccounts((prev) =>
-      prev.map((acc) => {
-        // If transfer
-        if (data.type === 'transfer') {
-          if (acc.id === data.sourceAccountId) {
-            return { ...acc, balance: acc.balance - data.amount };
-          }
-          if (acc.id === data.destinationAccountId) {
-            return { ...acc, balance: acc.balance + data.amount };
-          }
-        }
-        // If expense
-        else if (data.type === 'pengeluaran' && acc.id === data.sourceAccountId) {
-          if (acc.type === 'credit') {
-            return { ...acc, balance: acc.balance - data.amount };
-          }
-          return { ...acc, balance: acc.balance - data.amount };
-        }
-        // If income
-        else if (data.type === 'pemasukan' && acc.id === data.sourceAccountId) {
-          return { ...acc, balance: acc.balance + data.amount };
-        }
-        return acc;
-      })
-    );
+    const nextTransactions = [tempTx, ...transactions];
+    const nextAccounts = calculateAccountBalances(accounts, [tempTx]);
 
-    // Append to transactions list (newest first)
-    setTransactions((prev) => [newTx, ...prev]);
+    setTransactions(nextTransactions);
+    setAccounts(nextAccounts);
+
+    // Automatically switch to saldo view so user sees updated balance
+    setActiveTab('saldo');
+
+    // 2. Persist to Supabase in background
+    try {
+      const saved = await addTransactionToDatabase(data);
+      // Replace temporary ID with database ID
+      setTransactions((prev) =>
+        prev.map((t) => (t.id === tempTx.id ? { ...t, id: saved.id } : t))
+      );
+    } catch (err) {
+      console.error('Failed to persist transaction:', err);
+    }
   };
 
   return (
@@ -104,26 +114,62 @@ export function App() {
       {/* Header */}
       <Header onOpenSettings={() => setIsSettingsOpen(true)} />
 
+      {/* Sync Status Bar */}
+      <div className="max-w-md w-full mx-auto px-4 pt-2 flex items-center justify-between text-xs text-[#686b82]">
+        <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-[#149e61]" />
+          <span>
+            {isLoading
+              ? 'Memuat data dari Supabase...'
+              : `${transactions.length} transaksi aktif`}
+          </span>
+        </div>
+        <button
+          onClick={() => fetchData(true)}
+          disabled={isRefreshing || isLoading}
+          className="flex items-center gap-1 text-[#7132f5] hover:text-[#5741d8] font-medium transition-colors disabled:opacity-50"
+        >
+          <RefreshCw
+            className={`w-3 h-3 ${isRefreshing || isLoading ? 'animate-spin' : ''}`}
+          />
+          <span>{isRefreshing ? 'Sinkron...' : 'Sinkronkan'}</span>
+        </button>
+      </div>
+
       {/* Main Content Area */}
-      <main className="max-w-md w-full mx-auto px-4 pt-4 flex-1">
-        {activeTab === 'input' && (
-          <TransactionForm
-            accounts={accounts}
-            categories={categories}
-            onSubmit={handleAddTransaction}
-          />
-        )}
+      <main className="max-w-md w-full mx-auto px-4 pt-3 flex-1">
+        {isLoading && accounts.length === 0 ? (
+          <div className="py-20 flex flex-col items-center justify-center text-center space-y-3">
+            <div className="w-10 h-10 border-3 border-[#7132f5]/20 border-t-[#7132f5] rounded-full animate-spin" />
+            <p className="text-sm font-semibold text-[#101114]">
+              Menghubungkan ke Supabase...
+            </p>
+            <p className="text-xs text-[#686b82]">
+              Menghitung saldo dari 1.400+ riwayat transaksi
+            </p>
+          </div>
+        ) : (
+          <>
+            {activeTab === 'input' && (
+              <TransactionForm
+                accounts={accounts}
+                categories={categories}
+                onSubmit={handleAddTransaction}
+              />
+            )}
 
-        {activeTab === 'saldo' && <AccountsView accounts={accounts} />}
+            {activeTab === 'saldo' && <AccountsView accounts={accounts} />}
 
-        {activeTab === 'tagihan' && <BillsView accounts={accounts} />}
+            {activeTab === 'tagihan' && <BillsView accounts={accounts} />}
 
-        {activeTab === 'riwayat' && (
-          <HistoryView
-            transactions={transactions}
-            accounts={accounts}
-            categories={categories}
-          />
+            {activeTab === 'riwayat' && (
+              <HistoryView
+                transactions={transactions}
+                accounts={accounts}
+                categories={categories}
+              />
+            )}
+          </>
         )}
       </main>
 
