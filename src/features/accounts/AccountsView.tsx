@@ -13,7 +13,7 @@ import { getLogoDevUrl, getLocalFallback } from '../../services/logoService';
 
 export const AccountAvatar: React.FC<{ acc: Account }> = ({ acc }) => {
   const [hasError, setHasError] = useState(false);
-  const logoDevUrl = getLogoDevUrl(acc.name);
+  const logoDevUrl = getLogoDevUrl(acc.name, acc.website);
   const localFallback = getLocalFallback(acc.name);
   const candidateUrl = !hasError && (acc.icon || logoDevUrl);
 

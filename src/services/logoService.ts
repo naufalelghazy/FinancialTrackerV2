@@ -128,7 +128,19 @@ export function setLogoDevToken(token: string): void {
   } catch {}
 }
 
-export function getAccountDomain(name: string): string | null {
+export function cleanDomain(urlOrDomain: string): string {
+  if (!urlOrDomain) return '';
+  let clean = urlOrDomain.trim().toLowerCase();
+  clean = clean.replace(/^(?:https?:\/\/)?(?:www\.)?/i, '');
+  clean = clean.split('/')[0].split('?')[0].split('#')[0];
+  return clean;
+}
+
+export function getAccountDomain(name: string, website?: string): string | null {
+  if (website && website.trim()) {
+    const cleaned = cleanDomain(website);
+    if (cleaned) return cleaned;
+  }
   const key = name.trim().toLowerCase();
   if (key === 'cash' || key === 'tunai' || key === 'uang tunai') {
     return null;
@@ -137,7 +149,7 @@ export function getAccountDomain(name: string): string | null {
     return BANK_DOMAIN_MAP[key];
   }
   if (key.includes('.')) {
-    return key;
+    return cleanDomain(key);
   }
   const clean = key.replace(/[^a-z0-9]/g, '');
   return clean ? `${clean}.com` : null;
@@ -145,19 +157,29 @@ export function getAccountDomain(name: string): string | null {
 
 export function getLogoDevUrl(
   accountName: string,
-  options: { size?: number; format?: 'png' | 'webp' | 'jpg' } = {}
+  websiteOrOptions?: string | { size?: number; format?: 'png' | 'webp' | 'jpg' },
+  options?: { size?: number; format?: 'png' | 'webp' | 'jpg' }
 ): string {
   const key = accountName.trim().toLowerCase();
   if (key === 'cash' || key === 'tunai' || key === 'uang tunai') {
     return '/icons/banks/cash.svg';
   }
 
-  const domain = getAccountDomain(accountName);
+  let website: string | undefined;
+  let opt = options || {};
+
+  if (typeof websiteOrOptions === 'string') {
+    website = websiteOrOptions;
+  } else if (websiteOrOptions && typeof websiteOrOptions === 'object') {
+    opt = websiteOrOptions;
+  }
+
+  const domain = getAccountDomain(accountName, website);
   if (!domain) return '/icons/banks/cash.svg';
 
   const token = getLogoDevToken();
-  const size = options.size || 128;
-  const format = options.format || 'png';
+  const size = opt.size || 128;
+  const format = opt.format || 'png';
 
   const params = new URLSearchParams();
   if (token) {

@@ -12,8 +12,8 @@ import { getLogoDevUrl, getLocalFallback, LOCAL_FALLBACK_ICONS, BANK_DOMAIN_MAP 
 export { BANK_DOMAIN_MAP };
 export const BANK_ICON_MAP = LOCAL_FALLBACK_ICONS;
 
-export function getAccountIcon(name: string, fallbackUrl?: string): string {
-  const logoUrl = getLogoDevUrl(name);
+export function getAccountIcon(name: string, website?: string, fallbackUrl?: string): string {
+  const logoUrl = getLogoDevUrl(name, website);
   if (logoUrl) return logoUrl;
   const localFallback = getLocalFallback(name);
   if (localFallback) return localFallback;
@@ -133,7 +133,8 @@ export async function loadFinancialData(): Promise<FinancialData> {
       id: a.id,
       name: a.name,
       type: a.type,
-      icon: getAccountIcon(a.name, a.icon_url),
+      website: a.website || undefined,
+      icon: getAccountIcon(a.name, a.website, a.icon_url),
       initialBalance: Number(a.initial_balance || 0),
       balance: Number(a.initial_balance || 0),
     }));
@@ -286,14 +287,16 @@ export async function updateAccountInDatabase(
   updates: {
     name: string;
     type: AccountType;
+    website?: string;
     initialBalance?: number;
   }
 ): Promise<void> {
   if (isSupabaseConfigured && supabase) {
-    const iconUrl = getAccountIcon(updates.name);
+    const iconUrl = getAccountIcon(updates.name, updates.website);
     const payload: any = {
       name: updates.name,
       type: updates.type,
+      website: updates.website || null,
       icon_url: iconUrl,
     };
     if (updates.initialBalance !== undefined) {
@@ -318,15 +321,17 @@ export async function updateAccountInDatabase(
 export async function addAccountToDatabase(account: {
   name: string;
   type: AccountType;
+  website?: string;
   initialBalance: number;
 }): Promise<Account> {
-  const iconUrl = getAccountIcon(account.name);
+  const iconUrl = getAccountIcon(account.name, account.website);
   if (isSupabaseConfigured && supabase) {
     const { data, error } = await supabase
       .from('accounts')
       .insert({
         name: account.name,
         type: account.type,
+        website: account.website || null,
         icon_url: iconUrl,
         initial_balance: account.initialBalance,
       })
@@ -342,6 +347,7 @@ export async function addAccountToDatabase(account: {
       id: data.id,
       name: data.name,
       type: data.type,
+      website: data.website || undefined,
       icon: iconUrl,
       initialBalance: Number(data.initial_balance || 0),
       balance: Number(data.initial_balance || 0),
@@ -352,6 +358,7 @@ export async function addAccountToDatabase(account: {
     id: crypto.randomUUID(),
     name: account.name,
     type: account.type,
+    website: account.website,
     icon: iconUrl,
     initialBalance: account.initialBalance,
     balance: account.initialBalance,

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, Landmark, Trash2, AlertTriangle, ArrowRightLeft } from 'lucide-react';
+import { X, Landmark, Trash2, AlertTriangle, ArrowRightLeft, Globe } from 'lucide-react';
 import type { Account, AccountType } from '../../types';
 import { formatCurrency, formatNumberInput, parseRawAmount } from '../../lib/formatters';
+import { getLogoDevUrl, getLocalFallback } from '../../services/logoService';
 
 interface EditAccountModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface EditAccountModalProps {
     id?: string;
     name: string;
     type: AccountType;
+    website?: string;
     initialBalance: number;
   }) => Promise<void>;
   onDelete?: (id: string) => Promise<void>;
@@ -27,6 +29,7 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
 
   const [name, setName] = useState('');
   const [type, setType] = useState<AccountType>('bank');
+  const [website, setWebsite] = useState('');
   const [initialBalanceDisplay, setInitialBalanceDisplay] = useState('0');
   const [targetBalanceDisplay, setTargetBalanceDisplay] = useState('');
   const [isAdjustMode, setIsAdjustMode] = useState(false);
@@ -34,23 +37,31 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [previewFailed, setPreviewFailed] = useState(false);
 
   useEffect(() => {
     if (account) {
       setName(account.name);
       setType(account.type);
+      setWebsite(account.website || '');
       setInitialBalanceDisplay(formatNumberInput(String(account.initialBalance ?? 0)));
       setTargetBalanceDisplay(formatNumberInput(String(account.balance ?? 0)));
     } else {
       setName('');
       setType('bank');
+      setWebsite('');
       setInitialBalanceDisplay('0');
       setTargetBalanceDisplay('0');
     }
     setIsAdjustMode(false);
     setConfirmDelete(false);
     setErrorMsg('');
+    setPreviewFailed(false);
   }, [account, isOpen]);
+
+  useEffect(() => {
+    setPreviewFailed(false);
+  }, [name, website]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -63,6 +74,11 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
+
+  // Real-time preview logo from img.logo.dev with fallback
+  const previewLogoSrc = !previewFailed
+    ? (getLogoDevUrl(name, website) || getLocalFallback(name))
+    : getLocalFallback(name);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,6 +103,7 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
         id: account?.id,
         name: name.trim(),
         type,
+        website: website.trim() || undefined,
         initialBalance: finalInitialBalance,
       });
       onClose();
@@ -191,6 +208,45 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
               placeholder="Contoh: BCA Utama, Dompet Saku"
               className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-sm font-medium text-[#101114] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
             />
+          </div>
+
+          {/* Website / Domain URL Input for img.logo.dev */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-[#7132f5]" />
+                <span>Website / Domain Akun</span>
+              </label>
+              <span className="text-[10px] text-[#9497a9]">Untuk Logo.dev</span>
+            </div>
+            <div className="relative flex items-center">
+              <input
+                type="text"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                placeholder="Contoh: doku.com atau bca.co.id"
+                className="w-full pl-3.5 pr-11 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-sm font-medium text-[#101114] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
+              />
+              {/* Live Logo Preview icon */}
+              <div
+                className="absolute right-2.5 w-7 h-7 rounded-[7px] bg-white border border-[#dedee5] p-0.5 flex items-center justify-center shadow-micro overflow-hidden"
+                title={previewLogoSrc ? 'Preview Logo CDN' : 'Logo Default'}
+              >
+                {previewLogoSrc ? (
+                  <img
+                    src={previewLogoSrc}
+                    alt="Preview"
+                    onError={() => setPreviewFailed(true)}
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <Globe className="w-3.5 h-3.5 text-[#9497a9]" />
+                )}
+              </div>
+            </div>
+            <p className="text-[11px] text-[#686b82] mt-1.5 leading-snug">
+              <code>img.logo.dev</code> akan mencari logo resmi berdasarkan domain ini jika nama akun belum terdeteksi.
+            </p>
           </div>
 
           {/* Type Field */}

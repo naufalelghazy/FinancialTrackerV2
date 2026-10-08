@@ -21,6 +21,7 @@ import {
   addAccountToDatabase,
   deleteAccountFromDatabase,
   calculateAccountBalances,
+  getAccountIcon,
 } from './services/financialService';
 import type { Account, AccountType, Category, Transaction, TransactionType } from './types';
 
@@ -179,6 +180,7 @@ export function App() {
     id?: string;
     name: string;
     type: AccountType;
+    website?: string;
     initialBalance: number;
   }) => {
     if (data.id) {
@@ -189,6 +191,8 @@ export function App() {
               ...a,
               name: data.name,
               type: data.type,
+              website: data.website,
+              icon: getAccountIcon(data.name, data.website),
               initialBalance: data.initialBalance,
             }
           : a
@@ -199,6 +203,7 @@ export function App() {
       await updateAccountInDatabase(data.id, {
         name: data.name,
         type: data.type,
+        website: data.website,
         initialBalance: data.initialBalance,
       });
     } else {
@@ -206,6 +211,7 @@ export function App() {
       const created = await addAccountToDatabase({
         name: data.name,
         type: data.type,
+        website: data.website,
         initialBalance: data.initialBalance,
       });
 

@@ -7,6 +7,7 @@ export interface Account {
   type: AccountType;
   icon?: string;
   emoji?: string;
+  website?: string;
   initialBalance?: number;
   balance: number;
 }
