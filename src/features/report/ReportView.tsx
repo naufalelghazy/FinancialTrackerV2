@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import type { Transaction, Account, Category } from '../../types';
 import { formatCurrency } from '../../lib/formatters';
+import { CategoryIcon } from '../../components/ui/CategoryIcon';
+import { AccountAvatar } from '../accounts/AccountsView';
 import {
   TrendingUp,
   TrendingDown,
@@ -37,7 +39,7 @@ interface ReportViewProps {
 
 type PeriodType = 'this_month' | 'last_3_months' | 'last_6_months' | 'this_year' | 'all';
 
-// Curated harmonious color palette for categories
+// Curated harmonious color palette for charts
 const CATEGORY_COLORS = [
   '#7132f5', // Kraken purple
   '#ec4899', // Pink
@@ -58,7 +60,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
 }) => {
   const { isDark } = useTheme();
   const [period, setPeriod] = useState<PeriodType>('this_month');
-  const [activeChartTab, setActiveChartTab] = useState<'flow' | 'category' | 'source' | 'account'>('flow');
+  const [activeChartTab, setActiveChartTab] = useState<'flow' | 'category' | 'source' | 'account'>('category');
 
   // Helper map for accounts and categories
   const accountMap = useMemo(() => {
@@ -181,7 +183,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
     }
   }, [filteredTransactions, period]);
 
-  // 2. Category Expense Breakdown (Donut Chart)
+  // 2. Category Expense Breakdown (Donut Chart & List)
   const expenseByCategory = useMemo(() => {
     const catMap: { [catId: string]: { name: string; emoji: string; amount: number } } = {};
     let total = 0;
@@ -191,7 +193,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
       .forEach((t) => {
         const cat = t.categoryId ? categoryMap.get(t.categoryId) : undefined;
         const catName = cat?.name || 'Lain-lain';
-        const emoji = cat?.emoji || '📦';
+        const emoji = cat?.emoji || '🏷️';
         const id = t.categoryId || 'unknown';
 
         if (!catMap[id]) {
@@ -210,7 +212,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
       .sort((a, b) => b.amount - a.amount);
   }, [filteredTransactions, categoryMap]);
 
-  // 3. Category Income Breakdown (Donut Chart)
+  // 3. Category Income Breakdown (Donut Chart & List)
   const incomeByCategory = useMemo(() => {
     const catMap: { [catId: string]: { name: string; emoji: string; amount: number } } = {};
     let total = 0;
@@ -239,9 +241,9 @@ export const ReportView: React.FC<ReportViewProps> = ({
       .sort((a, b) => b.amount - a.amount);
   }, [filteredTransactions, categoryMap]);
 
-  // 4. Expense by Source Account (Horizontal Bar Chart)
+  // 4. Expense by Source Account
   const expenseByAccount = useMemo(() => {
-    const accExpMap: { [accId: string]: { name: string; type: string; amount: number } } = {};
+    const accExpMap: { [accId: string]: { account?: Account; name: string; type: string; amount: number } } = {};
 
     filteredTransactions
       .filter((t) => t.type === 'pengeluaran')
@@ -251,7 +253,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
         const type = acc?.type || 'bank';
 
         if (!accExpMap[t.sourceAccountId]) {
-          accExpMap[t.sourceAccountId] = { name, type, amount: 0 };
+          accExpMap[t.sourceAccountId] = { account: acc, name, type, amount: 0 };
         }
         accExpMap[t.sourceAccountId].amount += t.amount;
       });
@@ -278,7 +280,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
     };
   }, [filteredTransactions, totalExpense]);
 
-  // Tooltip colors & styles based on theme
+  // Tooltip styles based on theme
   const tooltipStyle = {
     backgroundColor: isDark ? '#16171f' : '#ffffff',
     borderColor: isDark ? '#282937' : '#dedee5',
@@ -458,20 +460,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
         </div>
       </div>
 
-      {/* Main Analysis Section: Tabs to switch or view detailed charts */}
+      {/* Main Analysis Tabs */}
       <div className="flex items-center gap-2 border-b border-[#dedee5] dark:border-[#282937] pb-3 overflow-x-auto">
-        <button
-          onClick={() => setActiveChartTab('flow')}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-[10px] text-xs font-bold transition-all whitespace-nowrap ${
-            activeChartTab === 'flow'
-              ? 'bg-[#7132f5] text-white shadow-micro'
-              : 'text-[#686b82] dark:text-[#9ca0ba] hover:bg-[#edeef3] dark:hover:bg-[#1e202b]'
-          }`}
-        >
-          <TrendingUp className="w-4 h-4" />
-          <span>Tren Arus Kas</span>
-        </button>
-
         <button
           onClick={() => setActiveChartTab('category')}
           className={`flex items-center gap-2 px-3.5 py-2 rounded-[10px] text-xs font-bold transition-all whitespace-nowrap ${
@@ -482,6 +472,18 @@ export const ReportView: React.FC<ReportViewProps> = ({
         >
           <PieChartIcon className="w-4 h-4" />
           <span>Kategori Pengeluaran</span>
+        </button>
+
+        <button
+          onClick={() => setActiveChartTab('flow')}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-[10px] text-xs font-bold transition-all whitespace-nowrap ${
+            activeChartTab === 'flow'
+              ? 'bg-[#7132f5] text-white shadow-micro'
+              : 'text-[#686b82] dark:text-[#9ca0ba] hover:bg-[#edeef3] dark:hover:bg-[#1e202b]'
+          }`}
+        >
+          <TrendingUp className="w-4 h-4" />
+          <span>Tren Arus Kas (Masuk vs Keluar)</span>
         </button>
 
         <button
@@ -509,7 +511,126 @@ export const ReportView: React.FC<ReportViewProps> = ({
         </button>
       </div>
 
-      {/* Chart View Content */}
+      {/* ===================== TAB 1: KATEGORI PENGELUARAN ===================== */}
+      {activeChartTab === 'category' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Donut Chart (5 cols) */}
+          <div className="lg:col-span-5 bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-5 flex flex-col justify-between">
+            <div>
+              <h3 className="text-sm sm:text-base font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
+                Alokasi Pengeluaran
+              </h3>
+              <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
+                Proporsi pengeluaran berdasarkan kategori
+              </p>
+            </div>
+
+            {expenseByCategory.length === 0 ? (
+              <div className="py-20 text-center text-xs text-[#9497a9]">
+                Belum ada pengeluaran pada periode ini
+              </div>
+            ) : (
+              <div className="h-64 sm:h-72 w-full relative flex items-center justify-center my-auto">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Tooltip
+                      contentStyle={tooltipStyle}
+                      formatter={(val: any) => [formatCurrency(Number(val) || 0), 'Pengeluaran']}
+                    />
+                    <Pie
+                      data={expenseByCategory}
+                      dataKey="amount"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={65}
+                      outerRadius={95}
+                      paddingAngle={3}
+                    >
+                      {expenseByCategory.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                {/* Center Label in Donut */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span className="text-[10px] uppercase font-bold text-[#9497a9]">Total</span>
+                  <span className="text-sm font-bold text-[#101114] dark:text-[#f3f4f8] tabular-nums">
+                    {formatCurrency(totalExpense)}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div className="pt-2 text-center text-[11px] text-[#686b82] dark:text-[#9ca0ba]">
+              {expenseByCategory.length} Kategori pengeluaran aktif
+            </div>
+          </div>
+
+          {/* Ranked Category List using standard CategoryIcon (7 cols) */}
+          <div className="lg:col-span-7 bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-5 space-y-4">
+            <div>
+              <h3 className="text-sm sm:text-base font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
+                Peringkat Kategori Terbesar
+              </h3>
+              <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
+                Urutan pos belanja dari nilai tertinggi ke terendah
+              </p>
+            </div>
+
+            {expenseByCategory.length === 0 ? (
+              <div className="py-16 text-center text-xs text-[#9497a9]">
+                Tidak ada data pengeluaran
+              </div>
+            ) : (
+              <div className="space-y-3 pt-1">
+                {expenseByCategory.map((cat, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#1e202b] border border-[#dedee5] dark:border-[#282937]/80 hover:border-[#7132f5]/40 transition-all space-y-2.5"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      {/* Left: Standard CategoryIcon + Name + Percentage subtitle */}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <CategoryIcon name={cat.name} type="pengeluaran" size="md" />
+                        <div className="min-w-0">
+                          <span className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8] block tracking-tight truncate">
+                            {cat.name}
+                          </span>
+                          <span className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] block">
+                            {cat.percentage.toFixed(1)}% dari total pengeluaran
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Right: Nominal & Percentage Badge */}
+                      <div className="text-right shrink-0">
+                        <span className="font-bold text-sm sm:text-base text-[#e53e3e] dark:text-[#f87171] tabular-nums block">
+                          -{formatCurrency(cat.amount)}
+                        </span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-[6px] bg-[#edeef3] dark:bg-[#282937] font-bold text-[#7132f5] dark:text-[#a78bfa] inline-block mt-0.5">
+                          {cat.percentage.toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Progress Bar Share */}
+                    <div className="w-full bg-[#edeef3] dark:bg-[#282937] rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{ width: `${cat.percentage}%`, backgroundColor: cat.color }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ===================== TAB 2: TREN ARUS KAS ===================== */}
       {activeChartTab === 'flow' && (
         <div className="space-y-6">
           {/* Cashflow Trend Bar Chart */}
@@ -656,123 +777,10 @@ export const ReportView: React.FC<ReportViewProps> = ({
         </div>
       )}
 
-      {activeChartTab === 'category' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Donut Chart: 5 columns */}
-          <div className="lg:col-span-5 bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-5 flex flex-col justify-between">
-            <div>
-              <h3 className="text-sm sm:text-base font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
-                Alokasi Pengeluaran
-              </h3>
-              <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
-                Proporsi pengeluaran berdasarkan kategori
-              </p>
-            </div>
-
-            {expenseByCategory.length === 0 ? (
-              <div className="py-20 text-center text-xs text-[#9497a9]">
-                Belum ada pengeluaran pada periode ini
-              </div>
-            ) : (
-              <div className="h-64 sm:h-72 w-full relative flex items-center justify-center my-auto">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Tooltip
-                      contentStyle={tooltipStyle}
-                      formatter={(val: any) => [formatCurrency(Number(val) || 0), 'Pengeluaran']}
-                    />
-                    <Pie
-                      data={expenseByCategory}
-                      dataKey="amount"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={65}
-                      outerRadius={95}
-                      paddingAngle={3}
-                    >
-                      {expenseByCategory.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-                {/* Center Label in Donut */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-[10px] uppercase font-bold text-[#9497a9]">Total</span>
-                  <span className="text-sm font-bold text-[#101114] dark:text-[#f3f4f8] tabular-nums">
-                    {formatCurrency(totalExpense)}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            <div className="pt-2 text-center text-[11px] text-[#686b82] dark:text-[#9ca0ba]">
-              {expenseByCategory.length} Kategori pengeluaran aktif
-            </div>
-          </div>
-
-          {/* Ranked Category List: 7 columns */}
-          <div className="lg:col-span-7 bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-5 space-y-4">
-            <div>
-              <h3 className="text-sm sm:text-base font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
-                Peringkat Kategori Terbesar
-              </h3>
-              <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
-                Urutan pos belanja dari nilai tertinggi ke terendah
-              </p>
-            </div>
-
-            {expenseByCategory.length === 0 ? (
-              <div className="py-16 text-center text-xs text-[#9497a9]">
-                Tidak ada data pengeluaran
-              </div>
-            ) : (
-              <div className="space-y-3 pt-1">
-                {expenseByCategory.map((cat, idx) => (
-                  <div
-                    key={idx}
-                    className="p-3 rounded-[12px] bg-[#fafbfe] dark:bg-[#1e202b] border border-[#dedee5] dark:border-[#282937]/80 hover:border-[#7132f5]/40 transition-all space-y-2"
-                  >
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="w-3 h-3 rounded-full shrink-0"
-                          style={{ backgroundColor: cat.color }}
-                        />
-                        <span className="text-sm">{cat.emoji}</span>
-                        <span className="font-bold text-[#101114] dark:text-[#f3f4f8]">
-                          {cat.name}
-                        </span>
-                      </div>
-                      <div className="text-right flex items-center gap-2">
-                        <span className="font-bold text-[#101114] dark:text-[#f3f4f8] tabular-nums">
-                          {formatCurrency(cat.amount)}
-                        </span>
-                        <span className="px-2 py-0.5 rounded-[6px] bg-[#edeef3] dark:bg-[#282937] text-[10px] font-bold text-[#7132f5] dark:text-[#a78bfa]">
-                          {cat.percentage.toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Progress Bar Share */}
-                    <div className="w-full bg-[#edeef3] dark:bg-[#282937] rounded-full h-1.5 overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${cat.percentage}%`, backgroundColor: cat.color }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
+      {/* ===================== TAB 3: SUMBER PEMASUKAN ===================== */}
       {activeChartTab === 'source' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Donut Chart: 5 cols */}
+          {/* Donut Chart (5 cols) */}
           <div className="lg:col-span-5 bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-5 flex flex-col justify-between">
             <div>
               <h3 className="text-sm sm:text-base font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
@@ -826,7 +834,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
             </div>
           </div>
 
-          {/* Ranked Income List: 7 cols */}
+          {/* Ranked Income List using standard CategoryIcon (7 cols) */}
           <div className="lg:col-span-7 bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-5 space-y-4">
             <div>
               <h3 className="text-sm sm:text-base font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
@@ -846,24 +854,28 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 {incomeByCategory.map((cat, idx) => (
                   <div
                     key={idx}
-                    className="p-3 rounded-[12px] bg-[#fafbfe] dark:bg-[#1e202b] border border-[#dedee5] dark:border-[#282937]/80 hover:border-[#10b981]/40 transition-all space-y-2"
+                    className="p-3.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#1e202b] border border-[#dedee5] dark:border-[#282937]/80 hover:border-[#10b981]/40 transition-all space-y-2.5"
                   >
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="w-3 h-3 rounded-full shrink-0"
-                          style={{ backgroundColor: cat.color }}
-                        />
-                        <span className="text-sm">{cat.emoji}</span>
-                        <span className="font-bold text-[#101114] dark:text-[#f3f4f8]">
-                          {cat.name}
-                        </span>
+                    <div className="flex items-center justify-between gap-3">
+                      {/* Left: Standard CategoryIcon + Name + Subtitle */}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <CategoryIcon name={cat.name} type="pemasukan" size="md" />
+                        <div className="min-w-0">
+                          <span className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8] block tracking-tight truncate">
+                            {cat.name}
+                          </span>
+                          <span className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] block">
+                            {cat.percentage.toFixed(1)}% dari total pendapatan
+                          </span>
+                        </div>
                       </div>
-                      <div className="text-right flex items-center gap-2">
-                        <span className="font-bold text-[#026b3f] dark:text-[#34d399] tabular-nums">
+
+                      {/* Right: Nominal & Percentage Badge */}
+                      <div className="text-right shrink-0">
+                        <span className="font-bold text-sm sm:text-base text-[#026b3f] dark:text-[#34d399] tabular-nums block">
                           +{formatCurrency(cat.amount)}
                         </span>
-                        <span className="px-2 py-0.5 rounded-[6px] bg-[#edeef3] dark:bg-[#282937] text-[10px] font-bold text-[#10b981] dark:text-[#34d399]">
+                        <span className="text-[10px] px-2 py-0.5 rounded-[6px] bg-[#edeef3] dark:bg-[#282937] font-bold text-[#10b981] dark:text-[#34d399] inline-block mt-0.5">
                           {cat.percentage.toFixed(1)}%
                         </span>
                       </div>
@@ -883,6 +895,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
         </div>
       )}
 
+      {/* ===================== TAB 4: PENGELUARAN PER AKUN ===================== */}
       {activeChartTab === 'account' && (
         <div className="bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-5 space-y-5">
           <div>
@@ -908,12 +921,16 @@ export const ReportView: React.FC<ReportViewProps> = ({
                     className="p-3.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#1e202b] border border-[#dedee5] dark:border-[#282937]/80 hover:border-[#7132f5]/40 transition-all space-y-2.5"
                   >
                     <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-[7px] bg-[#edeef3] dark:bg-[#282937] flex items-center justify-center text-[#7132f5] dark:text-[#a78bfa] font-bold text-xs uppercase">
-                          {acc.name.slice(0, 2)}
-                        </div>
-                        <div>
-                          <span className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8] block">
+                      <div className="flex items-center gap-3 min-w-0">
+                        {acc.account ? (
+                          <AccountAvatar acc={acc.account} />
+                        ) : (
+                          <div className="w-10 h-10 rounded-[8px] bg-[#edeef3] dark:bg-[#282937] flex items-center justify-center text-[#7132f5] dark:text-[#a78bfa] font-bold text-xs uppercase shrink-0">
+                            {acc.name.slice(0, 2)}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <span className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8] block truncate">
                             {acc.name}
                           </span>
                           <span className="text-[10px] text-[#686b82] dark:text-[#9ca0ba] uppercase font-semibold">
@@ -922,8 +939,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
                         </div>
                       </div>
 
-                      <div className="text-right">
-                        <span className="font-bold text-sm text-[#e53e3e] dark:text-[#f87171] tabular-nums block">
+                      <div className="text-right shrink-0">
+                        <span className="font-bold text-sm sm:text-base text-[#e53e3e] dark:text-[#f87171] tabular-nums block">
                           -{formatCurrency(acc.amount)}
                         </span>
                         <span className="text-[10px] text-[#9497a9] font-semibold">
