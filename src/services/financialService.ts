@@ -8,32 +8,15 @@ export interface FinancialData {
   transactions: Transaction[];
 }
 
-export const BANK_ICON_MAP: Record<string, string> = {
-  'bca': '/icons/banks/bca.webp',
-  'mandiri': '/icons/banks/mandiri.webp',
-  'krom': '/icons/banks/krom.webp',
-  'jago': '/icons/banks/jago.webp',
-  'sampoerna': '/icons/banks/sampoerna.webp',
-  'seabank': '/icons/banks/seabank.webp',
-  'gopay': '/icons/banks/gopay.webp',
-  'shopeepay': '/icons/banks/shopeepay.webp',
-  'dana': '/icons/banks/dana.webp',
-  'honest card': '/icons/banks/honest.webp',
-  'nex card': '/icons/banks/nex.webp',
-  'kredivo': '/icons/banks/kredivo.webp',
-  'spaylatter': '/icons/banks/spaylatter.webp',
-  'jago loan': '/icons/banks/jagoloan.webp',
-  'superbank': '/icons/banks/superbank.webp',
-  'cash': '/icons/banks/cash.svg',
-};
+import { getLogoDevUrl, getLocalFallback, LOCAL_FALLBACK_ICONS, BANK_DOMAIN_MAP } from './logoService';
+export { BANK_DOMAIN_MAP };
+export const BANK_ICON_MAP = LOCAL_FALLBACK_ICONS;
 
 export function getAccountIcon(name: string, fallbackUrl?: string): string {
-  const key = name.trim().toLowerCase();
-  if (BANK_ICON_MAP[key]) return BANK_ICON_MAP[key];
-  if (fallbackUrl && fallbackUrl.endsWith('.svg')) {
-    const webpUrl = fallbackUrl.replace(/\.svg$/, '.webp');
-    return webpUrl;
-  }
+  const logoUrl = getLogoDevUrl(name);
+  if (logoUrl) return logoUrl;
+  const localFallback = getLocalFallback(name);
+  if (localFallback) return localFallback;
   return fallbackUrl || '/icons/banks/cash.svg';
 }
 

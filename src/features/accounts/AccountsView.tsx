@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import type { Account } from '../../types';
 import { formatCurrency } from '../../lib/formatters';
 import { Wallet, Plus, Edit2 } from 'lucide-react';
-import { BANK_ICON_MAP } from '../../services/financialService';
 
 interface AccountsViewProps {
   accounts: Account[];
@@ -10,16 +9,30 @@ interface AccountsViewProps {
   onAddAccount: () => void;
 }
 
+import { getLogoDevUrl, getLocalFallback } from '../../services/logoService';
+
 export const AccountAvatar: React.FC<{ acc: Account }> = ({ acc }) => {
   const [hasError, setHasError] = useState(false);
-  const iconSrc = acc.icon || BANK_ICON_MAP[acc.name.trim().toLowerCase()];
+  const logoDevUrl = getLogoDevUrl(acc.name);
+  const localFallback = getLocalFallback(acc.name);
+  const candidateUrl = !hasError && (acc.icon || logoDevUrl);
 
-  if (iconSrc && !hasError) {
+  if (candidateUrl) {
     return (
       <img
-        src={iconSrc}
+        src={candidateUrl}
         alt={acc.name}
         onError={() => setHasError(true)}
+        className="w-10 h-10 object-contain rounded-[8px] bg-white p-1 border border-[#dedee5] shadow-sm shrink-0"
+      />
+    );
+  }
+
+  if (localFallback) {
+    return (
+      <img
+        src={localFallback}
+        alt={acc.name}
         className="w-10 h-10 object-contain rounded-[8px] bg-white p-1 border border-[#dedee5] shadow-sm shrink-0"
       />
     );
