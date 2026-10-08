@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { X, Receipt, Trash2, AlertTriangle } from 'lucide-react';
-import type { Transaction, TransactionType, Account, Category } from '../../types';
-import { formatNumberInput, parseRawAmount } from '../../lib/formatters';
+import React, { useState } from 'react';
+import type { Transaction, Account, Category, TransactionType } from '../../types';
+import { formatNumberInput, parseNumberInput } from '../../lib/formatters';
+import { X, Trash2, AlertTriangle } from 'lucide-react';
+import { CategoryIcon } from '../ui/CategoryIcon';
 
 interface EditTransactionModalProps {
   isOpen: boolean;
@@ -9,10 +10,10 @@ interface EditTransactionModalProps {
   accounts: Account[];
   categories: Category[];
   onClose: () => void;
-  onSave: (data: {
+  onSave: (updated: {
     id: string;
-    type: TransactionType;
     amount: number;
+    type: TransactionType;
     sourceAccountId: string;
     destinationAccountId?: string;
     categoryId?: string;
@@ -22,8 +23,25 @@ interface EditTransactionModalProps {
   onDelete: (id: string) => Promise<void>;
 }
 
-export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
-  isOpen,
+interface EditModalContentProps {
+  transaction: Transaction;
+  accounts: Account[];
+  categories: Category[];
+  onClose: () => void;
+  onSave: (updated: {
+    id: string;
+    amount: number;
+    type: TransactionType;
+    sourceAccountId: string;
+    destinationAccountId?: string;
+    categoryId?: string;
+    date: string;
+    notes: string;
+  }) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+}
+
+const EditModalContent: React.FC<EditModalContentProps> = ({
   transaction,
   accounts,
   categories,
@@ -31,72 +49,61 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
   onSave,
   onDelete,
 }) => {
-  const [type, setType] = useState<TransactionType>('pengeluaran');
-  const [amountDisplay, setAmountDisplay] = useState('');
-  const [date, setDate] = useState('');
-  const [sourceAccountId, setSourceAccountId] = useState('');
-  const [destinationAccountId, setDestinationAccountId] = useState('');
-  const [categoryId, setCategoryId] = useState('');
-  const [notes, setNotes] = useState('');
+  const [type, setType] = useState<TransactionType>(transaction.type);
+  const [amountDisplay, setAmountDisplay] = useState(() =>
+    formatNumberInput(transaction.amount.toString())
+  );
+  const [sourceAccountId, setSourceAccountId] = useState(transaction.sourceAccountId);
+  const [destinationAccountId, setDestinationAccountId] = useState(
+    transaction.destinationAccountId || ''
+  );
+  const [categoryId, setCategoryId] = useState(transaction.categoryId || '');
+  const [date, setDate] = useState(transaction.date);
+  const [notes, setNotes] = useState(transaction.notes || '');
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  useEffect(() => {
-    if (transaction) {
-      setType(transaction.type);
-      setAmountDisplay(formatNumberInput(String(transaction.amount)));
-      setDate(transaction.date);
-      setSourceAccountId(transaction.sourceAccountId || '');
-      setDestinationAccountId(transaction.destinationAccountId || '');
-      setCategoryId(transaction.categoryId || '');
-      setNotes(transaction.notes || '');
-    }
-    setConfirmDelete(false);
-    setErrorMsg('');
-  }, [transaction, isOpen]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
-
-  if (!isOpen || !transaction) return null;
+  const selectedCategory = categories.find((c) => c.id === categoryId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const rawAmount = parseRawAmount(amountDisplay);
-    if (!rawAmount || rawAmount <= 0) {
-      setErrorMsg('Nominal harus lebih dari 0.');
+    setErrorMsg('');
+
+    const numericAmount = parseNumberInput(amountDisplay);
+    if (!numericAmount || numericAmount <= 0) {
+      setErrorMsg('Nominal transaksi harus lebih dari 0.');
       return;
     }
+
     if (!sourceAccountId) {
-      setErrorMsg('Pilih akun transaksi.');
+      setErrorMsg('Pilih rekening transaksi.');
       return;
     }
+
     if (type === 'transfer' && !destinationAccountId) {
-      setErrorMsg('Pilih akun tujuan untuk transfer.');
+      setErrorMsg('Pilih rekening tujuan transfer.');
       return;
     }
+
+    if (type === 'transfer' && sourceAccountId === destinationAccountId) {
+      setErrorMsg('Rekening asal dan tujuan tidak boleh sama.');
+      return;
+    }
+
     if (type !== 'transfer' && !categoryId) {
       setErrorMsg('Pilih kategori transaksi.');
       return;
     }
 
     setIsSubmitting(true);
-    setErrorMsg('');
-
     try {
       await onSave({
         id: transaction.id,
+        amount: numericAmount,
         type,
-        amount: rawAmount,
         sourceAccountId,
         destinationAccountId: type === 'transfer' ? destinationAccountId : undefined,
         categoryId: type !== 'transfer' ? categoryId : undefined,
@@ -105,7 +112,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
       });
       onClose();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Gagal memperbarui transaksi.');
+      setErrorMsg(err.message || 'Gagal menyimpan perubahan transaksi.');
     } finally {
       setIsSubmitting(false);
     }
@@ -118,6 +125,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
     }
 
     setIsDeleting(true);
+    setErrorMsg('');
     try {
       await onDelete(transaction.id);
       onClose();
@@ -139,9 +147,11 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-[#dedee5] shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-[8px] bg-[#855bfb]/15 flex items-center justify-center text-[#7132f5]">
-              <Receipt className="w-4 h-4" />
-            </div>
+            <CategoryIcon
+              name={type === 'transfer' ? 'Pindah Akun' : selectedCategory?.name}
+              type={type}
+              size="md"
+            />
             <div>
               <h2 className="font-bold text-base text-[#101114] tracking-[-0.5px]">
                 Edit Transaksi
@@ -171,7 +181,10 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
           <div className="flex bg-[#edeef3] p-1 rounded-[12px] gap-1">
             <button
               type="button"
-              onClick={() => setType('pengeluaran')}
+              onClick={() => {
+                setType('pengeluaran');
+                setCategoryId('');
+              }}
               className={`flex-1 py-2 text-xs font-bold rounded-[9px] transition-all ${
                 type === 'pengeluaran'
                   ? 'bg-white text-[#101114] shadow-sm'
@@ -182,7 +195,10 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => setType('pemasukan')}
+              onClick={() => {
+                setType('pemasukan');
+                setCategoryId('');
+              }}
               className={`flex-1 py-2 text-xs font-bold rounded-[9px] transition-all ${
                 type === 'pemasukan'
                   ? 'bg-[#149e61] text-white shadow-sm'
@@ -193,7 +209,10 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => setType('transfer')}
+              onClick={() => {
+                setType('transfer');
+                setCategoryId('');
+              }}
               className={`flex-1 py-2 text-xs font-bold rounded-[9px] transition-all ${
                 type === 'transfer'
                   ? 'bg-[#7132f5] text-white shadow-sm'
@@ -280,9 +299,17 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
           {/* Category (if not transfer) */}
           {type !== 'transfer' && (
             <div>
-              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] block mb-1">
-                Kategori
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82]">
+                  Kategori
+                </label>
+                {selectedCategory && (
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-[6px] bg-[#edeef3] text-[11px] font-semibold text-[#101114]">
+                    <CategoryIcon name={selectedCategory.name} type={type} size="sm" />
+                    <span>{selectedCategory.name}</span>
+                  </div>
+                )}
+              </div>
               <select
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
@@ -294,7 +321,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
                   .filter((cat) => (type === 'pemasukan' ? cat.type === 'pemasukan' : cat.type === 'pengeluaran'))
                   .map((cat) => (
                     <option key={cat.id} value={cat.id}>
-                      {cat.emoji} {cat.name}
+                      {cat.name}
                     </option>
                   ))}
               </select>
@@ -346,5 +373,29 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
         </form>
       </div>
     </div>
+  );
+};
+
+export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
+  isOpen,
+  transaction,
+  accounts,
+  categories,
+  onClose,
+  onSave,
+  onDelete,
+}) => {
+  if (!isOpen || !transaction) return null;
+
+  return (
+    <EditModalContent
+      key={transaction.id}
+      transaction={transaction}
+      accounts={accounts}
+      categories={categories}
+      onClose={onClose}
+      onSave={onSave}
+      onDelete={onDelete}
+    />
   );
 };

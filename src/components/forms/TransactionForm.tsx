@@ -1,7 +1,8 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import type { TransactionType, Account, Category } from '../../types';
 import { formatNumberWithDots, parseRawAmount } from '../../lib/formatters';
 import { ArrowUpRight, ArrowDownLeft, ArrowLeftRight, CheckCircle2 } from 'lucide-react';
+import { CategoryIcon } from '../ui/CategoryIcon';
 
 interface TransactionFormProps {
   accounts: Account[];
@@ -32,6 +33,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   const [isSuccess, setIsSuccess] = useState(false);
 
   const filteredCategories = categories.filter((c) => c.type === type);
+  const selectedCategory = categories.find((c) => c.id === categoryId);
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAmountDisplay(formatNumberWithDots(e.target.value));
@@ -71,7 +73,10 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
       <div className="grid grid-cols-3 p-1 bg-[#edeef3] rounded-[12px] gap-1 border border-[#dedee5]">
         <button
           type="button"
-          onClick={() => setType('pengeluaran')}
+          onClick={() => {
+            setType('pengeluaran');
+            setCategoryId('');
+          }}
           className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-all ${
             type === 'pengeluaran'
               ? 'bg-[#101114] text-white shadow-micro'
@@ -84,7 +89,10 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
 
         <button
           type="button"
-          onClick={() => setType('transfer')}
+          onClick={() => {
+            setType('transfer');
+            setCategoryId('');
+          }}
           className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-all ${
             type === 'transfer'
               ? 'bg-[#7132f5] text-white shadow-micro'
@@ -97,7 +105,10 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
 
         <button
           type="button"
-          onClick={() => setType('pemasukan')}
+          onClick={() => {
+            setType('pemasukan');
+            setCategoryId('');
+          }}
           className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-all ${
             type === 'pemasukan'
               ? 'bg-[#149e61] text-white shadow-micro'
@@ -144,7 +155,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
             <option value="">Pilih Akun Rekening / Dompet</option>
             {accounts.map((acc) => (
               <option key={acc.id} value={acc.id}>
-                {acc.emoji || '💳'} {acc.name}
+                {acc.name} ({acc.type})
               </option>
             ))}
           </select>
@@ -167,7 +178,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                 .filter((acc) => acc.id !== sourceAccountId)
                 .map((acc) => (
                   <option key={acc.id} value={acc.id}>
-                    {acc.emoji || '💳'} {acc.name}
+                    {acc.name} ({acc.type})
                   </option>
                 ))}
             </select>
@@ -177,9 +188,17 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         {/* Category for Expense/Income */}
         {type !== 'transfer' && (
           <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] block mb-1.5">
-              Kategori
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82]">
+                Kategori
+              </label>
+              {selectedCategory && (
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-[6px] bg-[#edeef3] text-[11px] font-semibold text-[#101114]">
+                  <CategoryIcon name={selectedCategory.name} type={type} size="sm" />
+                  <span>{selectedCategory.name}</span>
+                </div>
+              )}
+            </div>
             <select
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
@@ -189,7 +208,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
               <option value="">Pilih Kategori Transaksi</option>
               {filteredCategories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
-                  {cat.emoji} {cat.name}
+                  {cat.name}
                 </option>
               ))}
             </select>

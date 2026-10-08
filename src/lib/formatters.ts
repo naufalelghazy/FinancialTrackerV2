@@ -17,3 +17,5 @@ export function parseRawAmount(formatted: string): number {
   const raw = formatted.replace(/\D/g, '');
   return parseInt(raw, 10) || 0;
 }
+
+export const parseNumberInput = parseRawAmount;

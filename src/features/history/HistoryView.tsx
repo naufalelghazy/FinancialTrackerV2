@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import type { Transaction, Account, Category } from '../../types';
 import { formatCurrency } from '../../lib/formatters';
-import { Search, ArrowLeftRight, Calendar, Edit2 } from 'lucide-react';
+import { Search, Calendar, Edit2 } from 'lucide-react';
+import { CategoryIcon } from '../../components/ui/CategoryIcon';
 
 interface HistoryViewProps {
   transactions: Transaction[];
@@ -20,7 +21,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
   const [filterType, setFilterType] = useState<string>('all');
 
   const getAccountName = (id?: string) => accounts.find((a) => a.id === id)?.name || id || '-';
-  const getCategoryEmoji = (id?: string) => categories.find((c) => c.id === id)?.emoji || '🏷️';
   const getCategoryName = (id?: string) => categories.find((c) => c.id === id)?.name || id || '-';
 
   const filtered = transactions.filter((t) => {
@@ -104,21 +104,11 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                 }}
               >
                 <div className="flex items-center gap-3">
-                  <div
-                    className={`w-10 h-10 rounded-[8px] flex items-center justify-center text-lg shrink-0 ${
-                      isExpense
-                        ? 'bg-[#101114] text-white'
-                        : isIncome
-                        ? 'bg-[#149e61]/15 text-[#026b3f]'
-                        : 'bg-[#855bfb]/15 text-[#7132f5]'
-                    }`}
-                  >
-                    {isTransfer ? (
-                      <ArrowLeftRight className="w-4 h-4" />
-                    ) : (
-                      getCategoryEmoji(t.categoryId)
-                    )}
-                  </div>
+                  <CategoryIcon
+                    name={isTransfer ? 'Pindah Akun' : getCategoryName(t.categoryId)}
+                    type={t.type}
+                    size="md"
+                  />
                   <div>
                     <span className="font-bold text-sm text-[#101114] block tracking-tight group-hover:text-[#7132f5] transition-colors">
                       {isTransfer
