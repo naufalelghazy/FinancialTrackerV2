@@ -7,6 +7,7 @@ import { DashboardView } from './features/dashboard/DashboardView';
 import { TransactionForm } from './components/forms/TransactionForm';
 import { AccountsView } from './features/accounts/AccountsView';
 import { BillsView } from './features/accounts/BillsView';
+import { ReportView } from './features/report/ReportView';
 import { HistoryView } from './features/history/HistoryView';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { EditAccountModal } from './components/modals/EditAccountModal';
@@ -326,6 +327,16 @@ export function App() {
                     setSelectedTransaction(t);
                     setIsTxModalOpen(true);
                   }}
+                />
+              </div>
+            )}
+
+            {activeTab === 'report' && (
+              <div className="max-w-7xl mx-auto">
+                <ReportView
+                  transactions={transactions}
+                  accounts={accounts}
+                  categories={categories}
                 />
               </div>
             )}

@@ -9,6 +9,7 @@ import {
   RefreshCw,
   Sun,
   Moon,
+  BarChart3,
 } from 'lucide-react';
 import type { NavTab } from './BottomNav';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -35,6 +36,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navItems: { id: NavTab; label: string; icon: React.FC<{ className?: string }> }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'riwayat', label: 'Riwayat Transaksi', icon: History },
+    { id: 'report', label: 'Laporan & Grafik', icon: BarChart3 },
     { id: 'saldo', label: 'Saldo & Rekening', icon: Wallet },
     { id: 'tagihan', label: 'Tagihan & Pinjaman', icon: CreditCard },
   ];

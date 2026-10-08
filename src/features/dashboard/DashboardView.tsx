@@ -14,6 +14,7 @@ import {
   History,
   Calendar,
   PieChart,
+  BarChart3,
 } from 'lucide-react';
 
 interface DashboardViewProps {
@@ -296,6 +297,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <History className="w-3.5 h-3.5 text-[#686b82] dark:text-[#9ca0ba]" />
             <span>Riwayat</span>
           </button>
+
+            <button
+              onClick={() => onNavigateTab('report')}
+              className="flex-1 sm:flex-initial py-2 px-3.5 rounded-[12px] bg-[#edeef3] dark:bg-[#232534] hover:bg-[#dedee5] dark:hover:bg-[#2d3042] text-[#101114] dark:text-[#f3f4f8] text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+            >
+              <BarChart3 className="w-3.5 h-3.5 text-[#7132f5] dark:text-[#a78bfa]" />
+              <span>Laporan & Grafik</span>
+            </button>
         </div>
       </div>
 

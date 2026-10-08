@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings, Wallet, LayoutDashboard, CreditCard, History, Plus, RefreshCw, Sun, Moon } from 'lucide-react';
+import { Settings, Wallet, LayoutDashboard, CreditCard, History, Plus, RefreshCw, Sun, Moon, BarChart3 } from 'lucide-react';
 import type { NavTab } from './BottomNav';
 import { useTheme } from '../../contexts/ThemeContext';
 
@@ -24,9 +24,10 @@ export const Header: React.FC<HeaderProps> = ({
 
   const desktopNavItems: { id: NavTab; label: string; icon: React.FC<{ className?: string }> }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'riwayat', label: 'Riwayat', icon: History },
+    { id: 'report', label: 'Laporan', icon: BarChart3 },
     { id: 'saldo', label: 'Saldo & Rekening', icon: Wallet },
     { id: 'tagihan', label: 'Tagihan', icon: CreditCard },
-    { id: 'riwayat', label: 'Riwayat', icon: History },
   ];
 
   return (

@@ -1,7 +1,7 @@
 import React from 'react';
-import { LayoutDashboard, Wallet, CreditCard, History, Plus } from 'lucide-react';
+import { LayoutDashboard, Wallet, History, Plus, BarChart3 } from 'lucide-react';
 
-export type NavTab = 'dashboard' | 'saldo' | 'input' | 'tagihan' | 'riwayat';
+export type NavTab = 'dashboard' | 'saldo' | 'input' | 'tagihan' | 'riwayat' | 'report';
 
 interface BottomNavProps {
   activeTab: NavTab;
@@ -11,10 +11,10 @@ interface BottomNavProps {
 export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onChangeTab }) => {
   const tabs = [
     { id: 'dashboard' as NavTab, label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'saldo' as NavTab, label: 'Saldo', icon: Wallet },
-    { id: 'input' as NavTab, label: 'Catat', icon: Plus, isPrimary: true },
-    { id: 'tagihan' as NavTab, label: 'Tagihan', icon: CreditCard },
     { id: 'riwayat' as NavTab, label: 'Riwayat', icon: History },
+    { id: 'input' as NavTab, label: 'Catat', icon: Plus, isPrimary: true },
+    { id: 'report' as NavTab, label: 'Laporan', icon: BarChart3 },
+    { id: 'saldo' as NavTab, label: 'Saldo', icon: Wallet },
   ];
 
   return (
