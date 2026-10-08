@@ -1,18 +1,32 @@
-﻿# 💰 Financial Tracker V2 (Modern PWA)
+# React + TypeScript + Vite
 
-Personal finance management application built with **Vite + React (TypeScript)** and **Supabase (PostgreSQL)**.
+This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
-## 🚀 Tech Stack
-- **Frontend:** Vite, React, TypeScript, Tailwind CSS, Lucide Icons
-- **Backend & Database:** Supabase (PostgreSQL, Row Level Security, Auth)
-- **State & Data Fetching:** TanStack Query (React Query) + Zustand
-- **PWA:** vite-plugin-pwa (Installable on iOS & Android, offline-first)
-- **Deployment:** Vercel / Cloudflare Pages / Netlify
+Currently, two official plugins are available:
 
-## 📖 Development Walkthrough
-Panduan lengkap arsitektur, skema database, dan roadmap implementasi bertahap dapat dilihat di:
-👉 **[DEVELOPMENT_WALKTHROUGH.md](./DEVELOPMENT_WALKTHROUGH.md)**
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## 📂 Status Proyek
-- Proyek ini adalah repository baru yang menggantikan versi monolitik berbasis Google Apps Script.
-- Menghadirkan performa instan (<100ms), riwayat transaksi lengkap, analitik grafik, dan manajemen multi-akun Indonesia.
+## React Compiler
+
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+
+## Expanding the Oxlint configuration
+
+If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+
+```json
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "typescript", "oxc"],
+  "options": {
+    "typeAware": true
+  },
+  "rules": {
+    "react/rules-of-hooks": "error",
+    "react/only-export-components": ["warn", { "allowConstantExport": true }]
+  }
+}
+```
+
+See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
