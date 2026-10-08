@@ -33,32 +33,34 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
 
   return (
     <div className="space-y-4 pb-24">
-      {/* Header & Search */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-3">
-        <h2 className="text-base font-bold text-slate-800">Riwayat Transaksi</h2>
+      {/* Search & Filter Card */}
+      <div className="bg-white p-4 rounded-[16px] border border-[#dedee5] shadow-whisper space-y-3">
+        <h2 className="text-base font-bold text-[#101114] tracking-[-0.5px]">
+          Riwayat Transaksi
+        </h2>
         
-        {/* Search Bar */}
+        {/* Search Input */}
         <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[#9497a9] absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari transaksi, akun, catatan..."
-            className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 outline-none focus:border-indigo-500"
+            className="w-full pl-9 pr-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-sm text-[#101114] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 placeholder:text-[#9497a9]"
           />
         </div>
 
         {/* Filter Pills */}
-        <div className="flex gap-1.5 overflow-x-auto pb-1 text-xs">
+        <div className="flex gap-1.5 overflow-x-auto pb-0.5 text-xs">
           {['all', 'pengeluaran', 'pemasukan', 'transfer'].map((ft) => (
             <button
               key={ft}
               onClick={() => setFilterType(ft)}
-              className={`px-3 py-1.5 rounded-lg capitalize font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-[8px] capitalize font-semibold transition-all ${
                 filterType === ft
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  ? 'bg-[#7132f5] text-white shadow-micro'
+                  : 'bg-[#edeef3] text-[#686b82] hover:text-[#101114]'
               }`}
             >
               {ft === 'all' ? 'Semua' : ft}
@@ -70,8 +72,8 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
       {/* Transaction List */}
       <div className="space-y-2">
         {filtered.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-2xl border border-slate-100 p-6 text-slate-400">
-            <Calendar className="w-10 h-10 mx-auto mb-2 opacity-50" />
+          <div className="text-center py-12 bg-white rounded-[16px] border border-[#dedee5] p-6 text-[#9497a9]">
+            <Calendar className="w-8 h-8 mx-auto mb-2 opacity-40 text-[#686b82]" />
             <p className="text-sm font-medium">Belum ada riwayat transaksi</p>
           </div>
         ) : (
@@ -83,33 +85,33 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
             return (
               <div
                 key={t.id}
-                className="p-3.5 bg-white rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between"
+                className="p-3.5 bg-white rounded-[12px] border border-[#dedee5] shadow-micro flex items-center justify-between hover:border-[#686b82]/40 transition-all"
               >
                 <div className="flex items-center gap-3">
                   <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${
+                    className={`w-10 h-10 rounded-[8px] flex items-center justify-center text-lg ${
                       isExpense
-                        ? 'bg-rose-50 text-rose-600'
+                        ? 'bg-[#101114] text-white'
                         : isIncome
-                        ? 'bg-emerald-50 text-emerald-600'
-                        : 'bg-indigo-50 text-indigo-600'
+                        ? 'bg-[#149e61]/15 text-[#026b3f]'
+                        : 'bg-[#855bfb]/15 text-[#7132f5]'
                     }`}
                   >
                     {isTransfer ? (
-                      <ArrowLeftRight className="w-5 h-5" />
+                      <ArrowLeftRight className="w-4 h-4" />
                     ) : (
                       getCategoryEmoji(t.categoryId)
                     )}
                   </div>
                   <div>
-                    <span className="font-bold text-sm text-slate-800 block">
+                    <span className="font-bold text-sm text-[#101114] block tracking-tight">
                       {isTransfer
-                        ? `Transfer: ${getAccountName(t.sourceAccountId)} → ${getAccountName(
+                        ? `${getAccountName(t.sourceAccountId)} → ${getAccountName(
                             t.destinationAccountId
                           )}`
                         : getCategoryName(t.categoryId)}
                     </span>
-                    <span className="text-[11px] text-slate-400">
+                    <span className="text-[11px] text-[#686b82] font-medium">
                       {t.date} • {getAccountName(t.sourceAccountId)}
                       {t.notes ? ` • ${t.notes}` : ''}
                     </span>
@@ -118,12 +120,12 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
 
                 <div className="text-right">
                   <span
-                    className={`font-bold text-sm block ${
+                    className={`font-bold text-sm block tracking-tight ${
                       isExpense
-                        ? 'text-rose-600'
+                        ? 'text-[#e53e3e]'
                         : isIncome
-                        ? 'text-emerald-600'
-                        : 'text-indigo-600'
+                        ? 'text-[#026b3f]'
+                        : 'text-[#7132f5]'
                     }`}
                   >
                     {isExpense ? '-' : isIncome ? '+' : ''}

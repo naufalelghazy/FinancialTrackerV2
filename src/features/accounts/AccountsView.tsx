@@ -13,51 +13,54 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ accounts }) => {
 
   return (
     <div className="space-y-4 pb-24">
-      {/* Total Saldo Card */}
-      <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 text-white rounded-3xl p-6 shadow-md relative overflow-hidden">
-        <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-        <div className="flex items-center gap-2 text-indigo-200 text-xs font-semibold uppercase tracking-wider">
-          <Wallet className="w-4 h-4" />
-          Total Saldo
+      {/* Total Saldo Card - Kraken Purple Commanding Hero */}
+      <div className="bg-[#7132f5] text-white rounded-[16px] p-6 shadow-whisper relative overflow-hidden border border-[#5741d8]">
+        <div className="flex items-center gap-2 text-white/80 text-[11px] font-semibold uppercase tracking-wider">
+          <Wallet className="w-3.5 h-3.5" />
+          Total Saldo Tersedia
         </div>
-        <div className="text-3xl font-extrabold mt-2 tracking-tight">
+        <div className="text-3xl font-bold mt-2 tracking-[-0.8px]">
           {formatCurrency(totalBalance)}
         </div>
-        <div className="text-xs text-indigo-200/80 mt-1">
+        <div className="text-xs text-white/70 mt-1">
           {bankAccounts.length} Akun (Bank & E-Wallet)
         </div>
       </div>
 
       {/* Account List */}
-      <div className="space-y-2.5">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 px-1">
+      <div className="space-y-2">
+        <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] px-1">
           Daftar Rekening & Dompet
         </h3>
         {bankAccounts.map((acc) => (
           <div
             key={acc.id}
-            className="flex items-center justify-between p-3.5 bg-white rounded-2xl border border-slate-100 shadow-sm hover:border-slate-200 transition-all"
+            className="flex items-center justify-between p-3.5 bg-white rounded-[12px] border border-[#dedee5] shadow-micro hover:border-[#686b82]/40 transition-all"
           >
             <div className="flex items-center gap-3">
               {acc.icon ? (
                 <img
                   src={acc.icon}
                   alt={acc.name}
-                  className="w-10 h-10 object-contain rounded-xl bg-slate-50 p-1 border border-slate-100"
+                  className="w-10 h-10 object-contain rounded-[8px] bg-[#fafbfe] p-1 border border-[#dedee5]"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-lg">
+                <div className="w-10 h-10 rounded-[8px] bg-[#edeef3] flex items-center justify-center text-lg">
                   {acc.emoji || '💰'}
                 </div>
               )}
               <div>
-                <span className="font-bold text-sm text-slate-800 block">{acc.name}</span>
-                <span className="text-[11px] text-slate-400 capitalize">{acc.type}</span>
+                <span className="font-bold text-sm text-[#101114] block tracking-tight">
+                  {acc.name}
+                </span>
+                <span className="text-[11px] text-[#686b82] capitalize font-medium">
+                  {acc.type}
+                </span>
               </div>
             </div>
             <span
-              className={`font-bold text-sm ${
-                acc.balance >= 0 ? 'text-slate-800' : 'text-rose-500'
+              className={`font-bold text-sm tracking-tight ${
+                acc.balance >= 0 ? 'text-[#101114]' : 'text-[#e53e3e]'
               }`}
             >
               {formatCurrency(acc.balance)}

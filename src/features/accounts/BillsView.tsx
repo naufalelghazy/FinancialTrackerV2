@@ -16,24 +16,23 @@ export const BillsView: React.FC<BillsViewProps> = ({ accounts }) => {
 
   return (
     <div className="space-y-4 pb-24">
-      {/* Total Tagihan Card */}
-      <div className="bg-gradient-to-br from-rose-500 via-rose-600 to-red-700 text-white rounded-3xl p-6 shadow-md relative overflow-hidden">
-        <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
-        <div className="flex items-center gap-2 text-rose-100 text-xs font-semibold uppercase tracking-wider">
-          <CreditCard className="w-4 h-4" />
-          Total Tagihan
+      {/* Total Tagihan Card - Deep Solid Slate/Dark Kraken Card */}
+      <div className="bg-[#101114] text-white rounded-[16px] p-6 shadow-whisper relative overflow-hidden border border-black">
+        <div className="flex items-center gap-2 text-[#9497a9] text-[11px] font-semibold uppercase tracking-wider">
+          <CreditCard className="w-3.5 h-3.5 text-[#7132f5]" />
+          Total Tagihan & Hutang
         </div>
-        <div className="text-3xl font-extrabold mt-2 tracking-tight">
+        <div className="text-3xl font-bold mt-2 tracking-[-0.8px]">
           {formatCurrency(totalDebt)}
         </div>
-        <div className="text-xs text-rose-100/80 mt-1">
+        <div className="text-xs text-[#9497a9] mt-1">
           {creditAccounts.length} Akun Kartu Kredit & Paylater
         </div>
       </div>
 
       {/* Credit Account List */}
-      <div className="space-y-2.5">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 px-1">
+      <div className="space-y-2">
+        <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] px-1">
           Kartu Kredit & Paylater
         </h3>
         {creditAccounts.map((acc) => {
@@ -41,36 +40,38 @@ export const BillsView: React.FC<BillsViewProps> = ({ accounts }) => {
           return (
             <div
               key={acc.id}
-              className="flex items-center justify-between p-3.5 bg-white rounded-2xl border border-slate-100 shadow-sm hover:border-slate-200 transition-all"
+              className="flex items-center justify-between p-3.5 bg-white rounded-[12px] border border-[#dedee5] shadow-micro hover:border-[#686b82]/40 transition-all"
             >
               <div className="flex items-center gap-3">
                 {acc.icon ? (
                   <img
                     src={acc.icon}
                     alt={acc.name}
-                    className="w-10 h-10 object-contain rounded-xl bg-slate-50 p-1 border border-slate-100"
+                    className="w-10 h-10 object-contain rounded-[8px] bg-[#fafbfe] p-1 border border-[#dedee5]"
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-lg">
+                  <div className="w-10 h-10 rounded-[8px] bg-[#edeef3] flex items-center justify-center text-lg">
                     {acc.emoji || '💳'}
                   </div>
                 )}
                 <div>
-                  <span className="font-bold text-sm text-slate-800 block">{acc.name}</span>
-                  <span className="text-[11px] text-slate-400">Tagihan berjalan</span>
+                  <span className="font-bold text-sm text-[#101114] block tracking-tight">
+                    {acc.name}
+                  </span>
+                  <span className="text-[11px] text-[#686b82] font-medium">Tagihan berjalan</span>
                 </div>
               </div>
               <div className="text-right">
                 <span
-                  className={`font-bold text-sm block ${
-                    debt > 0 ? 'text-rose-600' : 'text-emerald-600'
+                  className={`font-bold text-sm block tracking-tight ${
+                    debt > 0 ? 'text-[#e53e3e]' : 'text-[#026b3f]'
                   }`}
                 >
                   {debt > 0 ? formatCurrency(debt) : 'Rp 0'}
                 </span>
                 {debt === 0 && (
-                  <span className="text-[10px] text-emerald-600 flex items-center gap-0.5 justify-end">
-                    <CheckCircle2 className="w-3 h-3" /> Lunas
+                  <span className="inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 bg-[#149e61]/15 text-[#026b3f] text-[10px] font-semibold rounded-[6px]">
+                    <CheckCircle2 className="w-2.5 h-2.5" /> Lunas
                   </span>
                 )}
               </div>

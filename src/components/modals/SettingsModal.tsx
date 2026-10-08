@@ -29,34 +29,38 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
-      <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl border border-slate-100">
-        <div className="flex items-center justify-between p-4 border-b border-slate-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in">
+      <div className="bg-white rounded-[16px] w-full max-w-sm overflow-hidden shadow-whisper border border-[#dedee5]">
+        <div className="flex items-center justify-between p-4 border-b border-[#dedee5]">
           <div className="flex items-center gap-2">
-            <Database className="w-5 h-5 text-indigo-600" />
-            <h2 className="font-bold text-base text-slate-800">Pengaturan Backend</h2>
+            <div className="w-7 h-7 rounded-[8px] bg-[#855bfb]/15 flex items-center justify-center text-[#7132f5]">
+              <Database className="w-4 h-4" />
+            </div>
+            <h2 className="font-bold text-base text-[#101114] tracking-[-0.5px]">
+              Pengaturan Backend
+            </h2>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+            className="w-7 h-7 rounded-[8px] flex items-center justify-center text-[#686b82] hover:text-[#101114] hover:bg-[#edeef3]"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         <div className="p-5 space-y-4 text-sm">
           {/* Status Badge */}
           <div
-            className={`p-3 rounded-2xl flex items-center gap-2.5 text-xs font-semibold ${
+            className={`p-3 rounded-[10px] flex items-center gap-2.5 text-xs font-semibold ${
               isSupabaseConfigured
-                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                : 'bg-amber-50 text-amber-800 border border-amber-200'
+                ? 'bg-[#149e61]/15 text-[#026b3f] border border-[#149e61]/30'
+                : 'bg-[#edeef3] text-[#686b82] border border-[#dedee5]'
             }`}
           >
             {isSupabaseConfigured ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-[#149e61] shrink-0" />
             ) : (
-              <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
+              <ShieldAlert className="w-4 h-4 text-[#686b82] shrink-0" />
             )}
             <span>
               {isSupabaseConfigured
@@ -67,7 +71,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
 
           <div className="space-y-3">
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 block mb-1">
+              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] block mb-1">
                 Supabase Project URL
               </label>
               <input
@@ -75,12 +79,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 value={supabaseUrl}
                 onChange={(e) => setSupabaseUrl(e.target.value)}
                 placeholder="https://xyzcompany.supabase.co"
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono outline-none focus:border-indigo-500"
+                className="w-full px-3 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-xs font-mono outline-none focus:border-[#7132f5]"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 block mb-1">
+              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] block mb-1">
                 Supabase Anon Key
               </label>
               <input
@@ -88,20 +92,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 value={supabaseKey}
                 onChange={(e) => setSupabaseKey(e.target.value)}
                 placeholder="eyJhbGciOi..."
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono outline-none focus:border-indigo-500"
+                className="w-full px-3 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-xs font-mono outline-none focus:border-[#7132f5]"
               />
             </div>
           </div>
 
           {saved && (
-            <p className="text-xs text-emerald-600 font-semibold text-center">
+            <p className="text-xs text-[#026b3f] font-semibold text-center">
               ✅ Pengaturan berhasil disimpan!
             </p>
           )}
 
           <button
             onClick={handleSave}
-            className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow transition-all"
+            className="w-full btn-kraken-primary text-sm shadow-whisper"
           >
             Simpan Konfigurasi
           </button>

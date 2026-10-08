@@ -100,7 +100,7 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-between">
+    <div className="min-h-screen bg-[#fafbfe] flex flex-col justify-between text-[#101114]">
       {/* Header */}
       <Header onOpenSettings={() => setIsSettingsOpen(true)} />
 

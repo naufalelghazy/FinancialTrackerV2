@@ -67,55 +67,55 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 pb-24">
-      {/* Type Toggle */}
-      <div className="grid grid-cols-3 p-1 bg-slate-200/70 rounded-2xl gap-1">
+      {/* Type Toggle - Kraken Style Segmented Control */}
+      <div className="grid grid-cols-3 p-1 bg-[#edeef3] rounded-[12px] gap-1 border border-[#dedee5]">
         <button
           type="button"
           onClick={() => setType('pengeluaran')}
-          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-semibold text-sm transition-all ${
+          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-all ${
             type === 'pengeluaran'
-              ? 'bg-rose-500 text-white shadow-sm'
-              : 'text-slate-600 hover:text-slate-900'
+              ? 'bg-[#101114] text-white shadow-micro'
+              : 'text-[#686b82] hover:text-[#101114]'
           }`}
         >
-          <ArrowUpRight className="w-4 h-4" />
+          <ArrowUpRight className="w-3.5 h-3.5" />
           Keluar
         </button>
 
         <button
           type="button"
           onClick={() => setType('transfer')}
-          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-semibold text-sm transition-all ${
+          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-all ${
             type === 'transfer'
-              ? 'bg-indigo-600 text-white shadow-sm'
-              : 'text-slate-600 hover:text-slate-900'
+              ? 'bg-[#7132f5] text-white shadow-micro'
+              : 'text-[#686b82] hover:text-[#101114]'
           }`}
         >
-          <ArrowLeftRight className="w-4 h-4" />
+          <ArrowLeftRight className="w-3.5 h-3.5" />
           Transfer
         </button>
 
         <button
           type="button"
           onClick={() => setType('pemasukan')}
-          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-semibold text-sm transition-all ${
+          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-all ${
             type === 'pemasukan'
-              ? 'bg-emerald-600 text-white shadow-sm'
-              : 'text-slate-600 hover:text-slate-900'
+              ? 'bg-[#149e61] text-white shadow-micro'
+              : 'text-[#686b82] hover:text-[#101114]'
           }`}
         >
-          <ArrowDownLeft className="w-4 h-4" />
+          <ArrowDownLeft className="w-3.5 h-3.5" />
           Masuk
         </button>
       </div>
 
-      {/* Amount Card */}
-      <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm text-center">
-        <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
-          Jumlah
+      {/* Amount Card - Clean Kraken Display */}
+      <div className="bg-white rounded-[16px] p-6 border border-[#dedee5] shadow-whisper text-center">
+        <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] block">
+          Nominal Transaksi
         </label>
-        <div className="flex items-center justify-center gap-1 mt-2">
-          <span className="text-2xl font-bold text-slate-400">Rp</span>
+        <div className="flex items-center justify-center gap-1.5 mt-2">
+          <span className="text-2xl font-bold text-[#9497a9]">Rp</span>
           <input
             type="text"
             inputMode="numeric"
@@ -123,24 +123,25 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
             onChange={handleAmountChange}
             placeholder="0"
             required
-            className="w-full text-3xl font-extrabold text-slate-800 text-center tracking-tight outline-none focus:placeholder-transparent"
+            className="w-full text-4xl font-bold text-[#101114] text-center tracking-[-1px] outline-none placeholder:text-[#9497a9]"
           />
         </div>
       </div>
 
-      {/* Account Select */}
-      <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm space-y-3">
+      {/* Form Fields Card */}
+      <div className="bg-white rounded-[16px] p-5 border border-[#dedee5] shadow-whisper space-y-4">
+        {/* Source Account */}
         <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] block mb-1.5">
             {type === 'transfer' ? 'Dari Akun' : 'Akun'}
           </label>
           <select
             value={sourceAccountId}
             onChange={(e) => setSourceAccountId(e.target.value)}
             required
-            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-medium text-slate-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
+            className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-sm font-medium text-[#101114] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
           >
-            <option value="">Pilih Akun</option>
+            <option value="">Pilih Akun Rekening / Dompet</option>
             {accounts.map((acc) => (
               <option key={acc.id} value={acc.id}>
                 {acc.emoji || '💳'} {acc.name}
@@ -152,14 +153,14 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         {/* Destination Account for Transfer */}
         {type === 'transfer' && (
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] block mb-1.5">
               Ke Akun Tujuan
             </label>
             <select
               value={destinationAccountId}
               onChange={(e) => setDestinationAccountId(e.target.value)}
               required
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-medium text-slate-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
+              className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-sm font-medium text-[#101114] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
             >
               <option value="">Pilih Akun Tujuan</option>
               {accounts
@@ -176,16 +177,16 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         {/* Category for Expense/Income */}
         {type !== 'transfer' && (
           <div>
-            <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] block mb-1.5">
               Kategori
             </label>
             <select
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
               required
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-medium text-slate-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
+              className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-sm font-medium text-[#101114] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
             >
-              <option value="">Pilih Kategori</option>
+              <option value="">Pilih Kategori Transaksi</option>
               {filteredCategories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.emoji} {cat.name}
@@ -197,7 +198,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
 
         {/* Date Input */}
         <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] block mb-1.5">
             Tanggal
           </label>
           <input
@@ -205,37 +206,37 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
             value={date}
             onChange={(e) => setDate(e.target.value)}
             required
-            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-medium text-slate-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
+            className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-sm font-medium text-[#101114] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
           />
         </div>
 
         {/* Notes Input */}
         <div>
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 block mb-1.5">
-            Catatan <span className="text-slate-400 font-normal lowercase">(opsional)</span>
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] block mb-1.5">
+            Catatan <span className="text-[#9497a9] font-normal lowercase">(opsional)</span>
           </label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Keterangan transaksi..."
             rows={2}
-            className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-800 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all resize-none"
+            className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] border border-[#dedee5] text-sm text-[#101114] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all resize-none placeholder:text-[#9497a9]"
           />
         </div>
       </div>
 
-      {/* Success Notification Banner */}
+      {/* Success Notification Banner - Kraken Semantic Green Badge */}
       {isSuccess && (
-        <div className="flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm font-medium animate-in fade-in">
-          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+        <div className="flex items-center gap-2 p-3 bg-[#149e61]/15 border border-[#149e61]/30 text-[#026b3f] rounded-[10px] text-xs font-semibold animate-in fade-in">
+          <CheckCircle2 className="w-4 h-4 text-[#149e61] shrink-0" />
           <span>Transaksi berhasil disimpan!</span>
         </div>
       )}
 
-      {/* Submit Button */}
+      {/* Primary Kraken Purple Submit Button (12px radius, 13px 16px padding) */}
       <button
         type="submit"
-        className="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-2xl shadow-md hover:shadow-lg active:scale-[0.99] transition-all"
+        className="w-full btn-kraken-primary text-sm tracking-tight shadow-whisper"
       >
         Simpan Transaksi
       </button>
