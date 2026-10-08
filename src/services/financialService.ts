@@ -8,6 +8,35 @@ export interface FinancialData {
   transactions: Transaction[];
 }
 
+export const BANK_ICON_MAP: Record<string, string> = {
+  'bca': '/icons/banks/bca.webp',
+  'mandiri': '/icons/banks/mandiri.webp',
+  'krom': '/icons/banks/krom.webp',
+  'jago': '/icons/banks/jago.webp',
+  'sampoerna': '/icons/banks/sampoerna.webp',
+  'seabank': '/icons/banks/seabank.webp',
+  'gopay': '/icons/banks/gopay.webp',
+  'shopeepay': '/icons/banks/shopeepay.webp',
+  'dana': '/icons/banks/dana.webp',
+  'honest card': '/icons/banks/honest.webp',
+  'nex card': '/icons/banks/nex.webp',
+  'kredivo': '/icons/banks/kredivo.webp',
+  'spaylatter': '/icons/banks/spaylatter.webp',
+  'jago loan': '/icons/banks/jagoloan.webp',
+  'superbank': '/icons/banks/superbank.webp',
+  'cash': '/icons/banks/cash.svg',
+};
+
+export function getAccountIcon(name: string, fallbackUrl?: string): string {
+  const key = name.trim().toLowerCase();
+  if (BANK_ICON_MAP[key]) return BANK_ICON_MAP[key];
+  if (fallbackUrl && fallbackUrl.endsWith('.svg')) {
+    const webpUrl = fallbackUrl.replace(/\.svg$/, '.webp');
+    return webpUrl;
+  }
+  return fallbackUrl || '/icons/banks/cash.svg';
+}
+
 /**
  * Calculates current running balance for all accounts based on initial_balance and transaction history.
  */
@@ -122,7 +151,7 @@ export async function loadFinancialData(): Promise<FinancialData> {
       id: a.id,
       name: a.name,
       type: a.type,
-      icon: a.icon_url,
+      icon: getAccountIcon(a.name, a.icon_url),
       balance: Number(a.initial_balance || 0),
     }));
 
@@ -201,7 +230,6 @@ export async function addTransactionToDatabase(txData: {
     }
   }
 
-  // Fallback return
   return {
     id: tempId,
     date: txData.date,

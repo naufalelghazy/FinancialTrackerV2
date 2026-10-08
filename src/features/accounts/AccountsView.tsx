@@ -1,11 +1,34 @@
-﻿import React from 'react';
+import React, { useState } from 'react';
 import type { Account } from '../../types';
 import { formatCurrency } from '../../lib/formatters';
 import { Wallet } from 'lucide-react';
+import { BANK_ICON_MAP } from '../../services/financialService';
 
 interface AccountsViewProps {
   accounts: Account[];
 }
+
+export const AccountAvatar: React.FC<{ acc: Account }> = ({ acc }) => {
+  const [hasError, setHasError] = useState(false);
+  const iconSrc = acc.icon || BANK_ICON_MAP[acc.name.trim().toLowerCase()];
+
+  if (iconSrc && !hasError) {
+    return (
+      <img
+        src={iconSrc}
+        alt={acc.name}
+        onError={() => setHasError(true)}
+        className="w-10 h-10 object-contain rounded-[8px] bg-white p-1 border border-[#dedee5] shadow-sm"
+      />
+    );
+  }
+
+  return (
+    <div className="w-10 h-10 rounded-[8px] bg-[#f1edfe] text-[#7132f5] flex items-center justify-center text-xs font-bold border border-[#dedee5]">
+      {acc.name.slice(0, 3).toUpperCase()}
+    </div>
+  );
+};
 
 export const AccountsView: React.FC<AccountsViewProps> = ({ accounts }) => {
   const bankAccounts = accounts.filter((a) => a.type !== 'credit');
@@ -38,17 +61,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({ accounts }) => {
             className="flex items-center justify-between p-3.5 bg-white rounded-[12px] border border-[#dedee5] shadow-micro hover:border-[#686b82]/40 transition-all"
           >
             <div className="flex items-center gap-3">
-              {acc.icon ? (
-                <img
-                  src={acc.icon}
-                  alt={acc.name}
-                  className="w-10 h-10 object-contain rounded-[8px] bg-[#fafbfe] p-1 border border-[#dedee5]"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-[8px] bg-[#edeef3] flex items-center justify-center text-lg">
-                  {acc.emoji || '💰'}
-                </div>
-              )}
+              <AccountAvatar acc={acc} />
               <div>
                 <span className="font-bold text-sm text-[#101114] block tracking-tight">
                   {acc.name}

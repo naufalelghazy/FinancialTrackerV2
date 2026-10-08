@@ -1,7 +1,8 @@
-﻿import React from 'react';
+import React from 'react';
 import type { Account } from '../../types';
 import { formatCurrency } from '../../lib/formatters';
 import { CreditCard, CheckCircle2 } from 'lucide-react';
+import { AccountAvatar } from './AccountsView';
 
 interface BillsViewProps {
   accounts: Account[];
@@ -43,17 +44,7 @@ export const BillsView: React.FC<BillsViewProps> = ({ accounts }) => {
               className="flex items-center justify-between p-3.5 bg-white rounded-[12px] border border-[#dedee5] shadow-micro hover:border-[#686b82]/40 transition-all"
             >
               <div className="flex items-center gap-3">
-                {acc.icon ? (
-                  <img
-                    src={acc.icon}
-                    alt={acc.name}
-                    className="w-10 h-10 object-contain rounded-[8px] bg-[#fafbfe] p-1 border border-[#dedee5]"
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-[8px] bg-[#edeef3] flex items-center justify-center text-lg">
-                    {acc.emoji || '💳'}
-                  </div>
-                )}
+                <AccountAvatar acc={acc} />
                 <div>
                   <span className="font-bold text-sm text-[#101114] block tracking-tight">
                     {acc.name}
