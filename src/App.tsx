@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Header } from './components/layout/Header';
+import { Sidebar } from './components/layout/Sidebar';
 import { BottomNav } from './components/layout/BottomNav';
 import type { NavTab } from './components/layout/BottomNav';
 import { DashboardView } from './features/dashboard/DashboardView';
@@ -222,9 +223,9 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fafbfe] text-[#101114] flex flex-col font-sans selection:bg-[#855bfb]/20 selection:text-[#7132f5]">
-      {/* Top Header - Responsive desktop & mobile */}
-      <Header
+    <div className="min-h-screen bg-[#fafbfe] text-[#101114] flex flex-col md:flex-row font-sans selection:bg-[#855bfb]/20 selection:text-[#7132f5]">
+      {/* Desktop Left Sidebar (Visible on md and above) */}
+      <Sidebar
         activeTab={activeTab}
         onChangeTab={setActiveTab}
         onOpenSettings={() => setIsSettingsOpen(true)}
@@ -233,8 +234,22 @@ export function App() {
         onSync={handleRefresh}
       />
 
-      {/* Main Content Area - Full Responsive Grid Container */}
-      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex-1">
+      {/* Main View Area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Mobile Top Header (Hidden on desktop) */}
+        <div className="md:hidden">
+          <Header
+            activeTab={activeTab}
+            onChangeTab={setActiveTab}
+            onOpenSettings={() => setIsSettingsOpen(true)}
+            isRefreshing={isRefreshing}
+            isLoading={isLoading}
+            onSync={handleRefresh}
+          />
+        </div>
+
+        {/* Main Content Area - Responsive Container */}
+        <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1">
         {isLoading && accounts.length === 0 ? (
           <div className="py-24 flex flex-col items-center justify-center text-center space-y-3">
             <div className="w-10 h-10 border-3 border-[#7132f5]/20 border-t-[#7132f5] rounded-full animate-spin" />
@@ -312,13 +327,25 @@ export function App() {
         )}
       </main>
 
+      </div>
+
       {/* Mobile Bottom Navigation (Hidden on Desktop) */}
       <BottomNav activeTab={activeTab} onChangeTab={setActiveTab} />
 
-      {/* Settings Modal */}
+      {/* Settings Modal - Multi-tab application & backend settings */}
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+        accounts={accounts}
+        categories={categories}
+        onEditAccount={(acc) => {
+          setSelectedAccount(acc);
+          setIsAccountModalOpen(true);
+        }}
+        onAddAccount={() => {
+          setSelectedAccount(null);
+          setIsAccountModalOpen(true);
+        }}
       />
 
       {/* Edit / Add Account Modal */}

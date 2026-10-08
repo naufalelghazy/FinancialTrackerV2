@@ -54,7 +54,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     };
   }, [accounts]);
 
-  // 2. Active Month Cash Flow
+  // Helper to detect Pindah Akun / Transfer
+  const isPindahAkunOrTransfer = (t: Transaction) => {
+    if (t.type === 'transfer') return true;
+    const catName = getCategoryName(t.categoryId).toLowerCase().trim();
+    if (catName.includes('pindah akun') || catName.includes('transfer')) return true;
+    const catId = (t.categoryId || '').toLowerCase().trim();
+    if (catId.includes('pindah_akun') || catId.includes('transfer')) return true;
+    return false;
+  };
+
+  // 2. Active Month Cash Flow (Excluding Pindah Akun / Transfer)
   const { currentMonthLabel, monthExpense, monthIncome, netCashflow, topCategories } =
     useMemo(() => {
       // Find latest date in transactions to dynamically detect active month
@@ -74,6 +84,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       const catExpenseMap: Record<string, number> = {};
 
       for (const t of monthlyTx) {
+        // Abaikan kategori pindah akun dan transaksi transfer dari arus kas
+        if (isPindahAkunOrTransfer(t)) {
+          continue;
+        }
+
         if (t.type === 'pengeluaran') {
           expense += t.amount;
           if (t.categoryId) {
@@ -84,8 +99,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         }
       }
 
-      // Top categories calculation
+      // Top categories calculation (exclude pindah akun)
       const sortedCats = Object.entries(catExpenseMap)
+        .filter(([catId]) => {
+          const name = getCategoryName(catId).toLowerCase().trim();
+          return !name.includes('pindah akun') && !name.includes('transfer') && !catId.includes('pindah');
+        })
         .map(([catId, amount]) => ({
           catId,
           name: getCategoryName(catId),
@@ -104,10 +123,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       };
     }, [transactions, categories]);
 
-  // 3. Recent 5 Transactions
+  // 3. Recent 5 Transactions (Excluding Pindah Akun / Transfer)
   const recentTransactions = useMemo(() => {
-    return transactions.slice(0, 5);
-  }, [transactions]);
+    return transactions
+      .filter((t) => !isPindahAkunOrTransfer(t))
+      .slice(0, 5);
+  }, [transactions, categories]);
 
   return (
     <div className="space-y-6 pb-24">
