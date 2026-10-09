@@ -1,0 +1,10 @@
+{
+  "entries": [
+    {
+      "path": "../token-saver"
+    },
+    {
+      "path": "plugins/token-saver"
+    }
+  ]
+}

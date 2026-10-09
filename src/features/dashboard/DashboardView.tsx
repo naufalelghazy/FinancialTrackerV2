@@ -10,11 +10,9 @@ import {
   TrendingUp,
   TrendingDown,
   ArrowRight,
-  PlusCircle,
   History,
   Calendar,
   PieChart,
-  BarChart3,
   Edit2,
 } from 'lucide-react';
 
@@ -24,7 +22,7 @@ interface DashboardViewProps {
   categories: Category[];
   onNavigateTab: (tab: NavTab) => void;
   onEditTransaction: (transaction: Transaction) => void;
-  onAddTransaction: () => void;
+  onAddTransaction?: () => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -33,7 +31,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   categories,
   onNavigateTab,
   onEditTransaction,
-  onAddTransaction,
 }) => {
   const getAccountName = (id?: string) => accounts.find((a) => a.id === id)?.name || id || '-';
   const getCategoryName = (id?: string) => categories.find((c) => c.id === id)?.name || id || '-';
@@ -149,7 +146,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           <div className="my-3">
-            <div className="text-3xl sm:text-4xl font-bold tracking-tight">
+            <div className="balance-card-amount text-3xl sm:text-4xl font-bold tracking-tight">
               {formatCurrency(totalAvailable)}
             </div>
             <p className="text-xs text-white/80 mt-1">
@@ -159,7 +156,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
           <div className="pt-2 border-t border-white/15 flex items-center justify-between text-xs">
             <span className="text-white/70">Kekayaan Bersih (Net Worth)</span>
-            <span className="font-bold text-white tracking-tight">
+            <span className="net-worth-amount font-bold text-white tracking-tight">
               {formatCurrency(netWorth)}
             </span>
           </div>
@@ -191,7 +188,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </div>
                 <span className="text-xs text-[#686b82] dark:text-[#9ca0ba]">Pemasukan</span>
               </div>
-              <span className="text-sm font-bold text-[#026b3f]">
+              <span className="cashflow-amount text-sm font-bold text-[#026b3f]">
                 +{formatCurrency(monthIncome)}
               </span>
             </div>
@@ -203,7 +200,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </div>
                 <span className="text-xs text-[#686b82] dark:text-[#9ca0ba]">Pengeluaran</span>
               </div>
-              <span className="text-sm font-bold text-[#e53e3e]">
+              <span className="cashflow-amount text-sm font-bold text-[#e53e3e]">
                 -{formatCurrency(monthExpense)}
               </span>
             </div>
@@ -212,7 +209,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="pt-2 border-t border-[#dedee5] dark:border-[#282937] flex items-center justify-between text-xs">
             <span className="text-[#686b82] dark:text-[#9ca0ba]">Selisih Bersih</span>
             <span
-              className={`font-bold tracking-tight ${
+              className={`cashflow-amount font-bold tracking-tight ${
                 netCashflow >= 0 ? 'text-[#026b3f]' : 'text-[#b91c1c]'
               }`}
             >
@@ -235,7 +232,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           <div className="my-3">
-            <div className="debt-card-amount text-3xl font-bold tracking-tight text-white">
+            <div className="debt-card-amount text-3xl sm:text-4xl font-bold tracking-tight text-white">
               {formatCurrency(totalDebt)}
             </div>
             <p className="debt-card-sub text-xs text-white/80 mt-1">
@@ -256,57 +253,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               {totalDebt === 0 ? 'Semua Lunas' : 'Belum Dibayar'}
             </span>
           </div>
-        </div>
-      </div>
-
-      {/* ===================== QUICK ACTIONS BAR ===================== */}
-      <div className="bg-white dark:bg-[#16171f] rounded-[14px] p-3.5 sm:p-4 border border-[#dedee5] dark:border-[#282937] shadow-whisper flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-[8px] bg-[#855bfb]/15 text-[#7132f5] flex items-center justify-center">
-            <PlusCircle className="w-4 h-4" />
-          </div>
-          <div>
-            <h3 className="text-xs sm:text-sm font-bold text-[#101114] dark:text-[#f3f4f8]">
-              Aksi Cepat
-            </h3>
-            <p className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] hidden sm:block">
-              Catat atau kelola mutasi keuangan Anda
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <button
-            onClick={onAddTransaction}
-            className="flex-1 sm:flex-initial btn-kraken-primary text-xs font-semibold py-2 px-3.5 shadow-whisper flex items-center justify-center gap-1.5"
-          >
-            <PlusCircle className="w-3.5 h-3.5" />
-            <span>Catat Transaksi</span>
-          </button>
-
-          <button
-            onClick={() => onNavigateTab('saldo')}
-            className="flex-1 sm:flex-initial py-2 px-3.5 rounded-[12px] bg-[#edeef3] dark:bg-[#232534] hover:bg-[#dedee5] dark:hover:bg-[#2d3042] text-[#101114] dark:text-[#f3f4f8] text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
-          >
-            <Wallet className="w-3.5 h-3.5 text-[#686b82] dark:text-[#9ca0ba]" />
-            <span>Kelola Saldo</span>
-          </button>
-
-          <button
-            onClick={() => onNavigateTab('riwayat')}
-            className="flex-1 sm:flex-initial py-2 px-3.5 rounded-[12px] bg-[#edeef3] dark:bg-[#232534] hover:bg-[#dedee5] dark:hover:bg-[#2d3042] text-[#101114] dark:text-[#f3f4f8] text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
-          >
-            <History className="w-3.5 h-3.5 text-[#686b82] dark:text-[#9ca0ba]" />
-            <span>Riwayat</span>
-          </button>
-
-            <button
-              onClick={() => onNavigateTab('report')}
-              className="flex-1 sm:flex-initial py-2 px-3.5 rounded-[12px] bg-[#edeef3] dark:bg-[#232534] hover:bg-[#dedee5] dark:hover:bg-[#2d3042] text-[#101114] dark:text-[#f3f4f8] text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
-            >
-              <BarChart3 className="w-3.5 h-3.5 text-[#7132f5] dark:text-[#a78bfa]" />
-              <span>Laporan & Grafik</span>
-            </button>
         </div>
       </div>
 

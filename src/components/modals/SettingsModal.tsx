@@ -16,7 +16,6 @@ import {
   Laptop,
   Palette,
   Check,
-  FileCode2,
 } from 'lucide-react';
 import type { Account, Category } from '../../types';
 import { formatCurrency } from '../../lib/formatters';
@@ -90,7 +89,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       edition: 'Coinbase Edition',
       tagline: 'Financial Institutional Calm',
       description:
-        'Sistem desain resmi Coinbase: kanvas bersih dengan aksen Coinbase Blue (#0052ff), tombol pill 100px (rounded-full), kartu berkontur 24px, tipografi Inter berbobot sedang, dan angka monospace JetBrains Mono.',
+        'Aksen Coinbase Blue (#0052ff), tombol pill, kartu 24px, font Inter, dan angka JetBrains Mono.',
       docFile: 'DESIGN-coinbase.md',
       primaryColor: '#0052ff',
       accentColor: '#003ecc',
@@ -113,7 +112,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       edition: 'The Verge Edition',
       tagline: 'Cyber Editorial Newsprint',
       description:
-        'Sistem desain The Verge 2024: Kanvas berita cyber gelap (#131313), tombol Jelly Mint (#3cffd0) mencolok dengan teks hitam pekat, aksen Ultraviolet (#5200ff), display headline Anton yang padat & brutal, dan border flat 1px.',
+        'Kanvas cyber gelap #131313, aksen neon Jelly Mint (#3cffd0), headline Anton, dan border flat 1px.',
       docFile: 'DESIGN-theverge.md',
       primaryColor: '#3cffd0',
       accentColor: '#5200ff',
@@ -136,7 +135,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       edition: 'Kraken Edition',
       tagline: 'Crypto Modernist Classic',
       description:
-        'Sistem desain bawaan Kraken: aksen Kraken Purple (#7132f5), sudut rounded 12px yang presisi, tipografi IBM Plex Sans, dan efek bayangan whisper yang halus.',
+        'Aksen Kraken Purple (#7132f5), sudut rounded 12px, font IBM Plex Sans, dan bayangan lembut.',
       docFile: 'DESIGN-kraken.md',
       primaryColor: '#7132f5',
       accentColor: '#5741d8',
@@ -468,12 +467,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             {themeItem.previewLabel}
                           </button>
                         </div>
-
-                        {/* Doc badge reference */}
-                        <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#686b82] dark:text-[#9ca0ba]">
-                          <FileCode2 className="w-3.5 h-3.5 text-[#7132f5] dark:text-[#a78bfa]" />
-                          <span>{themeItem.docFile}</span>
-                        </div>
                       </div>
                     </div>
                   );
@@ -562,10 +555,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="flex justify-between text-xs text-[#686b82] dark:text-[#9ca0ba]">
                   <span>Sistem Desain Aktif</span>
                   <span className="font-bold text-[#101114] dark:text-[#f3f4f8]">{currentConfig.badge}</span>
-                </div>
-                <div className="flex justify-between text-xs text-[#686b82] dark:text-[#9ca0ba]">
-                  <span>Dokumentasi Rujukan</span>
-                  <span className="font-mono font-bold text-[#7132f5] dark:text-[#a78bfa]">{currentConfig.docFile}</span>
                 </div>
                 <div className="flex justify-between text-xs text-[#686b82] dark:text-[#9ca0ba]">
                   <span>Aksen Warna Utama</span>

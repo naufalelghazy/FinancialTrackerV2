@@ -107,6 +107,17 @@
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
 }
 
+
+/* Kraken Baseline: Clean IBM Plex Sans tabular numbers */
+.balance-card-amount,
+.debt-card-amount,
+.net-worth-amount,
+.cashflow-amount,
+.tabular-nums {
+  font-family: var(--font-sans);
+  font-feature-settings: 'tnum' 1;
+}
+
 .hero-debt-card .debt-card-amount {
   color: #ffffff !important;
 }
@@ -225,8 +236,21 @@
 
   [data-theme=coinbase] .hero-debt-card .debt-card-amount {
     color: #ffffff !important;
+  }
+
+  /* Coinbase Numerical Data: JetBrains Mono across all financial figures */
+  [data-theme=coinbase] .balance-card-amount,
+  [data-theme=coinbase] .hero-balance-card .balance-card-amount,
+  [data-theme=coinbase] .hero-balance-card .text-3xl,
+  [data-theme=coinbase] .hero-balance-card .text-4xl,
+  [data-theme=coinbase] .hero-debt-card .debt-card-amount,
+  [data-theme=coinbase] .net-worth-amount,
+  [data-theme=coinbase] .cashflow-amount,
+  [data-theme=coinbase] .tabular-nums,
+  [data-theme=coinbase] .font-mono {
     font-family: var(--font-mono) !important;
   }
+
 
   [data-theme=coinbase] .hero-debt-card .debt-card-sub {
     color: rgba(255, 255, 255, 0.85) !important;
@@ -464,9 +488,25 @@
 
   [data-theme=theverge] .hero-debt-card .debt-card-amount {
     color: #ffffff !important;
+  }
+
+  /* The Verge Numerical Data: Anton Display for Hero Amounts, Space Mono for Secondary Figures */
+  [data-theme=theverge] .balance-card-amount,
+  [data-theme=theverge] .hero-balance-card .balance-card-amount,
+  [data-theme=theverge] .hero-balance-card .text-3xl,
+  [data-theme=theverge] .hero-balance-card .text-4xl,
+  [data-theme=theverge] .hero-debt-card .debt-card-amount {
     font-family: var(--font-display) !important;
     letter-spacing: 0.8px !important;
   }
+
+  [data-theme=theverge] .net-worth-amount,
+  [data-theme=theverge] .cashflow-amount,
+  [data-theme=theverge] .tabular-nums {
+    font-family: var(--font-mono) !important;
+    letter-spacing: 0.5px !important;
+  }
+
 
   [data-theme=theverge] .hero-debt-card .debt-card-sub {
     color: #ffe2e5 !important;

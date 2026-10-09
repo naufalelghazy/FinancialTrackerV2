@@ -294,7 +294,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
   return (
     <div className="space-y-6 pb-24">
       {/* Header & Period Filter Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-[#16171f] p-4 sm:p-5 rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-[#16171f] p-3 sm:p-5 rounded-[14px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper">
         <div>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-[8px] bg-[#855bfb]/15 text-[#7132f5] dark:text-[#a78bfa] flex items-center justify-center">
@@ -304,7 +304,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
               <h1 className="text-lg sm:text-xl font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
                 Laporan & Analisis Keuangan
               </h1>
-              <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
+              <p className="text-xs text-[#686b82] dark:text-[#9ca0ba] hidden sm:block">
                 Visualisasi tren pemasukan, pengeluaran, dan alokasi kategori
               </p>
             </div>
@@ -366,58 +366,58 @@ export const ReportView: React.FC<ReportViewProps> = ({
         </div>
       </div>
 
-      {/* 4 Executive KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 4 Executive KPI Cards - Compact 2x2 grid on mobile so charts fit without scrolling */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         {/* Total Pemasukan */}
-        <div className="bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-4 sm:p-5 relative overflow-hidden group">
+        <div className="bg-white dark:bg-[#16171f] rounded-[12px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-2.5 sm:p-5 relative overflow-hidden group flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba]">
-              Total Pemasukan
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] truncate">
+              Pemasukan
             </span>
-            <div className="w-8 h-8 rounded-[8px] bg-[#149e61]/12 text-[#149e61] dark:text-[#34d399] flex items-center justify-center">
-              <TrendingUp className="w-4 h-4 stroke-[2.2]" />
+            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-[6px] sm:rounded-[8px] bg-[#149e61]/12 text-[#149e61] dark:text-[#34d399] flex items-center justify-center shrink-0">
+              <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.2]" />
             </div>
           </div>
-          <div className="text-xl sm:text-2xl font-bold tracking-tight text-[#026b3f] dark:text-[#34d399] mt-2 tabular-nums">
+          <div className="text-sm sm:text-2xl font-bold tracking-tight text-[#026b3f] dark:text-[#34d399] mt-1 sm:mt-2 tabular-nums truncate">
             +{formatCurrency(totalIncome)}
           </div>
-          <div className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] mt-1 flex items-center gap-1">
+          <div className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] mt-1 hidden sm:flex items-center gap-1">
             <ArrowUpRight className="w-3.5 h-3.5 text-[#149e61] dark:text-[#34d399]" />
             <span>Arus masuk tanpa transfer</span>
           </div>
         </div>
 
         {/* Total Pengeluaran */}
-        <div className="bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-4 sm:p-5 relative overflow-hidden group">
+        <div className="bg-white dark:bg-[#16171f] rounded-[12px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-2.5 sm:p-5 relative overflow-hidden group flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba]">
-              Total Pengeluaran
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] truncate">
+              Pengeluaran
             </span>
-            <div className="w-8 h-8 rounded-[8px] bg-[#e53e3e]/12 text-[#e53e3e] dark:text-[#f87171] flex items-center justify-center">
-              <TrendingDown className="w-4 h-4 stroke-[2.2]" />
+            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-[6px] sm:rounded-[8px] bg-[#e53e3e]/12 text-[#e53e3e] dark:text-[#f87171] flex items-center justify-center shrink-0">
+              <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.2]" />
             </div>
           </div>
-          <div className="text-xl sm:text-2xl font-bold tracking-tight text-[#e53e3e] dark:text-[#f87171] mt-2 tabular-nums">
+          <div className="text-sm sm:text-2xl font-bold tracking-tight text-[#e53e3e] dark:text-[#f87171] mt-1 sm:mt-2 tabular-nums truncate">
             -{formatCurrency(totalExpense)}
           </div>
-          <div className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] mt-1 flex items-center gap-1">
+          <div className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] mt-1 hidden sm:flex items-center gap-1">
             <ArrowDownRight className="w-3.5 h-3.5 text-[#e53e3e] dark:text-[#f87171]" />
             <span>Beban belanja & operasional</span>
           </div>
         </div>
 
         {/* Cashflow Bersih */}
-        <div className="bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-4 sm:p-5 relative overflow-hidden group">
+        <div className="bg-white dark:bg-[#16171f] rounded-[12px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-2.5 sm:p-5 relative overflow-hidden group flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba]">
-              Cashflow Bersih
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] truncate">
+              Cashflow
             </span>
-            <div className="w-8 h-8 rounded-[8px] bg-[#855bfb]/12 text-[#7132f5] dark:text-[#a78bfa] flex items-center justify-center">
-              <Wallet className="w-4 h-4 stroke-[2.2]" />
+            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-[6px] sm:rounded-[8px] bg-[#855bfb]/12 text-[#7132f5] dark:text-[#a78bfa] flex items-center justify-center shrink-0">
+              <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.2]" />
             </div>
           </div>
           <div
-            className={`text-xl sm:text-2xl font-bold tracking-tight mt-2 tabular-nums ${
+            className={`text-sm sm:text-2xl font-bold tracking-tight mt-1 sm:mt-2 tabular-nums truncate ${
               netCashflow >= 0
                 ? 'text-[#026b3f] dark:text-[#34d399]'
                 : 'text-[#e53e3e] dark:text-[#f87171]'
@@ -426,7 +426,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
             {netCashflow >= 0 ? '+' : ''}
             {formatCurrency(netCashflow)}
           </div>
-          <div className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] mt-1">
+          <div className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] mt-1 hidden sm:block">
             {netCashflow >= 0 ? (
               <span className="text-[#026b3f] dark:text-[#34d399] font-medium">Surplus keuangan</span>
             ) : (
@@ -436,19 +436,19 @@ export const ReportView: React.FC<ReportViewProps> = ({
         </div>
 
         {/* Rasio Tabungan */}
-        <div className="bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-4 sm:p-5 relative overflow-hidden group">
+        <div className="bg-white dark:bg-[#16171f] rounded-[12px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-2.5 sm:p-5 relative overflow-hidden group flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba]">
-              Tingkat Tabungan
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] truncate">
+              Tabungan
             </span>
-            <div className="w-8 h-8 rounded-[8px] bg-[#3b82f6]/12 text-[#3b82f6] flex items-center justify-center">
-              <Percent className="w-4 h-4 stroke-[2.2]" />
+            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-[6px] sm:rounded-[8px] bg-[#3b82f6]/12 text-[#3b82f6] flex items-center justify-center shrink-0">
+              <Percent className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.2]" />
             </div>
           </div>
-          <div className="text-xl sm:text-2xl font-bold tracking-tight text-[#101114] dark:text-[#f3f4f8] mt-2 tabular-nums">
+          <div className="text-sm sm:text-2xl font-bold tracking-tight text-[#101114] dark:text-[#f3f4f8] mt-1 sm:mt-2 tabular-nums truncate">
             {savingsRate.toFixed(1)}%
           </div>
-          <div className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] mt-1">
+          <div className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] mt-1 hidden sm:block">
             {savingsRate >= 20 ? (
               <span className="text-[#026b3f] dark:text-[#34d399] font-medium">Kondisi Sangat Sehat (&ge;20%)</span>
             ) : savingsRate > 0 ? (
