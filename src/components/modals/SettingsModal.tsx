@@ -73,7 +73,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     edition: string;
     tagline: string;
     description: string;
-    docFile: string;
     primaryColor: string;
     accentColor: string;
     darkCanvas: string;
@@ -81,16 +80,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     typography: { display: string; body: string; mono: string };
     buttonStyle: string;
     previewLabel: string;
-    highlights: string[];
   }[] = [
     {
       id: 'coinbase',
       name: 'Coinbase',
       edition: 'Coinbase Edition',
       tagline: 'Financial Institutional Calm',
-      description:
-        'Aksen Coinbase Blue (#0052ff), tombol pill, kartu 24px, font Inter, dan angka JetBrains Mono.',
-      docFile: 'DESIGN-coinbase.md',
+      description: 'Tampilan bersih, tenang, dan profesional dengan nuansa biru khas finansial modern.',
       primaryColor: '#0052ff',
       accentColor: '#003ecc',
       darkCanvas: '#0a0b0d',
@@ -98,22 +94,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       typography: { display: 'Inter (400 Calm)', body: 'Inter', mono: 'JetBrains Mono' },
       buttonStyle: 'Pill 100px (rounded-full)',
       previewLabel: 'Catat Transaksi',
-      highlights: [
-        'Aksen brand Coinbase Blue (#0052ff)',
-        'Tombol Pill rounded-full 100px',
-        'Kartu sudut bulat lebar 24px',
-        'Hairline border tipis #dee1e6 / #22252a',
-        'Dual Canvas: Putih Bersih & Obsidian #0a0b0d',
-      ],
     },
     {
       id: 'theverge',
       name: 'The Verge',
       edition: 'The Verge Edition',
       tagline: 'Cyber Editorial Newsprint',
-      description:
-        'Kanvas cyber gelap #131313, aksen neon Jelly Mint (#3cffd0), headline Anton, dan border flat 1px.',
-      docFile: 'DESIGN-theverge.md',
+      description: 'Tampilan bertema gelap dengan sentuhan warna neon yang tegas dan berani.',
       primaryColor: '#3cffd0',
       accentColor: '#5200ff',
       darkCanvas: '#131313',
@@ -121,22 +108,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       typography: { display: 'Anton (Condensed Heavy)', body: 'Space Grotesk', mono: 'Space Mono' },
       buttonStyle: 'Neon Mint Pill + Teks Hitam Pekat',
       previewLabel: 'CATAT TRANSAKSI',
-      highlights: [
-        'Kanvas berita cyber gelap murni #131313',
-        'Tombol CTA Jelly Mint neon (#3cffd0) teks hitam',
-        'Aksen komplementer Verge Ultraviolet (#5200ff)',
-        'Display headline Anton tebal & agresif',
-        'Garis batas flat 1px tanpa bayangan kabur',
-      ],
     },
     {
       id: 'kraken',
       name: 'Kraken',
       edition: 'Kraken Edition',
       tagline: 'Crypto Modernist Classic',
-      description:
-        'Aksen Kraken Purple (#7132f5), sudut rounded 12px, font IBM Plex Sans, dan bayangan lembut.',
-      docFile: 'DESIGN-kraken.md',
+      description: 'Tampilan modern dan elegan dengan nuansa ungu yang nyaman di mata.',
       primaryColor: '#7132f5',
       accentColor: '#5741d8',
       darkCanvas: '#0d0e12',
@@ -144,13 +122,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       typography: { display: 'IBM Plex Sans', body: 'IBM Plex Sans', mono: 'JetBrains Mono' },
       buttonStyle: 'Rounded 12px + Bayangan Whisper',
       previewLabel: 'Catat Transaksi',
-      highlights: [
-        'Aksen Kraken Purple signature (#7132f5)',
-        'Sudut rounded 12px geometris',
-        'Tipografi IBM Plex Sans terstruktur',
-        'Bayangan mikro & whisper lembut',
-        'Kanvas kontras ganda terang dan gelap',
-      ],
     },
   ];
 
@@ -435,18 +406,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       <p className="text-xs text-[#686b82] dark:text-[#9ca0ba] leading-relaxed mb-3">
                         {themeItem.description}
                       </p>
-
-                      {/* Highlights Pill Badges */}
-                      <div className="flex flex-wrap gap-1.5 mb-3.5">
-                        {themeItem.highlights.map((h, i) => (
-                          <span
-                            key={i}
-                            className="text-[10px] font-medium px-2.5 py-1 rounded-[8px] bg-white dark:bg-[#232534] border border-[#dedee5] dark:border-[#2e3146] text-[#4b4e63] dark:text-[#cbd0e2]"
-                          >
-                            {h}
-                          </span>
-                        ))}
-                      </div>
 
                       {/* Live Mini Preview Bar */}
                       <div className="pt-3 border-t border-[#dedee5]/70 dark:border-[#282937] flex flex-wrap items-center justify-between gap-3 bg-white/70 dark:bg-[#12131a] -mx-4 -mb-4 p-3.5 rounded-b-[16px]">
