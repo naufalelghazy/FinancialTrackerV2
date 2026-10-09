@@ -1,10 +1,12 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 @layer base {
   :root {
     --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-display: 'IBM Plex Sans', -apple-system, sans-serif;
+    --font-mono: 'IBM Plex Sans', monospace;
     --kraken-purple: #7132f5;
     --kraken-purple-dark: #5741d8;
     --kraken-purple-deep: #5b1ecf;
@@ -43,7 +45,9 @@
   }
 }
 
-/* Custom Kraken Utility Classes */
+/* ==============================================================
+   UTILITY & SHADOW CLASSES (KRAKEN BASELINE)
+   ============================================================== */
 .shadow-whisper {
   box-shadow: 0px 4px 24px rgba(0, 0, 0, 0.03);
 }
@@ -75,6 +79,59 @@
   transform: scale(0.99);
 }
 
+/* ==============================================================
+   HERO DEBT / BILLS CARD (KRAKEN BASELINE)
+   Vibrant, high-contrast Red Card for Outstanding Bills & Debt
+   ============================================================== */
+.hero-debt-card {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+  border: 1px solid #ef4444 !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 24px -4px rgba(220, 38, 38, 0.35) !important;
+}
+
+.dark .hero-debt-card {
+  background: linear-gradient(135deg, #b91c1c 0%, #881337 100%) !important;
+  border: 1px solid #f87171 !important;
+  box-shadow: 0 8px 28px -4px rgba(239, 68, 68, 0.3) !important;
+}
+
+.hero-debt-card .debt-card-header,
+.hero-debt-card .debt-card-icon {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.hero-debt-card .debt-card-badge {
+  background-color: rgba(0, 0, 0, 0.25) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+.hero-debt-card .debt-card-amount {
+  color: #ffffff !important;
+}
+
+.hero-debt-card .debt-card-sub {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.hero-debt-card .debt-card-divider {
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.hero-debt-card .debt-card-btn {
+  color: #ffffff !important;
+}
+
+.hero-debt-card .debt-card-btn:hover {
+  color: #fee2e2 !important;
+}
+
+.hero-debt-card .debt-card-status {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+
 .btn-kraken-subtle {
   background-color: rgba(133, 91, 251, 0.16);
   color: #7132f5;
@@ -90,4 +147,462 @@
 .dark .btn-kraken-subtle {
   background-color: rgba(133, 91, 251, 0.22);
   color: #a78bfa;
+}
+
+
+/* ==============================================================
+   1. COINBASE DESIGN SYSTEM (DESIGN-coinbase.md)
+   Institutional-grade crypto exchange. Pure white/dark hero canvas.
+   Signature Coinbase Blue (#0052ff) pill CTAs. Inter typography.
+   JetBrains Mono for numerical data. 24px rounded card geometry.
+   ============================================================== */
+[data-theme=coinbase] {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Coinbase Mono', monospace;
+}
+
+[data-theme=coinbase] body {
+  font-family: var(--font-sans);
+  background-color: #ffffff;
+  color: #0a0b0d;
+}
+
+[data-theme=coinbase].dark body,
+.dark[data-theme=coinbase] body,
+[data-theme=coinbase] .dark body {
+  background-color: #0a0b0d !important;
+  color: #ffffff !important;
+}
+
+/* Primary Action Buttons: Coinbase Blue (#0052ff) pill */
+[data-theme=coinbase] button.btn-kraken-primary,
+[data-theme=coinbase] .btn-kraken-primary,
+[data-theme=coinbase] button.bg-\[\#7132f5\],
+[data-theme=coinbase] a.bg-\[\#7132f5\] {
+  background-color: #0052ff !important;
+  color: #ffffff !important;
+  border-radius: 9999px !important;
+}
+
+/* Coinbase Hero Balance Card (Coinbase Blue #0052ff with 24px Card Radius) */
+[data-theme=coinbase] .hero-balance-card,
+[data-theme=coinbase] div.bg-\[\#7132f5\] {
+  background-color: #0052ff !important;
+  border-color: #003ecc !important;
+  border-radius: 24px !important;
+  color: #ffffff !important;
+}
+
+  /* Coinbase Hero Debt Card (Coinbase Semantic Down Red #cf202f with 24px Card Radius) */
+  [data-theme=coinbase] .hero-debt-card {
+    background-color: #cf202f !important;
+    border: 1px solid #b01b27 !important;
+    border-radius: 24px !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 20px -2px rgba(207, 32, 47, 0.25) !important;
+  }
+
+  [data-theme=coinbase].dark .hero-debt-card,
+  [data-theme=coinbase] .dark .hero-debt-card {
+    background-color: #b51a27 !important;
+    border-color: #ef4444 !important;
+    box-shadow: 0 6px 24px -2px rgba(207, 32, 47, 0.35) !important;
+  }
+
+  [data-theme=coinbase] .hero-debt-card .debt-card-header,
+  [data-theme=coinbase] .hero-debt-card .debt-card-icon {
+    color: rgba(255, 255, 255, 0.95) !important;
+  }
+
+  [data-theme=coinbase] .hero-debt-card .debt-card-badge {
+    background-color: rgba(0, 0, 0, 0.25) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    border-radius: 9999px !important;
+    font-family: var(--font-sans) !important;
+  }
+
+  [data-theme=coinbase] .hero-debt-card .debt-card-amount {
+    color: #ffffff !important;
+    font-family: var(--font-mono) !important;
+  }
+
+  [data-theme=coinbase] .hero-debt-card .debt-card-sub {
+    color: rgba(255, 255, 255, 0.85) !important;
+  }
+
+  [data-theme=coinbase] .hero-debt-card .debt-card-divider {
+    border-color: rgba(255, 255, 255, 0.2) !important;
+  }
+
+  [data-theme=coinbase] .hero-debt-card .debt-card-btn {
+    color: #ffffff !important;
+    font-weight: 600 !important;
+  }
+
+  [data-theme=coinbase] .hero-debt-card .debt-card-btn:hover {
+    opacity: 0.85 !important;
+  }
+
+  [data-theme=coinbase] .hero-debt-card .debt-card-status {
+    color: rgba(255, 255, 255, 0.85) !important;
+  }
+
+
+[data-theme=coinbase] .btn-kraken-primary:hover,
+[data-theme=coinbase] .hover\:bg-\[\#5741d8\]:hover {
+  background-color: #003ecc !important;
+}
+
+[data-theme=coinbase] .bg-\[\#5741d8\] {
+  background-color: #003ecc !important;
+  border-radius: 9999px !important;
+}
+
+/* Subtle Pill Chips */
+[data-theme=coinbase] .btn-kraken-subtle,
+[data-theme=coinbase] .bg-\[\#855bfb\]\/15,
+[data-theme=coinbase] .bg-\[\#855bfb\]\/10,
+[data-theme=coinbase] .bg-\[\#855bfb\]\/20 {
+  background-color: rgba(0, 82, 255, 0.1) !important;
+  color: #0052ff !important;
+  border-radius: 9999px !important;
+}
+
+[data-theme=coinbase].dark .btn-kraken-subtle,
+[data-theme=coinbase] .dark .btn-kraken-subtle,
+[data-theme=coinbase].dark .bg-\[\#855bfb\]\/15,
+[data-theme=coinbase] .dark .bg-\[\#855bfb\]\/15 {
+  background-color: rgba(0, 82, 255, 0.22) !important;
+  color: #5b95ff !important;
+  border-radius: 9999px !important;
+}
+
+/* Primary Color Text */
+[data-theme=coinbase] .text-\[\#7132f5\] {
+  color: #0052ff !important;
+}
+
+[data-theme=coinbase].dark .text-\[\#7132f5\],
+[data-theme=coinbase].dark .dark\:text-\[\#a78bfa\],
+[data-theme=coinbase] .dark .text-\[\#7132f5\],
+[data-theme=coinbase] .dark .dark\:text-\[\#a78bfa\] {
+  color: #387cff !important;
+}
+
+/* Border on focus & active */
+[data-theme=coinbase] .border-\[\#7132f5\] {
+  border-color: #0052ff !important;
+}
+
+[data-theme=coinbase] .focus\:border-\[\#7132f5\]:focus {
+  border-color: #0052ff !important;
+}
+
+/* Card Geometry: 24px rounded */
+[data-theme=coinbase] .rounded-\[16px\],
+[data-theme=coinbase] .rounded-\[14px\] {
+  border-radius: 24px !important;
+}
+
+/* Dark surface card elevation: #16181c */
+[data-theme=coinbase].dark .dark\:bg-\[\#16171f\],
+[data-theme=coinbase] .dark .dark\:bg-\[\#16171f\] {
+  background-color: #16181c !important;
+}
+
+[data-theme=coinbase].dark .dark\:bg-\[\#1e202b\],
+[data-theme=coinbase] .dark .dark\:bg-\[\#1e202b\],
+[data-theme=coinbase].dark .dark\:bg-\[\#13141c\],
+[data-theme=coinbase] .dark .dark\:bg-\[\#13141c\] {
+  background-color: #121316 !important;
+}
+
+/* Hairline dividers */
+[data-theme=coinbase] .border-\[\#dedee5\] {
+  border-color: #dee1e6 !important;
+}
+
+[data-theme=coinbase].dark .border-\[\#282937\],
+[data-theme=coinbase] .dark .border-\[\#282937\] {
+  border-color: #22252a !important;
+}
+
+/* Monospace numerals */
+[data-theme=coinbase] .font-mono,
+[data-theme=coinbase] .tabular-nums {
+  font-family: var(--font-mono) !important;
+}
+
+
+/* ==============================================================
+   2. THE VERGE DESIGN SYSTEM (DESIGN-theverge.md)
+   Modern tech editorial identity. Canvas Black (#131313).
+   Signature Jelly Mint (#3cffd0) button fill with black text.
+   Verge Ultraviolet (#5200ff) accent. Anton display headlines.
+   PolySans Mono (Space Mono) ALL-CAPS kickers, tags, and timestamps.
+   Crisp 1px flat borders with zero decorative shadow.
+   ============================================================== */
+[data-theme=theverge] {
+  --font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Anton', 'Oswald', 'Impact', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+}
+
+[data-theme=theverge] body {
+  font-family: var(--font-sans);
+  background-color: #131313 !important;
+  color: #ffffff !important;
+}
+
+/* Headlines: Anton condensed heavy display */
+[data-theme=theverge] h1,
+[data-theme=theverge] h2,
+[data-theme=theverge] .font-bold.text-base,
+[data-theme=theverge] .font-bold.text-lg,
+[data-theme=theverge] .font-bold.text-xl,
+[data-theme=theverge] .font-bold.text-2xl,
+[data-theme=theverge] .font-bold.text-3xl {
+  font-family: var(--font-display) !important;
+  letter-spacing: 0.6px !important;
+}
+
+/* Primary Action Buttons: Jelly Mint (#3cffd0) pill with black (#000000) text */
+[data-theme=theverge] button.btn-kraken-primary,
+[data-theme=theverge] .btn-kraken-primary,
+[data-theme=theverge] button.bg-\[\#7132f5\],
+[data-theme=theverge] a.bg-\[\#7132f5\] {
+  background-color: #3cffd0 !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+  border-radius: 9999px !important;
+  border: none !important;
+}
+
+/* The Verge Hero Balance Card (Dark Slate #191919 with 1.5px Neon Mint #3cffd0 Outline) */
+[data-theme=theverge] .hero-balance-card,
+[data-theme=theverge] div.bg-\[\#7132f5\] {
+  background-color: #191919 !important;
+  border: 1.5px solid #3cffd0 !important;
+  border-radius: 20px !important;
+  box-shadow: none !important;
+  color: #ffffff !important;
+}
+
+[data-theme=theverge] .hero-balance-card .text-white,
+[data-theme=theverge] div.bg-\[\#7132f5\] .text-white,
+[data-theme=theverge] .hero-balance-card .text-3xl,
+[data-theme=theverge] div.bg-\[\#7132f5\] .text-3xl,
+[data-theme=theverge] .hero-balance-card .text-4xl,
+[data-theme=theverge] div.bg-\[\#7132f5\] .text-4xl {
+  color: #ffffff !important;
+}
+
+[data-theme=theverge] .hero-balance-card .text-white\/80,
+[data-theme=theverge] div.bg-\[\#7132f5\] .text-white\/80 {
+  color: #3cffd0 !important;
+}
+
+[data-theme=theverge] .hero-balance-card .text-white\/70,
+[data-theme=theverge] div.bg-\[\#7132f5\] .text-white\/70 {
+  color: #949494 !important;
+}
+
+[data-theme=theverge] .hero-balance-card .bg-white\/15,
+[data-theme=theverge] div.bg-\[\#7132f5\] .bg-white\/15 {
+  background-color: rgba(60, 255, 208, 0.15) !important;
+  color: #3cffd0 !important;
+  border: 1px solid rgba(60, 255, 208, 0.35) !important;
+}
+
+[data-theme=theverge] .hero-balance-card .border-white\/15,
+[data-theme=theverge] div.bg-\[\#7132f5\] .border-white\/15 {
+  border-color: #313131 !important;
+}
+
+[data-theme=theverge] .hero-balance-card button,
+[data-theme=theverge] div.bg-\[\#7132f5\] button {
+  background-color: #3cffd0 !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+  border-radius: 9999px !important;
+}
+
+[data-theme=theverge] .hero-balance-card button:hover,
+[data-theme=theverge] div.bg-\[\#7132f5\] button:hover {
+  background-color: #309875 !important;
+  color: #ffffff !important;
+}
+
+  /* The Verge Hero Debt Card (Saturated Neon/Crimson Danger Red #c9182b with 1.5px Neon Red #ff4d5a Outline) */
+  [data-theme=theverge] .hero-debt-card {
+    background-color: #c9182b !important;
+    border: 1.5px solid #ff4d5a !important;
+    border-radius: 20px !important;
+    box-shadow: none !important;
+    color: #ffffff !important;
+  }
+
+  [data-theme=theverge] .hero-debt-card .debt-card-header,
+  [data-theme=theverge] .hero-debt-card .debt-card-icon {
+    color: #ffffff !important;
+    font-family: var(--font-mono) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1.2px !important;
+  }
+
+  [data-theme=theverge] .hero-debt-card .debt-card-badge {
+    background-color: #131313 !important;
+    color: #ffffff !important;
+    border: 1px solid #ff4d5a !important;
+    border-radius: 9999px !important;
+    font-family: var(--font-mono) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+  }
+
+  [data-theme=theverge] .hero-debt-card .debt-card-amount {
+    color: #ffffff !important;
+    font-family: var(--font-display) !important;
+    letter-spacing: 0.8px !important;
+  }
+
+  [data-theme=theverge] .hero-debt-card .debt-card-sub {
+    color: #ffe2e5 !important;
+  }
+
+  [data-theme=theverge] .hero-debt-card .debt-card-divider {
+    border-color: rgba(255, 255, 255, 0.3) !important;
+  }
+
+  [data-theme=theverge] .hero-debt-card .debt-card-btn {
+    color: #ffffff !important;
+    font-family: var(--font-mono) !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+  }
+
+  [data-theme=theverge] .hero-debt-card .debt-card-btn:hover {
+    color: #ffe2e5 !important;
+  }
+
+  [data-theme=theverge] .hero-debt-card .debt-card-status {
+    color: #ffffff !important;
+    font-family: var(--font-mono) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+  }
+
+
+[data-theme=theverge] .btn-kraken-primary:hover,
+[data-theme=theverge] .hover\:bg-\[\#5741d8\]:hover {
+  background-color: #309875 !important;
+  color: #ffffff !important;
+}
+
+[data-theme=theverge] .bg-\[\#5741d8\] {
+  background-color: #5200ff !important;
+  color: #ffffff !important;
+  border-radius: 9999px !important;
+}
+
+/* Text primary accents */
+[data-theme=theverge] .text-\[\#7132f5\],
+[data-theme=theverge] .dark\:text-\[\#a78bfa\] {
+  color: #3cffd0 !important;
+}
+
+/* Subtle tags & active chips */
+[data-theme=theverge] .btn-kraken-subtle,
+[data-theme=theverge] .bg-\[\#855bfb\]\/15,
+[data-theme=theverge] .bg-\[\#855bfb\]\/10,
+[data-theme=theverge] .bg-\[\#855bfb\]\/20 {
+  background-color: rgba(60, 255, 208, 0.15) !important;
+  color: #3cffd0 !important;
+  border: 1px solid rgba(60, 255, 208, 0.35) !important;
+  border-radius: 9999px !important;
+}
+
+/* Cards & Surface Slate */
+[data-theme=theverge] .bg-white,
+[data-theme=theverge] .bg-\[\#fafbfe\] {
+  background-color: #191919 !important;
+}
+
+[data-theme=theverge].dark .dark\:bg-\[\#16171f\],
+[data-theme=theverge] .dark .dark\:bg-\[\#16171f\],
+[data-theme=theverge].dark .dark\:bg-\[\#0d0e12\],
+[data-theme=theverge] .dark .dark\:bg-\[\#0d0e12\] {
+  background-color: #191919 !important;
+}
+
+[data-theme=theverge] .bg-\[\#edeef3\] {
+  background-color: #262626 !important;
+}
+
+[data-theme=theverge].dark .dark\:bg-\[\#1e202b\],
+[data-theme=theverge] .dark .dark\:bg-\[\#1e202b\],
+[data-theme=theverge].dark .dark\:bg-\[\#13141c\],
+[data-theme=theverge] .dark .dark\:bg-\[\#13141c\] {
+  background-color: #262626 !important;
+}
+
+/* Flat 1px Hairline Borders */
+[data-theme=theverge] .border-\[\#dedee5\] {
+  border-color: #313131 !important;
+}
+
+[data-theme=theverge].dark .border-\[\#282937\],
+[data-theme=theverge] .dark .border-\[\#282937\] {
+  border-color: #313131 !important;
+}
+
+[data-theme=theverge] .border-\[\#7132f5\] {
+  border-color: #3cffd0 !important;
+}
+
+[data-theme=theverge] .focus\:border-\[\#7132f5\]:focus {
+  border-color: #3cffd0 !important;
+  outline: 2px solid #5200ff !important;
+}
+
+/* Text colors */
+[data-theme=theverge] .text-\[\#101114\] {
+  color: #ffffff !important;
+}
+
+[data-theme=theverge].dark .dark\:text-\[\#f3f4f8\],
+[data-theme=theverge] .dark .dark\:text-\[\#f3f4f8\] {
+  color: #ffffff !important;
+}
+
+[data-theme=theverge] .text-\[\#686b82\] {
+  color: #949494 !important;
+}
+
+[data-theme=theverge].dark .dark\:text-\[\#9ca0ba\],
+[data-theme=theverge] .dark .dark\:text-\[\#9ca0ba\] {
+  color: #949494 !important;
+}
+
+/* UPPERCASE Mono Labels & Kickers */
+[data-theme=theverge] .text-\[10px\],
+[data-theme=theverge] .text-\[11px\],
+[data-theme=theverge] .uppercase {
+  font-family: var(--font-mono) !important;
+  letter-spacing: 1.2px !important;
+}
+
+/* Card Geometry: 20px pill-card */
+[data-theme=theverge] .rounded-\[16px\],
+[data-theme=theverge] .rounded-\[14px\] {
+  border-radius: 20px !important;
+}
+
+/* Remove decorative shadows for flat, crisp 1px borders */
+[data-theme=theverge] .shadow-whisper,
+[data-theme=theverge] .shadow-micro {
+  box-shadow: none !important;
 }

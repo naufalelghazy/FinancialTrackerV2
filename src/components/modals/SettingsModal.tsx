@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   CheckCircle2,
@@ -15,6 +15,8 @@ import {
   Moon,
   Laptop,
   Palette,
+  Check,
+  FileCode2,
 } from 'lucide-react';
 import type { Account, Category } from '../../types';
 import { formatCurrency } from '../../lib/formatters';
@@ -22,8 +24,7 @@ import { isSupabaseConfigured } from '../../lib/supabase';
 import { AccountAvatar } from '../../features/accounts/AccountsView';
 import { CategoryIcon } from '../ui/CategoryIcon';
 import { getLogoDevToken, setLogoDevToken } from '../../services/logoService';
-import { useTheme } from '../../contexts/ThemeContext';
-import type { ThemeMode } from '../../contexts/ThemeContext';
+import { useTheme, type DesignSystem } from '../../contexts/ThemeContext';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -32,9 +33,10 @@ interface SettingsModalProps {
   categories?: Category[];
   onEditAccount?: (account: Account) => void;
   onAddAccount?: () => void;
+  initialTab?: SettingsTab;
 }
 
-type SettingsTab = 'akun' | 'kategori' | 'tampilan' | 'backend';
+export type SettingsTab = 'akun' | 'kategori' | 'tampilan' | 'backend';
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
@@ -43,9 +45,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   categories = [],
   onEditAccount,
   onAddAccount,
+  initialTab = 'akun',
 }) => {
-  const [activeTab, setActiveTab] = useState<SettingsTab>('akun');
-  const { theme, setTheme } = useTheme();
+  const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
+  const { theme, setTheme, designSystem, setDesignSystem, currentConfig } = useTheme();
+
+  useEffect(() => {
+    if (isOpen && initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [isOpen, initialTab]);
 
   // Supabase Backend Settings State
   const [supabaseUrl, setSupabaseUrl] = useState(
@@ -57,6 +66,94 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   // Logo.dev Token State
   const [logoToken, setLogoToken] = useState(() => getLogoDevToken());
   const [saved, setSaved] = useState(false);
+
+
+  const designThemes: {
+    id: DesignSystem;
+    name: string;
+    edition: string;
+    tagline: string;
+    description: string;
+    docFile: string;
+    primaryColor: string;
+    accentColor: string;
+    darkCanvas: string;
+    lightCanvas: string;
+    typography: { display: string; body: string; mono: string };
+    buttonStyle: string;
+    previewLabel: string;
+    highlights: string[];
+  }[] = [
+    {
+      id: 'coinbase',
+      name: 'Coinbase',
+      edition: 'Coinbase Edition',
+      tagline: 'Financial Institutional Calm',
+      description:
+        'Sistem desain resmi Coinbase: kanvas bersih dengan aksen Coinbase Blue (#0052ff), tombol pill 100px (rounded-full), kartu berkontur 24px, tipografi Inter berbobot sedang, dan angka monospace JetBrains Mono.',
+      docFile: 'DESIGN-coinbase.md',
+      primaryColor: '#0052ff',
+      accentColor: '#003ecc',
+      darkCanvas: '#0a0b0d',
+      lightCanvas: '#ffffff',
+      typography: { display: 'Inter (400 Calm)', body: 'Inter', mono: 'JetBrains Mono' },
+      buttonStyle: 'Pill 100px (rounded-full)',
+      previewLabel: 'Catat Transaksi',
+      highlights: [
+        'Aksen brand Coinbase Blue (#0052ff)',
+        'Tombol Pill rounded-full 100px',
+        'Kartu sudut bulat lebar 24px',
+        'Hairline border tipis #dee1e6 / #22252a',
+        'Dual Canvas: Putih Bersih & Obsidian #0a0b0d',
+      ],
+    },
+    {
+      id: 'theverge',
+      name: 'The Verge',
+      edition: 'The Verge Edition',
+      tagline: 'Cyber Editorial Newsprint',
+      description:
+        'Sistem desain The Verge 2024: Kanvas berita cyber gelap (#131313), tombol Jelly Mint (#3cffd0) mencolok dengan teks hitam pekat, aksen Ultraviolet (#5200ff), display headline Anton yang padat & brutal, dan border flat 1px.',
+      docFile: 'DESIGN-theverge.md',
+      primaryColor: '#3cffd0',
+      accentColor: '#5200ff',
+      darkCanvas: '#131313',
+      lightCanvas: '#131313',
+      typography: { display: 'Anton (Condensed Heavy)', body: 'Space Grotesk', mono: 'Space Mono' },
+      buttonStyle: 'Neon Mint Pill + Teks Hitam Pekat',
+      previewLabel: 'CATAT TRANSAKSI',
+      highlights: [
+        'Kanvas berita cyber gelap murni #131313',
+        'Tombol CTA Jelly Mint neon (#3cffd0) teks hitam',
+        'Aksen komplementer Verge Ultraviolet (#5200ff)',
+        'Display headline Anton tebal & agresif',
+        'Garis batas flat 1px tanpa bayangan kabur',
+      ],
+    },
+    {
+      id: 'kraken',
+      name: 'Kraken',
+      edition: 'Kraken Edition',
+      tagline: 'Crypto Modernist Classic',
+      description:
+        'Sistem desain bawaan Kraken: aksen Kraken Purple (#7132f5), sudut rounded 12px yang presisi, tipografi IBM Plex Sans, dan efek bayangan whisper yang halus.',
+      docFile: 'DESIGN-kraken.md',
+      primaryColor: '#7132f5',
+      accentColor: '#5741d8',
+      darkCanvas: '#0d0e12',
+      lightCanvas: '#fafbfe',
+      typography: { display: 'IBM Plex Sans', body: 'IBM Plex Sans', mono: 'JetBrains Mono' },
+      buttonStyle: 'Rounded 12px + Bayangan Whisper',
+      previewLabel: 'Catat Transaksi',
+      highlights: [
+        'Aksen Kraken Purple signature (#7132f5)',
+        'Sudut rounded 12px geometris',
+        'Tipografi IBM Plex Sans terstruktur',
+        'Bayangan mikro & whisper lembut',
+        'Kanvas kontras ganda terang dan gelap',
+      ],
+    },
+  ];
 
   if (!isOpen) return null;
 
@@ -75,32 +172,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     { id: 'kategori', label: 'Kategori', icon: Layers },
     { id: 'tampilan', label: 'Tema & Tampilan', icon: Palette },
     { id: 'backend', label: 'Backend Database', icon: Server },
-  ];
-
-  const themeOptions: {
-    id: ThemeMode;
-    label: string;
-    description: string;
-    icon: React.FC<{ className?: string }>;
-  }[] = [
-    {
-      id: 'light',
-      label: 'Tema Terang (Light Mode)',
-      description: 'Latar putih bersih khas Kraken, kontras tinggi dan cerah.',
-      icon: Sun,
-    },
-    {
-      id: 'dark',
-      label: 'Tema Gelap (Dark Mode)',
-      description: 'Mode malam bernuansa deep Kraken dark (#0d0e12), nyaman di mata.',
-      icon: Moon,
-    },
-    {
-      id: 'system',
-      label: 'Ikuti Sistem Perangkat',
-      description: 'Menyesuaikan otomatis dengan preferensi tema sistem operasi Anda.',
-      icon: Laptop,
-    },
   ];
 
   return (
@@ -282,74 +353,225 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
           {/* ================= TAB 3: TEMA & TAMPILAN ================= */}
           {activeTab === 'tampilan' && (
-            <div className="space-y-4">
+            <div className="space-y-6">
+              {/* Header Tab */}
               <div>
                 <h3 className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8]">
-                  Pilihan Tema Aplikasi
+                  Menu Pilihan Sistem Desain & Tema
                 </h3>
-                <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
-                  Sesuaikan kenyamanan visual sesuai selera atau kondisi pencahayaan
+                <p className="text-xs text-[#686b82] dark:text-[#9ca0ba] mt-0.5">
+                  Pilih arsitektur desain yang Anda inginkan sesuai dokumentasi desain resmi platform
                 </p>
               </div>
 
-              {/* Theme Options Grid */}
-              <div className="space-y-2.5">
-                {themeOptions.map((opt) => {
-                  const Icon = opt.icon;
-                  const isSelected = theme === opt.id;
+              {/* Design Systems Cards Showroom */}
+              <div className="space-y-3.5">
+                {designThemes.map((themeItem) => {
+                  const isSelected = designSystem === themeItem.id;
                   return (
                     <div
-                      key={opt.id}
-                      onClick={() => setTheme(opt.id)}
-                      className={`p-3.5 rounded-[14px] border cursor-pointer transition-all flex items-start gap-3.5 ${
+                      key={themeItem.id}
+                      onClick={() => setDesignSystem(themeItem.id)}
+                      className={`p-4 rounded-[18px] border-2 cursor-pointer transition-all relative ${
                         isSelected
-                          ? 'bg-[#855bfb]/10 dark:bg-[#855bfb]/15 border-[#7132f5] shadow-micro'
-                          : 'bg-[#fafbfe] dark:bg-[#1e202b] border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/40'
+                          ? 'bg-[#fafbfe] dark:bg-[#1a1c26] border-[#7132f5] dark:border-[#a78bfa] shadow-md'
+                          : 'bg-[#fafbfe]/60 dark:bg-[#16171f] border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/40'
                       }`}
                     >
-                      <div
-                        className={`w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0 transition-colors ${
-                          isSelected
-                            ? 'bg-[#7132f5] text-white shadow-micro'
-                            : 'bg-white dark:bg-[#282937] border border-[#dedee5] dark:border-[#35374d] text-[#686b82] dark:text-[#9ca0ba]'
-                        }`}
-                      >
-                        <Icon className="w-4.5 h-4.5" />
-                      </div>
+                      {/* Top Header of Card */}
+                      <div className="flex items-start justify-between gap-3 mb-2.5">
+                        <div className="flex items-center gap-3">
+                          {/* Main Color Swatch */}
+                          <div
+                            className="w-10 h-10 rounded-[12px] flex items-center justify-center shrink-0 shadow-sm"
+                            style={{
+                              backgroundColor: themeItem.id === 'theverge' ? '#131313' : themeItem.primaryColor,
+                              border: themeItem.id === 'theverge' ? '2px solid #3cffd0' : 'none',
+                            }}
+                          >
+                            <span
+                              className="w-4 h-4 rounded-full"
+                              style={{ backgroundColor: themeItem.id === 'theverge' ? '#3cffd0' : '#ffffff' }}
+                            />
+                          </div>
 
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-bold text-xs text-[#101114] dark:text-[#f3f4f8]">
-                            {opt.label}
-                          </h4>
-                          {isSelected && (
-                            <span className="text-[10px] font-bold text-[#7132f5] dark:text-[#a78bfa] flex items-center gap-1">
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              <span>Aktif</span>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8]">
+                                {themeItem.name}
+                              </h4>
+                              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#dedee5]/80 dark:bg-[#282937] text-[#686b82] dark:text-[#9ca0ba] font-bold">
+                                {themeItem.edition}
+                              </span>
+                            </div>
+                            <span className="text-xs font-semibold text-[#7132f5] dark:text-[#a78bfa] block">
+                              {themeItem.tagline}
                             </span>
+                          </div>
+                        </div>
+
+                        {/* Selected Indicator */}
+                        <div className="shrink-0">
+                          {isSelected ? (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#7132f5] dark:bg-[#a78bfa] text-white dark:text-[#101114] text-xs font-bold shadow-micro">
+                              <Check className="w-3.5 h-3.5 stroke-[3]" />
+                              <span>Sedang Digunakan</span>
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDesignSystem(themeItem.id);
+                              }}
+                              className="px-3 py-1 rounded-full border border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5] text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8] transition-colors"
+                            >
+                              Gunakan Tema
+                            </button>
                           )}
                         </div>
-                        <p className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] mt-0.5 leading-relaxed">
-                          {opt.description}
-                        </p>
+                      </div>
+
+                      {/* Description */}
+                      <p className="text-xs text-[#686b82] dark:text-[#9ca0ba] leading-relaxed mb-3">
+                        {themeItem.description}
+                      </p>
+
+                      {/* Highlights Pill Badges */}
+                      <div className="flex flex-wrap gap-1.5 mb-3.5">
+                        {themeItem.highlights.map((h, i) => (
+                          <span
+                            key={i}
+                            className="text-[10px] font-medium px-2.5 py-1 rounded-[8px] bg-white dark:bg-[#232534] border border-[#dedee5] dark:border-[#2e3146] text-[#4b4e63] dark:text-[#cbd0e2]"
+                          >
+                            {h}
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Live Mini Preview Bar */}
+                      <div className="pt-3 border-t border-[#dedee5]/70 dark:border-[#282937] flex flex-wrap items-center justify-between gap-3 bg-white/70 dark:bg-[#12131a] -mx-4 -mb-4 p-3.5 rounded-b-[16px]">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#9497a9] dark:text-[#767993]">
+                            Preview CTA:
+                          </span>
+                          <button
+                            type="button"
+                            className={`py-1.5 px-4 text-xs font-bold transition-all shadow-micro ${
+                              themeItem.id === 'coinbase'
+                                ? 'bg-[#0052ff] text-white rounded-full'
+                                : themeItem.id === 'theverge'
+                                ? 'bg-[#3cffd0] text-black font-extrabold rounded-full'
+                                : 'bg-[#7132f5] text-white rounded-[10px]'
+                            }`}
+                          >
+                            {themeItem.previewLabel}
+                          </button>
+                        </div>
+
+                        {/* Doc badge reference */}
+                        <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#686b82] dark:text-[#9ca0ba]">
+                          <FileCode2 className="w-3.5 h-3.5 text-[#7132f5] dark:text-[#a78bfa]" />
+                          <span>{themeItem.docFile}</span>
+                        </div>
                       </div>
                     </div>
                   );
                 })}
               </div>
 
+              {/* Mode Tampilan (Light / Dark / Auto) */}
+              <div className="p-4 rounded-[16px] bg-[#fafbfe] dark:bg-[#1e202b] border border-[#dedee5] dark:border-[#282937] space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-bold text-xs text-[#101114] dark:text-[#f3f4f8]">
+                      Mode Warna Tampilan
+                    </h4>
+                    <span className="text-[11px] text-[#686b82] dark:text-[#9ca0ba]">
+                      Sesuaikan tingkat keterangan antarmuka
+                    </span>
+                  </div>
+                  {designSystem === 'theverge' && (
+                    <span className="text-[10px] font-mono text-[#3cffd0] bg-[#3cffd0]/10 px-2 py-0.5 rounded-full border border-[#3cffd0]/30">
+                      Terkunci Cyber Dark (#131313)
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    disabled={designSystem === 'theverge'}
+                    onClick={() => setTheme('light')}
+                    className={`p-3 rounded-[12px] border text-left transition-all ${
+                      theme === 'light' && designSystem !== 'theverge'
+                        ? 'bg-white dark:bg-[#282937] border-[#7132f5] shadow-micro'
+                        : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/40'
+                    } ${designSystem === 'theverge' ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  >
+                    <Sun className="w-4 h-4 text-[#f59e0b] mb-1.5" />
+                    <span className="block font-bold text-xs text-[#101114] dark:text-[#f3f4f8]">
+                      Terang
+                    </span>
+                    <span className="text-[10px] text-[#686b82] dark:text-[#9ca0ba]">
+                      Kanvas putih bersih
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => setTheme('dark')}
+                    className={`p-3 rounded-[12px] border text-left transition-all ${
+                      theme === 'dark' || designSystem === 'theverge'
+                        ? 'bg-white dark:bg-[#282937] border-[#7132f5] shadow-micro'
+                        : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/40'
+                    }`}
+                  >
+                    <Moon className="w-4 h-4 text-[#7132f5] dark:text-[#a78bfa] mb-1.5" />
+                    <span className="block font-bold text-xs text-[#101114] dark:text-[#f3f4f8]">
+                      Gelap
+                    </span>
+                    <span className="text-[10px] text-[#686b82] dark:text-[#9ca0ba]">
+                      Kenyamanan malam hari
+                    </span>
+                  </button>
+
+                  <button
+                    disabled={designSystem === 'theverge'}
+                    onClick={() => setTheme('system')}
+                    className={`p-3 rounded-[12px] border text-left transition-all ${
+                      theme === 'system' && designSystem !== 'theverge'
+                        ? 'bg-white dark:bg-[#282937] border-[#7132f5] shadow-micro'
+                        : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/40'
+                    } ${designSystem === 'theverge' ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  >
+                    <Laptop className="w-4 h-4 text-[#686b82] mb-1.5" />
+                    <span className="block font-bold text-xs text-[#101114] dark:text-[#f3f4f8]">
+                      Sistem
+                    </span>
+                    <span className="text-[10px] text-[#686b82] dark:text-[#9ca0ba]">
+                      Otomatis sistem OS
+                    </span>
+                  </button>
+                </div>
+              </div>
+
               {/* Info Box */}
-              <div className="p-3.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#1e202b] border border-[#dedee5] dark:border-[#282937] space-y-2 pt-3">
+              <div className="p-3.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#1e202b] border border-[#dedee5] dark:border-[#282937] space-y-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#9497a9] dark:text-[#767993] block">
-                  Informasi Sistem
+                  Informasi Tema Aktif
                 </span>
                 <div className="flex justify-between text-xs text-[#686b82] dark:text-[#9ca0ba]">
-                  <span>Versi Aplikasi</span>
-                  <span className="font-bold text-[#101114] dark:text-[#f3f4f8]">Kraken Edition v2.0</span>
+                  <span>Sistem Desain Aktif</span>
+                  <span className="font-bold text-[#101114] dark:text-[#f3f4f8]">{currentConfig.badge}</span>
                 </div>
                 <div className="flex justify-between text-xs text-[#686b82] dark:text-[#9ca0ba]">
-                  <span>Mata Uang</span>
-                  <span className="font-bold text-[#101114] dark:text-[#f3f4f8]">IDR (Rp)</span>
+                  <span>Dokumentasi Rujukan</span>
+                  <span className="font-mono font-bold text-[#7132f5] dark:text-[#a78bfa]">{currentConfig.docFile}</span>
+                </div>
+                <div className="flex justify-between text-xs text-[#686b82] dark:text-[#9ca0ba]">
+                  <span>Aksen Warna Utama</span>
+                  <span className="font-mono font-bold" style={{ color: currentConfig.primaryColor }}>
+                    {currentConfig.primaryColor}
+                  </span>
                 </div>
               </div>
             </div>

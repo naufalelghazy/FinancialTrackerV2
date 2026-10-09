@@ -253,16 +253,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                   return (
                     <div
                       key={t.id}
-                      onClick={() => onEditTransaction(t)}
-                      className="group px-4 py-3 flex items-start sm:items-center justify-between gap-3 hover:bg-[#fafbfe] dark:hover:bg-[#1e202b] dark:bg-[#13141c] active:bg-[#f4f5f8] cursor-pointer transition-colors"
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          onEditTransaction(t);
-                        }
-                      }}
+                      className="group px-4 py-3 flex items-start sm:items-center justify-between gap-3 hover:bg-[#fafbfe] dark:hover:bg-[#1e202b] dark:bg-[#13141c] transition-colors"
                     >
                       {/* Left: Category Icon */}
                       <div className="pt-0.5 sm:pt-0 shrink-0">
@@ -327,9 +318,18 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                           </span>
                         </div>
 
-                        <div className="w-7 h-7 rounded-[8px] flex items-center justify-center text-[#9497a9] group-hover:text-[#7132f5] group-hover:bg-[#855bfb]/10 transition-all">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditTransaction(t);
+                          }}
+                          className="w-8 h-8 rounded-[8px] flex items-center justify-center text-[#9497a9] hover:text-[#7132f5] dark:hover:text-[#a78bfa] hover:bg-[#855bfb]/15 transition-all cursor-pointer active:scale-95 border border-transparent hover:border-[#855bfb]/30"
+                          title="Ubah Transaksi"
+                          aria-label="Ubah Transaksi"
+                        >
                           <Edit2 className="w-3.5 h-3.5" />
-                        </div>
+                        </button>
                       </div>
                     </div>
                   );

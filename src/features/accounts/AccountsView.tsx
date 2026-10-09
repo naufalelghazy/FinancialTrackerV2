@@ -56,7 +56,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
   return (
     <div className="space-y-6 pb-24">
       {/* Total Saldo Card - Kraken Purple Commanding Hero */}
-      <div className="bg-[#7132f5] text-white rounded-[16px] p-6 shadow-whisper relative overflow-hidden border border-[#5741d8] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="hero-balance-card bg-[#7132f5] text-white rounded-[16px] p-6 shadow-whisper relative overflow-hidden border border-[#5741d8] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-white/80 text-[11px] font-semibold uppercase tracking-wider">
             <Wallet className="w-3.5 h-3.5" />
@@ -91,18 +91,9 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
           {bankAccounts.map((acc) => (
             <div
               key={acc.id}
-              onClick={() => onEditAccount(acc)}
-              className="group flex items-center justify-between p-3.5 bg-white dark:bg-[#16171f] rounded-[12px] border border-[#dedee5] dark:border-[#282937] shadow-micro hover:border-[#7132f5]/50 hover:shadow-md cursor-pointer transition-all active:scale-[0.99]"
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  onEditAccount(acc);
-                }
-              }}
+              className="group flex items-center justify-between p-3.5 bg-white dark:bg-[#16171f] rounded-[12px] border border-[#dedee5] dark:border-[#282937] shadow-micro transition-all"
             >
-              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-3 min-w-0">
                 <AccountAvatar acc={acc} />
                 <div className="min-w-0">
                   <span className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8] block tracking-tight group-hover:text-[#7132f5] transition-colors truncate">
@@ -122,9 +113,18 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                 >
                   {formatCurrency(acc.balance)}
                 </span>
-                <div className="w-7 h-7 rounded-[6px] flex items-center justify-center text-[#9497a9] group-hover:text-[#7132f5] group-hover:bg-[#855bfb]/10 transition-all">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEditAccount(acc);
+                  }}
+                  className="w-8 h-8 rounded-[8px] flex items-center justify-center text-[#9497a9] hover:text-[#7132f5] dark:hover:text-[#a78bfa] hover:bg-[#855bfb]/15 transition-all cursor-pointer active:scale-95 border border-transparent hover:border-[#855bfb]/30"
+                  title="Ubah Akun"
+                  aria-label="Ubah Akun"
+                >
                   <Edit2 className="w-3.5 h-3.5" />
-                </div>
+                </button>
               </div>
             </div>
           ))}

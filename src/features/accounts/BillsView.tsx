@@ -18,22 +18,22 @@ export const BillsView: React.FC<BillsViewProps> = ({ accounts, onEditAccount })
 
   return (
     <div className="space-y-6 pb-24">
-      {/* Total Tagihan Card - Deep Solid Slate/Dark Kraken Card */}
-      <div className="bg-[#101114] text-white rounded-[16px] p-6 shadow-whisper relative overflow-hidden border border-black dark:border-[#282937] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Total Tagihan Card - Red Hero Debt Card */}
+      <div className="hero-debt-card bg-gradient-to-br from-[#dc2626] to-[#b91c1c] text-white rounded-[16px] p-6 shadow-whisper relative overflow-hidden border border-[#ef4444]/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-[#9497a9] text-[11px] font-semibold uppercase tracking-wider">
-            <CreditCard className="w-3.5 h-3.5 text-[#7132f5]" />
+          <div className="debt-card-header flex items-center gap-2 text-white/90 text-[11px] font-semibold uppercase tracking-wider">
+            <CreditCard className="debt-card-icon w-3.5 h-3.5 text-white/90" />
             Total Tagihan & Hutang
           </div>
-          <div className="text-3xl sm:text-4xl font-bold mt-2 tracking-[-0.8px]">
+          <div className="debt-card-amount text-3xl sm:text-4xl font-bold mt-2 tracking-[-0.8px] text-white">
             {formatCurrency(totalDebt)}
           </div>
-          <div className="text-xs text-[#9497a9] mt-1">
+          <div className="debt-card-sub text-xs text-white/80 mt-1">
             {creditAccounts.length} Akun Kartu Kredit & Pinjaman
           </div>
         </div>
 
-        <div className="px-3 py-1.5 rounded-[8px] bg-white/10 text-xs font-semibold text-[#dedee5] self-start sm:self-auto">
+        <div className="debt-card-badge px-3 py-1.5 rounded-[8px] bg-black/25 text-xs font-semibold text-white border border-white/20 self-start sm:self-auto">
           {totalDebt === 0 ? 'Semua Tagihan Lunas' : 'Wajib Dibayarkan'}
         </div>
       </div>
@@ -52,18 +52,9 @@ export const BillsView: React.FC<BillsViewProps> = ({ accounts, onEditAccount })
             return (
               <div
                 key={acc.id}
-                onClick={() => onEditAccount && onEditAccount(acc)}
-                className="group p-4 bg-white dark:bg-[#16171f] rounded-[12px] border border-[#dedee5] dark:border-[#282937] shadow-micro hover:border-[#7132f5]/50 hover:shadow-md dark:hover:border-[#7132f5] cursor-pointer transition-all active:scale-[0.99] flex items-center justify-between"
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    onEditAccount && onEditAccount(acc);
-                  }
-                }}
+                className="group p-4 bg-white dark:bg-[#16171f] rounded-[12px] border border-[#dedee5] dark:border-[#282937] shadow-micro transition-all flex items-center justify-between"
               >
-                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center gap-3 min-w-0">
                   <AccountAvatar acc={acc} />
                   <div className="min-w-0">
                     <span className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8] block tracking-tight group-hover:text-[#7132f5] transition-colors truncate">
@@ -94,9 +85,18 @@ export const BillsView: React.FC<BillsViewProps> = ({ accounts, onEditAccount })
                       {hasDebt ? 'Belum Dibayar' : 'Lunas'}
                     </span>
                   </div>
-                  <div className="w-7 h-7 rounded-[6px] flex items-center justify-center text-[#9497a9] group-hover:text-[#7132f5] group-hover:bg-[#855bfb]/10 transition-all">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditAccount && onEditAccount(acc);
+                    }}
+                    className="w-8 h-8 rounded-[8px] flex items-center justify-center text-[#9497a9] hover:text-[#7132f5] dark:hover:text-[#a78bfa] hover:bg-[#855bfb]/15 transition-all cursor-pointer active:scale-95 border border-transparent hover:border-[#855bfb]/30"
+                    title="Ubah Tagihan / Akun"
+                    aria-label="Ubah Tagihan / Akun"
+                  >
                     <Edit2 className="w-3.5 h-3.5" />
-                  </div>
+                  </button>
                 </div>
               </div>
             );

@@ -1,3 +1,4 @@
+import { ReloadPrompt } from './components/layout/ReloadPrompt';
 import { useState, useEffect, useCallback } from 'react';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
@@ -9,7 +10,7 @@ import { AccountsView } from './features/accounts/AccountsView';
 import { BillsView } from './features/accounts/BillsView';
 import { ReportView } from './features/report/ReportView';
 import { HistoryView } from './features/history/HistoryView';
-import { SettingsModal } from './components/modals/SettingsModal';
+import { SettingsModal, type SettingsTab } from './components/modals/SettingsModal';
 import { EditAccountModal } from './components/modals/EditAccountModal';
 import { EditTransactionModal } from './components/modals/EditTransactionModal';
 import { INITIAL_ACCOUNTS, INITIAL_CATEGORIES } from './lib/constants';
@@ -29,6 +30,12 @@ import type { Account, AccountType, Category, Transaction, TransactionType } fro
 export function App() {
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>('akun');
+
+  const handleOpenSettings = (tab: SettingsTab = 'akun') => {
+    setSettingsTab(tab);
+    setIsSettingsOpen(true);
+  };
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -235,7 +242,7 @@ export function App() {
       <Sidebar
         activeTab={activeTab}
         onChangeTab={setActiveTab}
-        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenSettings={handleOpenSettings}
         isRefreshing={isRefreshing}
         isLoading={isLoading}
         onSync={handleRefresh}
@@ -248,12 +255,26 @@ export function App() {
           <Header
             activeTab={activeTab}
             onChangeTab={setActiveTab}
-            onOpenSettings={() => setIsSettingsOpen(true)}
+            onOpenSettings={handleOpenSettings}
             isRefreshing={isRefreshing}
             isLoading={isLoading}
             onSync={handleRefresh}
           />
         </div>
+
+        {/* Desktop Top Header Bar with Quick Theme Selector (Visible on md and above) */}
+        <header className="hidden md:flex items-center justify-between px-6 lg:px-8 h-16 border-b border-[#dedee5] dark:border-[#282937] bg-white/80 dark:bg-[#16171f]/80 backdrop-blur-md sticky top-0 z-20">
+          <div>
+            <h1 className="font-bold text-base lg:text-lg text-[#101114] dark:text-[#f3f4f8] tracking-tight">
+              {activeTab === 'dashboard' && 'Dashboard Overview'}
+              {activeTab === 'riwayat' && 'Riwayat Transaksi'}
+              {activeTab === 'report' && 'Laporan & Grafik Keuangan'}
+              {activeTab === 'saldo' && 'Saldo & Rekening'}
+              {activeTab === 'tagihan' && 'Tagihan & Pinjaman'}
+              {activeTab === 'input' && 'Catat Transaksi Baru'}
+            </h1>
+          </div>
+        </header>
 
         {/* Main Content Area - Responsive Container */}
         <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1">
@@ -352,6 +373,7 @@ export function App() {
       {/* Settings Modal - Multi-tab application & backend settings */}
       <SettingsModal
         isOpen={isSettingsOpen}
+        initialTab={settingsTab}
         onClose={() => setIsSettingsOpen(false)}
         accounts={accounts}
         categories={categories}
@@ -384,6 +406,7 @@ export function App() {
         onSave={handleSaveTransaction}
         onDelete={handleDeleteTransaction}
       />
+          <ReloadPrompt />
     </div>
   );
 }

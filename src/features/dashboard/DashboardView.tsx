@@ -15,6 +15,7 @@ import {
   Calendar,
   PieChart,
   BarChart3,
+  Edit2,
 } from 'lucide-react';
 
 interface DashboardViewProps {
@@ -136,7 +137,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* ===================== HERO CARDS GRID ===================== */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Total Saldo Tersedia (Kraken Purple Hero) */}
-        <div className="bg-[#7132f5] text-white rounded-[16px] p-5 sm:p-6 shadow-whisper relative overflow-hidden border border-[#5741d8] flex flex-col justify-between">
+        <div className="hero-balance-card bg-[#7132f5] text-white rounded-[16px] p-5 sm:p-6 shadow-whisper relative overflow-hidden border border-[#5741d8] flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-white/80 text-[11px] font-semibold uppercase tracking-wider flex items-center gap-1.5">
               <Wallet className="w-3.5 h-3.5" />
@@ -221,36 +222,37 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        {/* Total Tagihan & Hutang Card (Near Black Solid Kraken Card) */}
-        <div className="bg-[#101114] text-white rounded-[16px] p-5 sm:p-6 shadow-whisper border border-black flex flex-col justify-between sm:col-span-2 lg:col-span-1">
+        {/* Total Tagihan & Hutang Card (Red Hero Debt Card) */}
+        <div className="hero-debt-card bg-gradient-to-br from-[#dc2626] to-[#b91c1c] text-white rounded-[16px] p-5 sm:p-6 shadow-whisper border border-[#ef4444]/40 flex flex-col justify-between sm:col-span-2 lg:col-span-1 relative overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-[#9497a9] text-[11px] font-semibold uppercase tracking-wider flex items-center gap-1.5">
-              <CreditCard className="w-3.5 h-3.5 text-[#7132f5]" />
+            <span className="debt-card-header text-white/90 text-[11px] font-semibold uppercase tracking-wider flex items-center gap-1.5">
+              <CreditCard className="debt-card-icon w-3.5 h-3.5 text-white/90" />
               Total Tagihan & Hutang
             </span>
-            <span className="px-2 py-0.5 rounded-[6px] bg-white/10 text-[11px] font-medium text-[#dedee5]">
+            <span className="debt-card-badge px-2 py-0.5 rounded-[6px] bg-black/25 text-[11px] font-semibold text-white border border-white/20">
               {creditAccounts.length} Akun Kredit
             </span>
           </div>
 
           <div className="my-3">
-            <div className="text-3xl font-bold tracking-tight text-white">
+            <div className="debt-card-amount text-3xl font-bold tracking-tight text-white">
               {formatCurrency(totalDebt)}
             </div>
-            <p className="text-xs text-[#9497a9] mt-1">
+            <p className="debt-card-sub text-xs text-white/80 mt-1">
               Kartu Kredit, Paylater & Cicilan Pinjaman
             </p>
           </div>
 
-          <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs">
+          <div className="debt-card-divider pt-2 border-t border-white/20 flex items-center justify-between text-xs">
             <button
+              type="button"
               onClick={() => onNavigateTab('tagihan')}
-              className="text-[#855bfb] hover:text-[#9f7efa] font-semibold flex items-center gap-1 transition-colors"
+              className="debt-card-btn text-white hover:text-white/80 font-bold flex items-center gap-1.5 transition-all group"
             >
-              <span>Rincian Tagihan</span>
-              <ArrowRight className="w-3 h-3" />
+              <span className="underline underline-offset-2">Rincian Tagihan</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
             </button>
-            <span className="text-[11px] text-[#9497a9]">
+            <span className="debt-card-status text-[11px] text-white/90 font-medium">
               {totalDebt === 0 ? 'Semua Lunas' : 'Belum Dibayar'}
             </span>
           </div>
@@ -400,14 +402,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 const categoryName = getCategoryName(t.categoryId);
 
                 return (
-                  <div
-                    key={t.id}
-                    onClick={() => onEditTransaction(t)}
-                    className="p-3.5 sm:px-4 flex items-center justify-between gap-3 hover:bg-[#fafbfe] dark:hover:bg-[#1e202b] dark:bg-[#1e202b] active:bg-[#f0f1f5] cursor-pointer transition-colors"
-                    role="button"
-                    tabIndex={0}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      key={t.id}
+                      className="p-3.5 sm:px-4 flex items-center justify-between gap-3 hover:bg-[#fafbfe] dark:hover:bg-[#1e202b] dark:bg-[#1e202b] transition-colors"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
                       <CategoryIcon
                         name={isTransfer ? 'Pindah Akun' : categoryName}
                         type={t.type}
@@ -428,20 +427,34 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       </div>
                     </div>
 
-                    <div className="text-right shrink-0">
-                      <span
-                        className={`font-bold text-xs sm:text-sm block tabular-nums ${
-                          isExpense
-                            ? 'text-[#e53e3e]'
-                            : isIncome
-                            ? 'text-[#026b3f]'
-                            : 'text-[#7132f5]'
-                        }`}
-                      >
-                        {isExpense ? '-' : isIncome ? '+' : ''}
-                        {formatCurrency(t.amount)}
-                      </span>
-                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                        <div className="text-right">
+                          <span
+                            className={`font-bold text-xs sm:text-sm block tabular-nums ${
+                              isExpense
+                                ? 'text-[#e53e3e]'
+                                : isIncome
+                                ? 'text-[#026b3f]'
+                                : 'text-[#7132f5]'
+                            }`}
+                          >
+                            {isExpense ? '-' : isIncome ? '+' : ''}
+                            {formatCurrency(t.amount)}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditTransaction(t);
+                          }}
+                          className="w-7 h-7 rounded-[7px] flex items-center justify-center text-[#9497a9] hover:text-[#7132f5] dark:hover:text-[#a78bfa] hover:bg-[#855bfb]/15 transition-all cursor-pointer active:scale-95 border border-transparent hover:border-[#855bfb]/30"
+                          title="Ubah Transaksi"
+                          aria-label="Ubah Transaksi"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                   </div>
                 );
               })}

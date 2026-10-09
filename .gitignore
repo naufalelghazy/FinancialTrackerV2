@@ -25,4 +25,10 @@ dist-ssr
  
 .env
 .env*.local
-
+DESIGN-coinbase.md
+DESIGN-kraken.md
+DESIGN-theverge.md
+DESIGN-autumn.md
+DEVELOPMENT_WALKTHROUGH.md
+token-saver/*
+agents/*

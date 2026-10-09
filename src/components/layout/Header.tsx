@@ -1,12 +1,12 @@
-import React from 'react';
-import { Settings, Wallet, LayoutDashboard, CreditCard, History, Plus, RefreshCw, Sun, Moon, BarChart3 } from 'lucide-react';
+﻿import React from 'react';
+import { Wallet, LayoutDashboard, CreditCard, History, Plus, RefreshCw, Sun, Moon, BarChart3, Settings } from 'lucide-react';
 import type { NavTab } from './BottomNav';
 import { useTheme } from '../../contexts/ThemeContext';
 
 interface HeaderProps {
   activeTab: NavTab;
   onChangeTab: (tab: NavTab) => void;
-  onOpenSettings: () => void;
+  onOpenSettings: (tab?: 'akun' | 'kategori' | 'tampilan' | 'backend') => void;
   isRefreshing?: boolean;
   isLoading?: boolean;
   onSync?: () => void;
@@ -20,7 +20,7 @@ export const Header: React.FC<HeaderProps> = ({
   isLoading = false,
   onSync,
 }) => {
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark, toggleTheme, currentConfig } = useTheme();
 
   const desktopNavItems: { id: NavTab; label: string; icon: React.FC<{ className?: string }> }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -40,17 +40,15 @@ export const Header: React.FC<HeaderProps> = ({
           role="button"
           tabIndex={0}
         >
-          <div className="w-9 h-9 rounded-[10px] bg-[#7132f5] flex items-center justify-center text-white shadow-micro shrink-0">
-            <Wallet className="w-5 h-5 stroke-[2.2]" />
+          <div
+            className="w-9 h-9 rounded-[10px] flex items-center justify-center shadow-micro shrink-0 transition-colors"
+            style={{ backgroundColor: currentConfig.primaryColor }}
+          >
+            <Wallet className={`w-5 h-5 stroke-[2.2] ${currentConfig.id === 'theverge' ? 'text-black' : 'text-white'}`} />
           </div>
-          <div>
-            <span className="font-bold text-base sm:text-lg text-[#101114] dark:text-[#f3f4f8] tracking-[-0.5px] block leading-none">
-              Financial Tracker
-            </span>
-            <span className="text-[10px] font-semibold text-[#7132f5] dark:text-[#a78bfa] tracking-wider uppercase">
-              Kraken Edition
-            </span>
-          </div>
+          <span className="font-bold text-base sm:text-lg text-[#101114] dark:text-[#f3f4f8] tracking-[-0.5px] block leading-none">
+            Financial Tracker
+          </span>
         </div>
 
         {/* Desktop Navigation Tabs (Hidden on Mobile) */}
@@ -75,27 +73,28 @@ export const Header: React.FC<HeaderProps> = ({
           })}
         </nav>
 
-        {/* Right Actions: Theme Toggle, Sync, Catat Transaksi CTA & Settings */}
-        <div className="flex items-center gap-2 sm:gap-2.5">
+        {/* Right Actions: Theme Menu Dropdown, Theme Toggle, Sync, Catat Transaksi CTA & Settings */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Quick Catat Transaksi Button on Desktop */}
           <button
             onClick={() => onChangeTab('input')}
             className={`hidden sm:flex items-center gap-1.5 py-2 px-3.5 rounded-[12px] text-xs font-bold transition-all shadow-micro ${
               activeTab === 'input'
                 ? 'bg-[#5741d8] text-white'
-                : 'bg-[#7132f5] hover:bg-[#5741d8] text-white'
+                : 'btn-kraken-primary text-white'
             }`}
           >
             <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
             <span>Catat Transaksi</span>
           </button>
 
+
           {/* Theme Quick Toggle Button */}
           <button
             onClick={toggleTheme}
             className="w-9 h-9 rounded-[10px] flex items-center justify-center text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8] hover:bg-[#edeef3] dark:hover:bg-[#1e202b] transition-colors border border-[#dedee5] dark:border-[#282937]"
             title={isDark ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
-            aria-label="Ganti Tema"
+            aria-label="Ganti Mode Tampilan"
           >
             {isDark ? (
               <Sun className="w-4 h-4 text-[#f59e0b]" />
@@ -121,7 +120,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Settings Button */}
           <button
-            onClick={onOpenSettings}
+            onClick={() => onOpenSettings()}
             className="w-9 h-9 rounded-[10px] flex items-center justify-center text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8] hover:bg-[#edeef3] dark:hover:bg-[#1e202b] transition-colors active:scale-95 border border-[#dedee5] dark:border-[#282937]"
             aria-label="Pengaturan"
           >
