@@ -27,6 +27,10 @@
     --kraken-border: #282937;
   }
 
+  html {
+    scrollbar-gutter: stable;
+  }
+
   body {
     background-color: #fafbfe;
     color: #101114;
@@ -957,4 +961,12 @@ button.theme-preview-cta[data-preview-theme="autumn"] {
 }
 .theme-card-container[data-selected="true"][data-theme-id="autumn"] {
   border-color: #ea580c !important;
+}
+
+/* Autumn active segmented button for pengeluaran in dark mode */
+[data-theme=autumn].dark button.bg-\[\#101114\],
+.dark[data-theme=autumn] button.bg-\[\#101114\],
+[data-theme=autumn] .dark button.bg-\[\#101114\] {
+  background-color: #2e2925 !important;
+  color: #ffffff !important;
 }

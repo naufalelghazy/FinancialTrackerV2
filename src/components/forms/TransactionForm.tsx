@@ -73,14 +73,15 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
       <div className="grid grid-cols-3 p-1 bg-[#edeef3] dark:bg-[#232534] rounded-[12px] gap-1 border border-[#dedee5] dark:border-[#282937]">
         <button
           type="button"
+          tabIndex={-1}
           onClick={() => {
             setType('pengeluaran');
             setCategoryId('');
           }}
-          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-all ${
+          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-colors duration-150 ${
             type === 'pengeluaran'
               ? 'bg-[#101114] text-white shadow-micro'
-              : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:text-[#f3f4f8]'
+              : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
           }`}
         >
           <ArrowUpRight className="w-3.5 h-3.5" />
@@ -89,14 +90,15 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
 
         <button
           type="button"
+          tabIndex={-1}
           onClick={() => {
             setType('transfer');
             setCategoryId('');
           }}
-          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-all ${
+          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-colors duration-150 ${
             type === 'transfer'
               ? 'bg-[#7132f5] text-white shadow-micro'
-              : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:text-[#f3f4f8]'
+              : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
           }`}
         >
           <ArrowLeftRight className="w-3.5 h-3.5" />
@@ -105,14 +107,15 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
 
         <button
           type="button"
+          tabIndex={-1}
           onClick={() => {
             setType('pemasukan');
             setCategoryId('');
           }}
-          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-all ${
+          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-colors duration-150 ${
             type === 'pemasukan'
               ? 'bg-[#149e61] text-white shadow-micro'
-              : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:text-[#f3f4f8]'
+              : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
           }`}
         >
           <ArrowDownLeft className="w-3.5 h-3.5" />
@@ -143,7 +146,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
       <div className="bg-white dark:bg-[#16171f] rounded-[16px] p-5 border border-[#dedee5] dark:border-[#282937] shadow-whisper space-y-4">
         {/* Source Account */}
         <div>
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1.5">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1.5 h-4 leading-4">
             {type === 'transfer' ? 'Dari Akun' : 'Akun'}
           </label>
           <select
@@ -161,63 +164,64 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
           </select>
         </div>
 
-        {/* Destination Account for Transfer */}
-        {type === 'transfer' && (
-          <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1.5">
-              Ke Akun Tujuan
-            </label>
-            <select
-              value={destinationAccountId}
-              onChange={(e) => setDestinationAccountId(e.target.value)}
-              required
-              className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
-            >
-              <option value="">Pilih Akun Tujuan</option>
-              {accounts
-                .filter((acc) => acc.id !== sourceAccountId)
-                .map((acc) => (
-                  <option key={acc.id} value={acc.id}>
-                    {acc.name} ({acc.type})
+        {/* Destination Account for Transfer vs Category for Expense/Income */}
+        <div className="min-h-[66px]">
+          {type === 'transfer' ? (
+            <div>
+              <div className="flex items-center justify-between mb-1.5 h-5">
+                <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] leading-none">
+                  Ke Akun Tujuan
+                </label>
+              </div>
+              <select
+                value={destinationAccountId}
+                onChange={(e) => setDestinationAccountId(e.target.value)}
+                required
+                className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
+              >
+                <option value="">Pilih Akun Tujuan</option>
+                {accounts
+                  .filter((acc) => acc.id !== sourceAccountId)
+                  .map((acc) => (
+                    <option key={acc.id} value={acc.id}>
+                      {acc.name} ({acc.type})
+                    </option>
+                  ))}
+              </select>
+            </div>
+          ) : (
+            <div>
+              <div className="flex items-center justify-between mb-1.5 h-5">
+                <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] leading-none">
+                  Kategori
+                </label>
+                {selectedCategory && (
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-[6px] bg-[#edeef3] dark:bg-[#232534] text-[11px] font-semibold text-[#101114] dark:text-[#f3f4f8]">
+                    <CategoryIcon name={selectedCategory.name} type={type} size="sm" />
+                    <span>{selectedCategory.name}</span>
+                  </div>
+                )}
+              </div>
+              <select
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+                required
+                className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
+              >
+                <option value="">Pilih Kategori Transaksi</option>
+                {filteredCategories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
                   </option>
                 ))}
-            </select>
-          </div>
-        )}
-
-        {/* Category for Expense/Income */}
-        {type !== 'transfer' && (
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba]">
-                Kategori
-              </label>
-              {selectedCategory && (
-                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-[6px] bg-[#edeef3] dark:bg-[#232534] text-[11px] font-semibold text-[#101114] dark:text-[#f3f4f8]">
-                  <CategoryIcon name={selectedCategory.name} type={type} size="sm" />
-                  <span>{selectedCategory.name}</span>
-                </div>
-              )}
+              </select>
             </div>
-            <select
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-              required
-              className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
-            >
-              <option value="">Pilih Kategori Transaksi</option>
-              {filteredCategories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Date Input */}
         <div>
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1.5">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1.5 h-4 leading-4">
             Tanggal
           </label>
           <input
@@ -231,7 +235,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
 
         {/* Notes Input */}
         <div>
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1.5">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1.5 h-4 leading-4">
             Catatan <span className="text-[#9497a9] font-normal lowercase">(opsional)</span>
           </label>
           <textarea
