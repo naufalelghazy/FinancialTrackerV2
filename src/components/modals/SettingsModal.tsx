@@ -123,6 +123,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       buttonStyle: 'Rounded 12px + Bayangan Whisper',
       previewLabel: 'Catat Transaksi',
     },
+    {
+      id: 'autumn',
+      name: 'Autumn',
+      edition: 'Autumn Edition',
+      tagline: 'Warm Insight Analytics',
+      description: 'Tampilan hangat dengan nuansa warna oat dan aksen oranye musim gugur yang nyaman.',
+      primaryColor: '#ea580c',
+      accentColor: '#c2410c',
+      darkCanvas: '#1c1917',
+      lightCanvas: '#f4efea',
+      typography: { display: 'Plus Jakarta Sans', body: 'Plus Jakarta Sans', mono: 'Plus Jakarta Sans' },
+      buttonStyle: 'Rounded 10px + Warm Amber Accent',
+      previewLabel: 'Catat Transaksi',
+    },
   ];
 
   if (!isOpen) return null;
@@ -342,7 +356,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <div
                       key={themeItem.id}
                       onClick={() => setDesignSystem(themeItem.id)}
-                      className={`p-4 rounded-[18px] border-2 cursor-pointer transition-all relative ${
+                      data-selected={isSelected ? "true" : "false"}
+                      data-theme-id={themeItem.id}
+                      className={`theme-card-container p-4 rounded-[18px] border-2 cursor-pointer transition-all relative ${
                         isSelected
                           ? 'bg-[#fafbfe] dark:bg-[#1a1c26] border-[#7132f5] dark:border-[#a78bfa] shadow-md'
                           : 'bg-[#fafbfe]/60 dark:bg-[#16171f] border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/40'
@@ -374,7 +390,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                 {themeItem.edition}
                               </span>
                             </div>
-                            <span className="text-xs font-semibold text-[#7132f5] dark:text-[#a78bfa] block">
+                            <span className="theme-card-tagline text-xs font-semibold block" data-theme-id={themeItem.id}>
                               {themeItem.tagline}
                             </span>
                           </div>
@@ -383,7 +399,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         {/* Selected Indicator */}
                         <div className="shrink-0">
                           {isSelected ? (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#7132f5] dark:bg-[#a78bfa] text-white dark:text-[#101114] text-xs font-bold shadow-micro">
+                            <span className="theme-active-badge inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-micro" data-active-theme={designSystem}>
                               <Check className="w-3.5 h-3.5 stroke-[3]" />
                               <span>Sedang Digunakan</span>
                             </span>
@@ -415,12 +431,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           </span>
                           <button
                             type="button"
-                            className={`py-1.5 px-4 text-xs font-bold transition-all shadow-micro ${
+                            data-preview-theme={themeItem.id}
+                            className={`theme-preview-cta py-1.5 px-4 text-xs font-bold transition-all shadow-micro ${
                               themeItem.id === 'coinbase'
-                                ? 'bg-[#0052ff] text-white rounded-full'
+                                ? 'rounded-full'
                                 : themeItem.id === 'theverge'
-                                ? 'bg-[#3cffd0] text-black font-extrabold rounded-full'
-                                : 'bg-[#7132f5] text-white rounded-[10px]'
+                                ? 'font-extrabold rounded-full'
+                                : 'rounded-[10px]'
                             }`}
                           >
                             {themeItem.previewLabel}

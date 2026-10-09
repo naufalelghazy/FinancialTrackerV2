@@ -1,7 +1,7 @@
 ﻿import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
-export type DesignSystem = 'coinbase' | 'theverge' | 'kraken';
+export type DesignSystem = 'coinbase' | 'theverge' | 'kraken' | 'autumn';
 
 export interface ThemeConfig {
   id: DesignSystem;
@@ -61,6 +61,20 @@ export const DESIGN_SYSTEMS: Record<DesignSystem, ThemeConfig> = {
     fontSans: 'IBM Plex Sans',
     docFile: 'DESIGN-kraken.md',
   },
+  autumn: {
+    id: 'autumn',
+    name: 'Autumn',
+    tagline: 'Warm Insight Edition',
+    badge: 'Autumn Edition',
+    description: 'Tampilan hangat dengan nuansa warna oat dan aksen oranye musim gugur yang nyaman.',
+    primaryColor: '#ea580c',
+    accentColor: '#c2410c',
+    canvasBg: { light: '#f4efea', dark: '#1c1917' },
+    pillShape: false,
+    fontDisplay: 'Plus Jakarta Sans',
+    fontSans: 'Plus Jakarta Sans',
+    docFile: 'DESIGN-autumn.md',
+  },
 };
 
 interface ThemeContextType {
@@ -80,7 +94,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [designSystem, setDesignSystemState] = useState<DesignSystem>(() => {
     try {
       const saved = localStorage.getItem('ft_design_system') as DesignSystem | null;
-      if (saved && ['coinbase', 'theverge', 'kraken'].includes(saved)) {
+      if (saved && ['coinbase', 'theverge', 'kraken', 'autumn'].includes(saved)) {
         return saved;
       }
     } catch {}
@@ -145,6 +159,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
  metaThemeColor.setAttribute('content', isDark ? '#0a0b0d' : '#0052ff');
  } else if (designSystem === 'theverge') {
  metaThemeColor.setAttribute('content', '#131313');
+ } else if (designSystem === 'autumn') {
+ metaThemeColor.setAttribute('content', isDark ? '#1c1917' : '#ea580c');
  } else {
  metaThemeColor.setAttribute('content', isDark ? '#0d0e12' : '#7132f5');
  }

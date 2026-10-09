@@ -646,3 +646,315 @@
 [data-theme=theverge] .shadow-micro {
   box-shadow: none !important;
 }
+
+
+/* ==============================================================
+   3. AUTUMN DESIGN SYSTEM (DESIGN-autumn.md)
+   Warm Oat & Sand Light (#F4EFEA), Warm Stone Dark (#1C1917),
+   Warm Autumn Orange Accent (#EA580C / #C2410C),
+   Plus Jakarta Sans Typography & Tabular Figures.
+   ============================================================== */
+[data-theme=autumn] {
+  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+  --font-display: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  --font-mono: 'Plus Jakarta Sans', monospace;
+}
+
+[data-theme=autumn] body {
+  background-color: #f4efea !important;
+  color: #1e1e1e !important;
+  font-family: var(--font-sans) !important;
+}
+
+[data-theme=autumn].dark body,
+.dark[data-theme=autumn] body,
+[data-theme=autumn] .dark body {
+  background-color: #1c1917 !important;
+  color: #f5f5f4 !important;
+}
+
+/* Primary Button & CTA styling */
+[data-theme=autumn] button.btn-kraken-primary,
+[data-theme=autumn] .btn-kraken-primary,
+[data-theme=autumn] button.bg-\[\#7132f5\],
+[data-theme=autumn] a.bg-\[\#7132f5\] {
+  background-color: #ea580c !important;
+  color: #ffffff !important;
+  border-radius: 10px !important;
+  box-shadow: 0 2px 10px rgba(234, 88, 12, 0.22) !important;
+  border: none !important;
+}
+
+[data-theme=autumn] .btn-kraken-primary:hover,
+[data-theme=autumn] .hover\:bg-\[\#5741d8\]:hover {
+  background-color: #c2410c !important;
+}
+
+[data-theme=autumn] .bg-\[\#5741d8\] {
+  background-color: #c2410c !important;
+}
+
+/* Hero Balance Card */
+[data-theme=autumn] .hero-balance-card,
+[data-theme=autumn] div.bg-\[\#7132f5\] {
+  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%) !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 4px 20px -2px rgba(234, 88, 12, 0.25) !important;
+}
+
+/* Hero Debt Card */
+[data-theme=autumn] .hero-debt-card {
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%) !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 4px 20px -2px rgba(185, 28, 28, 0.2) !important;
+}
+
+[data-theme=autumn].dark .hero-debt-card,
+[data-theme=autumn] .dark .hero-debt-card {
+  background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Numbers & Tabular Figures in Autumn: Plus Jakarta Sans Bold */
+[data-theme=autumn] .balance-card-amount,
+[data-theme=autumn] .hero-balance-card .balance-card-amount,
+[data-theme=autumn] .hero-balance-card .text-3xl,
+[data-theme=autumn] .hero-balance-card .text-4xl,
+[data-theme=autumn] .hero-debt-card .debt-card-amount,
+[data-theme=autumn] .net-worth-amount,
+[data-theme=autumn] .cashflow-amount,
+[data-theme=autumn] .tabular-nums,
+[data-theme=autumn] .font-mono {
+  font-family: 'Plus Jakarta Sans', var(--font-sans) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* Subtle highlights & badges */
+[data-theme=autumn] .btn-kraken-subtle,
+[data-theme=autumn] .bg-\[\#855bfb\]\/15,
+[data-theme=autumn] .bg-\[\#855bfb\]\/10,
+[data-theme=autumn] .bg-\[\#855bfb\]\/20 {
+  background-color: rgba(234, 88, 12, 0.12) !important;
+  color: #ea580c !important;
+}
+
+[data-theme=autumn].dark .btn-kraken-subtle,
+[data-theme=autumn] .dark .btn-kraken-subtle,
+[data-theme=autumn].dark .bg-\[\#855bfb\]\/15,
+[data-theme=autumn] .dark .bg-\[\#855bfb\]\/15 {
+  background-color: rgba(234, 88, 12, 0.2) !important;
+  color: #fb923c !important;
+}
+
+/* Primary text & accent colors */
+[data-theme=autumn] .text-\[\#7132f5\] {
+  color: #ea580c !important;
+}
+
+[data-theme=autumn].dark .text-\[\#7132f5\],
+[data-theme=autumn].dark .dark\:text-\[\#a78bfa\],
+[data-theme=autumn] .dark .text-\[\#7132f5\],
+[data-theme=autumn] .dark .dark\:text-\[\#a78bfa\] {
+  color: #fb923c !important;
+}
+
+[data-theme=autumn] .border-\[\#7132f5\] {
+  border-color: #ea580c !important;
+}
+
+[data-theme=autumn] .focus\:border-\[\#7132f5\]:focus {
+  border-color: #ea580c !important;
+}
+
+/* Container & Surface card colors in LIGHT MODE */
+[data-theme=autumn]:not(.dark) .bg-white,
+html[data-theme=autumn]:not(.dark) .bg-white {
+  background-color: #ffffff !important;
+}
+
+[data-theme=autumn]:not(.dark) .bg-\[\#fafbfe\],
+html[data-theme=autumn]:not(.dark) .bg-\[\#fafbfe\] {
+  background-color: #f8f6f2 !important;
+}
+
+[data-theme=autumn]:not(.dark) .border-\[\#dedee5\],
+html[data-theme=autumn]:not(.dark) .border-\[\#dedee5\] {
+  border-color: #e7e1d8 !important;
+}
+
+[data-theme=autumn]:not(.dark) .text-\[\#101114\],
+html[data-theme=autumn]:not(.dark) .text-\[\#101114\] {
+  color: #1e1e1e !important;
+}
+
+[data-theme=autumn]:not(.dark) .text-\[\#686b82\],
+html[data-theme=autumn]:not(.dark) .text-\[\#686b82\] {
+  color: #78716c !important;
+}
+
+/* ==============================================================
+   AUTUMN DARK MODE OVERRIDES (#1C1917 Canvas, #24201D Cards)
+   ============================================================== */
+[data-theme=autumn].dark body,
+.dark[data-theme=autumn] body,
+[data-theme=autumn] .dark body {
+  background-color: #1c1917 !important;
+  color: #f5f5f4 !important;
+}
+
+/* Card surfaces and containers in dark mode */
+[data-theme=autumn].dark .bg-white,
+.dark[data-theme=autumn] .bg-white,
+[data-theme=autumn] .dark .bg-white,
+[data-theme=autumn].dark .dark\:bg-\[\#16171f\],
+.dark[data-theme=autumn] .dark\:bg-\[\#16171f\],
+[data-theme=autumn] .dark .dark\:bg-\[\#16171f\] {
+  background-color: #24201d !important;
+}
+
+/* Nested cards & secondary panels in dark mode */
+[data-theme=autumn].dark .dark\:bg-\[\#1e202b\],
+.dark[data-theme=autumn] .dark\:bg-\[\#1e202b\],
+[data-theme=autumn] .dark .dark\:bg-\[\#1e202b\],
+[data-theme=autumn].dark .dark\:bg-\[\#13141c\],
+.dark[data-theme=autumn] .dark\:bg-\[\#13141c\],
+[data-theme=autumn] .dark .dark\:bg-\[\#13141c\] {
+  background-color: #1c1917 !important;
+}
+
+/* Inactive button backgrounds in dark mode */
+[data-theme=autumn].dark .bg-\[\#fafbfe\],
+.dark[data-theme=autumn] .bg-\[\#fafbfe\],
+[data-theme=autumn] .dark .bg-\[\#fafbfe\],
+[data-theme=autumn].dark button.bg-\[\#fafbfe\],
+.dark[data-theme=autumn] button.bg-\[\#fafbfe\],
+[data-theme=autumn] .dark button.bg-\[\#fafbfe\] {
+  background-color: #24201d !important;
+}
+
+/* Segmented control backgrounds in dark mode */
+[data-theme=autumn].dark .bg-\[\#edeef3\],
+.dark[data-theme=autumn] .bg-\[\#edeef3\],
+[data-theme=autumn] .dark .bg-\[\#edeef3\] {
+  background-color: #171513 !important;
+}
+
+/* Active segmented buttons in dark mode */
+[data-theme=autumn].dark .dark\:bg-\[\#282937\],
+.dark[data-theme=autumn] .dark\:bg-\[\#282937\],
+[data-theme=autumn] .dark .dark\:bg-\[\#282937\],
+[data-theme=autumn].dark .dark\:bg-\[\#232534\],
+.dark[data-theme=autumn] .dark\:bg-\[\#232534\],
+[data-theme=autumn] .dark .dark\:bg-\[\#232534\] {
+  background-color: #2e2925 !important;
+}
+
+/* Borders in dark mode */
+[data-theme=autumn].dark .border-\[\#dedee5\],
+.dark[data-theme=autumn] .border-\[\#dedee5\],
+[data-theme=autumn] .dark .border-\[\#dedee5\],
+[data-theme=autumn].dark .dark\:border-\[\#282937\],
+.dark[data-theme=autumn] .dark\:border-\[\#282937\],
+[data-theme=autumn] .dark .dark\:border-\[\#282937\] {
+  border-color: #383431 !important;
+}
+
+/* Text in dark mode */
+[data-theme=autumn].dark .text-\[\#101114\],
+.dark[data-theme=autumn] .text-\[\#101114\],
+[data-theme=autumn] .dark .text-\[\#101114\],
+[data-theme=autumn].dark .dark\:text-\[\#f3f4f8\],
+.dark[data-theme=autumn] .dark\:text-\[\#f3f4f8\],
+[data-theme=autumn] .dark .dark\:text-\[\#f3f4f8\] {
+  color: #f5f5f4 !important;
+}
+
+[data-theme=autumn].dark .text-\[\#686b82\],
+.dark[data-theme=autumn] .text-\[\#686b82\],
+[data-theme=autumn] .dark .text-\[\#686b82\],
+[data-theme=autumn].dark .dark\:text-\[\#9ca0ba\],
+.dark[data-theme=autumn] .dark\:text-\[\#9ca0ba\],
+[data-theme=autumn] .dark .dark\:text-\[\#9ca0ba\] {
+  color: #a8a29e !important;
+}
+
+/* Card Geometry: 16px */
+[data-theme=autumn] .rounded-\[16px\],
+[data-theme=autumn] .rounded-\[14px\] {
+  border-radius: 16px !important;
+}
+
+/* Warm diffused soft shadow */
+[data-theme=autumn] .shadow-whisper {
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04) !important;
+}
+[data-theme=autumn].dark .shadow-whisper,
+.dark[data-theme=autumn] .shadow-whisper {
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* ==============================================================
+   THEME SHOWROOM STYLES (IMMUNE TO ACTIVE THEME OVERRIDES)
+   ============================================================== */
+.theme-card-tagline[data-theme-id="coinbase"] {
+  color: #0052ff !important;
+}
+.theme-card-tagline[data-theme-id="theverge"] {
+  color: #3cffd0 !important;
+}
+.theme-card-tagline[data-theme-id="kraken"] {
+  color: #7132f5 !important;
+}
+.theme-card-tagline[data-theme-id="autumn"] {
+  color: #ea580c !important;
+}
+
+button.theme-preview-cta[data-preview-theme="coinbase"] {
+  background-color: #0052ff !important;
+  color: #ffffff !important;
+}
+button.theme-preview-cta[data-preview-theme="theverge"] {
+  background-color: #3cffd0 !important;
+  color: #000000 !important;
+}
+button.theme-preview-cta[data-preview-theme="kraken"] {
+  background-color: #7132f5 !important;
+  color: #ffffff !important;
+}
+button.theme-preview-cta[data-preview-theme="autumn"] {
+  background-color: #ea580c !important;
+  color: #ffffff !important;
+}
+
+.theme-active-badge[data-active-theme="coinbase"] {
+  background-color: #0052ff !important;
+  color: #ffffff !important;
+}
+.theme-active-badge[data-active-theme="theverge"] {
+  background-color: #3cffd0 !important;
+  color: #000000 !important;
+}
+.theme-active-badge[data-active-theme="kraken"] {
+  background-color: #7132f5 !important;
+  color: #ffffff !important;
+}
+.theme-active-badge[data-active-theme="autumn"] {
+  background-color: #ea580c !important;
+  color: #ffffff !important;
+}
+
+.theme-card-container[data-selected="true"][data-theme-id="coinbase"] {
+  border-color: #0052ff !important;
+}
+.theme-card-container[data-selected="true"][data-theme-id="theverge"] {
+  border-color: #3cffd0 !important;
+}
+.theme-card-container[data-selected="true"][data-theme-id="kraken"] {
+  border-color: #7132f5 !important;
+}
+.theme-card-container[data-selected="true"][data-theme-id="autumn"] {
+  border-color: #ea580c !important;
+}

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { Transaction, Account, Category } from '../../types';
 import { formatCurrency } from '../../lib/formatters';
 import { CategoryIcon } from '../../components/ui/CategoryIcon';
@@ -61,6 +61,15 @@ export const ReportView: React.FC<ReportViewProps> = ({
   const { isDark } = useTheme();
   const [period, setPeriod] = useState<PeriodType>('this_month');
   const [activeChartTab, setActiveChartTab] = useState<'flow' | 'category' | 'source' | 'account'>('category');
+  const [isDesktop, setIsDesktop] = useState(
+    () => typeof window !== 'undefined' && window.innerWidth >= 1024
+  );
+
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Helper map for accounts and categories
   const accountMap = useMemo(() => {
@@ -461,53 +470,65 @@ export const ReportView: React.FC<ReportViewProps> = ({
       </div>
 
       {/* Main Analysis Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#dedee5] dark:border-[#282937] pb-3 overflow-x-auto">
+      <div className="grid grid-cols-2 sm:flex sm:items-center gap-1.5 sm:gap-2 border-b border-[#dedee5] dark:border-[#282937] pb-3">
         <button
           onClick={() => setActiveChartTab('category')}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-[10px] text-xs font-bold transition-all whitespace-nowrap ${
+          className={`flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-3 py-2.5 sm:py-2 sm:px-3.5 rounded-[10px] text-xs font-bold transition-all ${
             activeChartTab === 'category'
               ? 'bg-[#7132f5] text-white shadow-micro'
-              : 'text-[#686b82] dark:text-[#9ca0ba] hover:bg-[#edeef3] dark:hover:bg-[#1e202b]'
+              : 'bg-[#fafbfe] sm:bg-transparent dark:bg-[#1e202b] sm:dark:bg-transparent border border-[#dedee5] sm:border-transparent dark:border-[#282937] text-[#686b82] dark:text-[#9ca0ba] hover:bg-[#edeef3] dark:hover:bg-[#1e202b]'
           }`}
         >
-          <PieChartIcon className="w-4 h-4" />
-          <span>Kategori Pengeluaran</span>
+          <PieChartIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+          <span className="truncate">
+            <span className="sm:hidden">Pengeluaran</span>
+            <span className="hidden sm:inline">Kategori Pengeluaran</span>
+          </span>
         </button>
 
         <button
           onClick={() => setActiveChartTab('flow')}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-[10px] text-xs font-bold transition-all whitespace-nowrap ${
+          className={`flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-3 py-2.5 sm:py-2 sm:px-3.5 rounded-[10px] text-xs font-bold transition-all ${
             activeChartTab === 'flow'
               ? 'bg-[#7132f5] text-white shadow-micro'
-              : 'text-[#686b82] dark:text-[#9ca0ba] hover:bg-[#edeef3] dark:hover:bg-[#1e202b]'
+              : 'bg-[#fafbfe] sm:bg-transparent dark:bg-[#1e202b] sm:dark:bg-transparent border border-[#dedee5] sm:border-transparent dark:border-[#282937] text-[#686b82] dark:text-[#9ca0ba] hover:bg-[#edeef3] dark:hover:bg-[#1e202b]'
           }`}
         >
-          <TrendingUp className="w-4 h-4" />
-          <span>Tren Arus Kas (Masuk vs Keluar)</span>
+          <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+          <span className="truncate">
+            <span className="sm:hidden">Arus Kas</span>
+            <span className="hidden sm:inline">Tren Arus Kas (Masuk vs Keluar)</span>
+          </span>
         </button>
 
         <button
           onClick={() => setActiveChartTab('source')}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-[10px] text-xs font-bold transition-all whitespace-nowrap ${
+          className={`flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-3 py-2.5 sm:py-2 sm:px-3.5 rounded-[10px] text-xs font-bold transition-all ${
             activeChartTab === 'source'
               ? 'bg-[#7132f5] text-white shadow-micro'
-              : 'text-[#686b82] dark:text-[#9ca0ba] hover:bg-[#edeef3] dark:hover:bg-[#1e202b]'
+              : 'bg-[#fafbfe] sm:bg-transparent dark:bg-[#1e202b] sm:dark:bg-transparent border border-[#dedee5] sm:border-transparent dark:border-[#282937] text-[#686b82] dark:text-[#9ca0ba] hover:bg-[#edeef3] dark:hover:bg-[#1e202b]'
           }`}
         >
-          <TrendingUp className="w-4 h-4" />
-          <span>Sumber Pemasukan</span>
+          <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+          <span className="truncate">
+            <span className="sm:hidden">Pemasukan</span>
+            <span className="hidden sm:inline">Sumber Pemasukan</span>
+          </span>
         </button>
 
         <button
           onClick={() => setActiveChartTab('account')}
-          className={`flex items-center gap-2 px-3.5 py-2 rounded-[10px] text-xs font-bold transition-all whitespace-nowrap ${
+          className={`flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-3 py-2.5 sm:py-2 sm:px-3.5 rounded-[10px] text-xs font-bold transition-all ${
             activeChartTab === 'account'
               ? 'bg-[#7132f5] text-white shadow-micro'
-              : 'text-[#686b82] dark:text-[#9ca0ba] hover:bg-[#edeef3] dark:hover:bg-[#1e202b]'
+              : 'bg-[#fafbfe] sm:bg-transparent dark:bg-[#1e202b] sm:dark:bg-transparent border border-[#dedee5] sm:border-transparent dark:border-[#282937] text-[#686b82] dark:text-[#9ca0ba] hover:bg-[#edeef3] dark:hover:bg-[#1e202b]'
           }`}
         >
-          <CreditCard className="w-4 h-4" />
-          <span>Pengeluaran per Akun</span>
+          <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+          <span className="truncate">
+            <span className="sm:hidden">Per Akun</span>
+            <span className="hidden sm:inline">Pengeluaran per Akun</span>
+          </span>
         </button>
       </div>
 
@@ -530,36 +551,65 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 Belum ada pengeluaran pada periode ini
               </div>
             ) : (
-              <div className="h-64 sm:h-72 w-full relative flex items-center justify-center my-auto">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Tooltip
-                      contentStyle={tooltipStyle}
-                      formatter={(val: any) => [formatCurrency(Number(val) || 0), 'Pengeluaran']}
-                    />
-                    <Pie
-                      data={expenseByCategory}
-                      dataKey="amount"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={65}
-                      outerRadius={95}
-                      paddingAngle={3}
-                    >
-                      {expenseByCategory.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-                {/* Center Label in Donut */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-[10px] uppercase font-bold text-[#9497a9]">Total</span>
-                  <span className="text-sm font-bold text-[#101114] dark:text-[#f3f4f8] tabular-nums">
-                    {formatCurrency(totalExpense)}
-                  </span>
+              <div className="flex-1 flex flex-col justify-center my-2">
+                <div className="h-64 sm:h-72 lg:h-[380px] xl:h-[420px] w-full relative flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Tooltip
+                        contentStyle={tooltipStyle}
+                        formatter={(val: any) => [formatCurrency(Number(val) || 0), 'Pengeluaran']}
+                      />
+                      <Pie
+                        data={expenseByCategory}
+                        dataKey="amount"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={isDesktop ? 100 : 65}
+                        outerRadius={isDesktop ? 155 : 95}
+                        paddingAngle={3}
+                      >
+                        {expenseByCategory.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  {/* Center Label in Donut */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span className="text-[10px] sm:text-xs uppercase font-bold text-[#9497a9] tracking-wider">Total</span>
+                    <span className="text-sm sm:text-lg lg:text-2xl font-bold text-[#101114] dark:text-[#f3f4f8] tabular-nums tracking-tight mt-0.5">
+                      {formatCurrency(totalExpense)}
+                    </span>
+                  </div>
                 </div>
+
+                {/* Top Categories Mini Legend for Desktop */}
+                {expenseByCategory.length > 0 && (
+                  <div className="pt-3 border-t border-[#dedee5]/70 dark:border-[#282937] mt-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      {expenseByCategory.slice(0, 4).map((cat, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center gap-2 p-2 rounded-[10px] bg-[#fafbfe] dark:bg-[#1e202b] border border-[#dedee5]/70 dark:border-[#282937]"
+                        >
+                          <span
+                            className="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs"
+                            style={{ backgroundColor: cat.color }}
+                          />
+                          <div className="min-w-0 flex-1 flex items-center justify-between">
+                            <span className="text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] truncate">
+                              {cat.name}
+                            </span>
+                            <span className="text-[11px] font-mono font-bold text-[#686b82] dark:text-[#9ca0ba] ml-1 shrink-0">
+                              {cat.percentage.toFixed(0)}%
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -584,7 +634,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 Tidak ada data pengeluaran
               </div>
             ) : (
-              <div className="space-y-3 pt-1">
+              <div className="space-y-3 pt-1 max-h-[580px] overflow-y-auto pr-1.5">
                 {expenseByCategory.map((cat, idx) => (
                   <div
                     key={idx}
@@ -727,7 +777,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 Tidak ada data pada periode ini
               </div>
             ) : (
-              <div className="h-56 sm:h-64 w-full pt-2">
+              <div className="h-56 sm:h-64 lg:h-[350px] w-full pt-2">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={timelineData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
@@ -796,36 +846,65 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 Belum ada transaksi pemasukan pada periode ini
               </div>
             ) : (
-              <div className="h-64 sm:h-72 w-full relative flex items-center justify-center my-auto">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Tooltip
-                      contentStyle={tooltipStyle}
-                      formatter={(val: any) => [formatCurrency(Number(val) || 0), 'Pemasukan']}
-                    />
-                    <Pie
-                      data={incomeByCategory}
-                      dataKey="amount"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={65}
-                      outerRadius={95}
-                      paddingAngle={3}
-                    >
-                      {incomeByCategory.map((entry, index) => (
-                        <Cell key={`cell-income-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-                {/* Center Label in Donut */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-[10px] uppercase font-bold text-[#9497a9]">Total</span>
-                  <span className="text-sm font-bold text-[#026b3f] dark:text-[#34d399] tabular-nums">
-                    +{formatCurrency(totalIncome)}
-                  </span>
+              <div className="flex-1 flex flex-col justify-center my-2">
+                <div className="h-64 sm:h-72 lg:h-[380px] xl:h-[420px] w-full relative flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Tooltip
+                        contentStyle={tooltipStyle}
+                        formatter={(val: any) => [formatCurrency(Number(val) || 0), 'Pemasukan']}
+                      />
+                      <Pie
+                        data={incomeByCategory}
+                        dataKey="amount"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={isDesktop ? 100 : 65}
+                        outerRadius={isDesktop ? 155 : 95}
+                        paddingAngle={3}
+                      >
+                        {incomeByCategory.map((entry, index) => (
+                          <Cell key={`cell-income-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  {/* Center Label in Donut */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span className="text-[10px] sm:text-xs uppercase font-bold text-[#9497a9] tracking-wider">Total</span>
+                    <span className="text-sm sm:text-lg lg:text-2xl font-bold text-[#026b3f] dark:text-[#34d399] tabular-nums tracking-tight mt-0.5">
+                      +{formatCurrency(totalIncome)}
+                    </span>
+                  </div>
                 </div>
+
+                {/* Top Sources Mini Legend for Desktop */}
+                {incomeByCategory.length > 0 && (
+                  <div className="pt-3 border-t border-[#dedee5]/70 dark:border-[#282937] mt-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      {incomeByCategory.slice(0, 4).map((cat, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center gap-2 p-2 rounded-[10px] bg-[#fafbfe] dark:bg-[#1e202b] border border-[#dedee5]/70 dark:border-[#282937]"
+                        >
+                          <span
+                            className="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs"
+                            style={{ backgroundColor: cat.color }}
+                          />
+                          <div className="min-w-0 flex-1 flex items-center justify-between">
+                            <span className="text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] truncate">
+                              {cat.name}
+                            </span>
+                            <span className="text-[11px] font-mono font-bold text-[#686b82] dark:text-[#9ca0ba] ml-1 shrink-0">
+                              {cat.percentage.toFixed(0)}%
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

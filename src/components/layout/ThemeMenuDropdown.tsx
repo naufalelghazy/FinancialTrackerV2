@@ -92,6 +92,16 @@ export const ThemeMenuDropdown: React.FC<ThemeMenuDropdownProps> = ({
       doc: 'DESIGN-kraken.md',
       isPill: false,
     },
+    {
+      id: 'autumn',
+      name: 'Autumn',
+      badge: 'Autumn Edition',
+      tagline: 'Warm Insight Analytics',
+      color: '#ea580c',
+      accent: '#c2410c',
+      doc: 'DESIGN-autumn.md',
+      isPill: false,
+    },
   ];
 
   // Width classes:
@@ -260,7 +270,7 @@ export const ThemeMenuDropdown: React.FC<ThemeMenuDropdownProps> = ({
                           {s.name}
                         </span>
                         <span className="text-[8px] font-mono px-1 py-0.2 rounded bg-[#dedee5]/70 dark:bg-[#282937] text-[#686b82] dark:text-[#9ca0ba] shrink-0">
-                          {s.isPill ? 'Pill' : 'Classic'}
+                          {s.id === 'autumn' ? 'Warm' : s.isPill ? 'Pill' : 'Classic'}
                         </span>
                       </div>
                       <span className="text-[10px] text-[#686b82] dark:text-[#9ca0ba] block truncate">
