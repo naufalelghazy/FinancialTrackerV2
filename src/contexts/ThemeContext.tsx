@@ -1,7 +1,7 @@
-﻿import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
-export type DesignSystem = 'coinbase' | 'theverge' | 'kraken' | 'autumn';
+export type DesignSystem = 'coinbase' | 'theverge' | 'kraken' | 'autumn' | 'mongodb';
 
 export interface ThemeConfig {
   id: DesignSystem;
@@ -19,6 +19,20 @@ export interface ThemeConfig {
 }
 
 export const DESIGN_SYSTEMS: Record<DesignSystem, ThemeConfig> = {
+  mongodb: {
+    id: 'mongodb',
+    name: 'MongoDB',
+    tagline: 'Developer Data Platform',
+    badge: 'MongoDB Edition',
+    description: 'Aksen hijau MongoDB (#00ed64), kanvas deep-teal (#001e2b), tombol pill, sudut 12px, dan tipografi Euclid Circular A.',
+    primaryColor: '#00ed64',
+    accentColor: '#00684a',
+    canvasBg: { light: '#ffffff', dark: '#001e2b' },
+    pillShape: true,
+    fontDisplay: 'Euclid Circular A',
+    fontSans: 'Euclid Circular A',
+    docFile: 'DESIGN-mongodb.md',
+  },
   coinbase: {
     id: 'coinbase',
     name: 'Coinbase',
@@ -94,7 +108,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [designSystem, setDesignSystemState] = useState<DesignSystem>(() => {
     try {
       const saved = localStorage.getItem('ft_design_system') as DesignSystem | null;
-      if (saved && ['coinbase', 'theverge', 'kraken', 'autumn'].includes(saved)) {
+      if (saved && ['coinbase', 'theverge', 'kraken', 'autumn', 'mongodb'].includes(saved)) {
         return saved;
       }
     } catch {}
@@ -154,18 +168,20 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // Update browser theme-color meta tag
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
- if (metaThemeColor) {
- if (designSystem === 'coinbase') {
- metaThemeColor.setAttribute('content', isDark ? '#0a0b0d' : '#0052ff');
- } else if (designSystem === 'theverge') {
- metaThemeColor.setAttribute('content', '#131313');
- } else if (designSystem === 'autumn') {
- metaThemeColor.setAttribute('content', isDark ? '#1c1917' : '#ea580c');
- } else {
- metaThemeColor.setAttribute('content', isDark ? '#0d0e12' : '#7132f5');
- }
- }
- }, [designSystem, isDark]);
+    if (metaThemeColor) {
+      if (designSystem === 'coinbase') {
+        metaThemeColor.setAttribute('content', isDark ? '#0a0b0d' : '#0052ff');
+      } else if (designSystem === 'theverge') {
+        metaThemeColor.setAttribute('content', '#131313');
+      } else if (designSystem === 'autumn') {
+        metaThemeColor.setAttribute('content', isDark ? '#1c1917' : '#ea580c');
+      } else if (designSystem === 'mongodb') {
+        metaThemeColor.setAttribute('content', isDark ? '#001e2b' : '#00ed64');
+      } else {
+        metaThemeColor.setAttribute('content', isDark ? '#0d0e12' : '#7132f5');
+      }
+    }
+  }, [designSystem, isDark]);
 
  const setDesignSystem = (newSystem: DesignSystem) => {
  setDesignSystemState(newSystem);

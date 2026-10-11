@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Palette,
   Check,
@@ -62,6 +62,16 @@ export const ThemeMenuDropdown: React.FC<ThemeMenuDropdownProps> = ({
     doc: string;
     isPill: boolean;
   }[] = [
+    {
+      id: 'mongodb',
+      name: 'MongoDB',
+      badge: 'MongoDB Edition',
+      tagline: 'Developer Data Platform',
+      color: '#00ed64',
+      accent: '#00684a',
+      doc: 'DESIGN-mongodb.md',
+      isPill: true,
+    },
     {
       id: 'coinbase',
       name: 'Coinbase',
@@ -260,7 +270,7 @@ export const ThemeMenuDropdown: React.FC<ThemeMenuDropdownProps> = ({
                     >
                       <span
                         className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: s.id === 'theverge' ? '#3cffd0' : '#ffffff' }}
+                        style={{ backgroundColor: s.id === 'theverge' ? '#3cffd0' : s.id === 'mongodb' ? '#001e2b' : '#ffffff' }}
                       />
                     </div>
 

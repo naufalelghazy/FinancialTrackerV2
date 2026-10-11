@@ -82,6 +82,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     previewLabel: string;
   }[] = [
     {
+      id: 'mongodb',
+      name: 'MongoDB',
+      edition: 'MongoDB Edition',
+      tagline: 'Developer Data Platform',
+      description: 'Aksen hijau MongoDB (#00ed64), kanvas deep-teal (#001e2b), tombol pill, sudut 12px, dan tipografi Euclid Circular A.',
+      primaryColor: '#00ed64',
+      accentColor: '#00684a',
+      darkCanvas: '#001e2b',
+      lightCanvas: '#ffffff',
+      typography: { display: 'Euclid Circular A', body: 'Euclid Circular A', mono: 'Source Code Pro' },
+      buttonStyle: 'Green Pill + Deep Teal Text',
+      previewLabel: 'Catat Transaksi',
+    },
+    {
       id: 'coinbase',
       name: 'Coinbase',
       edition: 'Coinbase Edition',
@@ -377,7 +391,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           >
                             <span
                               className="w-4 h-4 rounded-full"
-                              style={{ backgroundColor: themeItem.id === 'theverge' ? '#3cffd0' : '#ffffff' }}
+                              style={{ backgroundColor: themeItem.id === 'theverge' ? '#3cffd0' : themeItem.id === 'mongodb' ? '#001e2b' : '#ffffff' }}
                             />
                           </div>
 
@@ -433,7 +447,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             type="button"
                             data-preview-theme={themeItem.id}
                             className={`theme-preview-cta py-1.5 px-4 text-xs font-bold transition-all shadow-micro ${
-                              themeItem.id === 'coinbase'
+                              themeItem.id === 'coinbase' || themeItem.id === 'mongodb'
                                 ? 'rounded-full'
                                 : themeItem.id === 'theverge'
                                 ? 'font-extrabold rounded-full'

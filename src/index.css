@@ -1,4 +1,4 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -334,27 +334,102 @@
   border-radius: 24px !important;
 }
 
-/* Dark surface card elevation: #16181c */
+/* Hairline dividers in LIGHT MODE */
+[data-theme=coinbase]:not(.dark) .border-\[\#dedee5\],
+html[data-theme=coinbase]:not(.dark) .border-\[\#dedee5\] {
+  border-color: #dee1e6 !important;
+}
+
+/* ==============================================================
+   COINBASE DARK MODE OVERRIDES (#0A0B0D Canvas, #16181C Cards)
+   ============================================================== */
+/* Card surfaces and containers in dark mode */
+[data-theme=coinbase].dark .bg-white,
+.dark[data-theme=coinbase] .bg-white,
+[data-theme=coinbase] .dark .bg-white,
 [data-theme=coinbase].dark .dark\:bg-\[\#16171f\],
+.dark[data-theme=coinbase] .dark\:bg-\[\#16171f\],
 [data-theme=coinbase] .dark .dark\:bg-\[\#16171f\] {
   background-color: #16181c !important;
 }
 
+/* Nested cards, input backgrounds, & secondary panels in dark mode */
 [data-theme=coinbase].dark .dark\:bg-\[\#1e202b\],
+.dark[data-theme=coinbase] .dark\:bg-\[\#1e202b\],
 [data-theme=coinbase] .dark .dark\:bg-\[\#1e202b\],
 [data-theme=coinbase].dark .dark\:bg-\[\#13141c\],
-[data-theme=coinbase] .dark .dark\:bg-\[\#13141c\] {
+.dark[data-theme=coinbase] .dark\:bg-\[\#13141c\],
+[data-theme=coinbase] .dark .dark\:bg-\[\#13141c\],
+[data-theme=coinbase].dark .bg-\[\#fafbfe\],
+.dark[data-theme=coinbase] .bg-\[\#fafbfe\],
+[data-theme=coinbase] .dark .bg-\[\#fafbfe\] {
   background-color: #121316 !important;
 }
 
-/* Hairline dividers */
-[data-theme=coinbase] .border-\[\#dedee5\] {
-  border-color: #dee1e6 !important;
+/* Inactive button backgrounds in dark mode */
+[data-theme=coinbase].dark button.bg-\[\#fafbfe\],
+.dark[data-theme=coinbase] button.bg-\[\#fafbfe\],
+[data-theme=coinbase] .dark button.bg-\[\#fafbfe\] {
+  background-color: #16181c !important;
 }
 
+/* Segmented control backgrounds in dark mode */
+[data-theme=coinbase].dark .bg-\[\#edeef3\],
+.dark[data-theme=coinbase] .bg-\[\#edeef3\],
+[data-theme=coinbase] .dark .bg-\[\#edeef3\] {
+  background-color: #121316 !important;
+}
+
+/* Active segmented buttons in dark mode */
+[data-theme=coinbase].dark .dark\:bg-\[\#282937\],
+.dark[data-theme=coinbase] .dark\:bg-\[\#282937\],
+[data-theme=coinbase] .dark .dark\:bg-\[\#282937\],
+[data-theme=coinbase].dark .dark\:bg-\[\#232534\],
+.dark[data-theme=coinbase] .dark\:bg-\[\#232534\],
+[data-theme=coinbase] .dark .dark\:bg-\[\#232534\],
+[data-theme=coinbase].dark button.bg-\[\#101114\],
+.dark[data-theme=coinbase] button.bg-\[\#101114\],
+[data-theme=coinbase] .dark button.bg-\[\#101114\] {
+  background-color: #22252a !important;
+  color: #ffffff !important;
+}
+
+/* Borders & Dividers in DARK MODE - quiet slate #22252a instead of white/light hairlines */
+[data-theme=coinbase].dark .border-\[\#dedee5\],
+.dark[data-theme=coinbase] .border-\[\#dedee5\],
+[data-theme=coinbase] .dark .border-\[\#dedee5\],
 [data-theme=coinbase].dark .border-\[\#282937\],
-[data-theme=coinbase] .dark .border-\[\#282937\] {
+.dark[data-theme=coinbase] .border-\[\#282937\],
+[data-theme=coinbase] .dark .border-\[\#282937\],
+[data-theme=coinbase].dark .dark\:border-\[\#282937\],
+.dark[data-theme=coinbase] .dark\:border-\[\#282937\],
+[data-theme=coinbase] .dark .dark\:border-\[\#282937\],
+[data-theme=coinbase].dark [class*="border-\[\#dedee5\]"],
+.dark[data-theme=coinbase] [class*="border-\[\#dedee5\]"],
+[data-theme=coinbase] .dark [class*="border-\[\#dedee5\]"],
+[data-theme=coinbase].dark [class*="dark:border-\[\#282937\]"],
+.dark[data-theme=coinbase] [class*="dark:border-\[\#282937\]"],
+[data-theme=coinbase] .dark [class*="dark:border-\[\#282937\]"] {
   border-color: #22252a !important;
+}
+
+[data-theme=coinbase].dark .divide-\[\#dedee5\] > :not([hidden]) ~ :not([hidden]),
+.dark[data-theme=coinbase] .divide-\[\#dedee5\] > :not([hidden]) ~ :not([hidden]),
+[data-theme=coinbase] .dark .divide-\[\#dedee5\] > :not([hidden]) ~ :not([hidden]),
+[data-theme=coinbase].dark .divide-\[\#282937\] > :not([hidden]) ~ :not([hidden]),
+.dark[data-theme=coinbase] .divide-\[\#282937\] > :not([hidden]) ~ :not([hidden]),
+[data-theme=coinbase] .dark .divide-\[\#282937\] > :not([hidden]) ~ :not([hidden]),
+[data-theme=coinbase].dark .dark\:divide-\[\#282937\] > :not([hidden]) ~ :not([hidden]),
+.dark[data-theme=coinbase] .dark\:divide-\[\#282937\] > :not([hidden]) ~ :not([hidden]),
+[data-theme=coinbase] .dark .dark\:divide-\[\#282937\] > :not([hidden]) ~ :not([hidden]) {
+  border-color: #22252a !important;
+}
+
+/* Secondary text in dark mode */
+[data-theme=coinbase].dark .dark\:text-\[\#9ca0ba\],
+.dark[data-theme=coinbase] .dark\:text-\[\#9ca0ba\],
+[data-theme=coinbase] .dark .dark\:text-\[\#9ca0ba\] {
+  color: #a8acb3 !important;
 }
 
 /* Monospace numerals */
@@ -901,6 +976,328 @@ html[data-theme=autumn]:not(.dark) .text-\[\#686b82\] {
 }
 
 /* ==============================================================
+   4. MONGODB DESIGN SYSTEM (DESIGN-mongodb.md)
+   Developer Data Platform.
+   Canvas White (#FFFFFF) & Brand Teal Deep Dark (#001E2B).
+   Signature MongoDB Green (#00ED64) pill button with deep teal text (#001E2B).
+   Brand Green Dark (#00684A) and Mint Soft (#E3FCEF / #C3F0D2) accents.
+   Euclid Circular A typography & Source Code Pro tabular numbers.
+   12px rounded cards with crisp borders and minimal elevation.
+   ============================================================== */
+[data-theme=mongodb] {
+  --font-sans: 'Euclid Circular A', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Euclid Circular A', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Source Code Pro', 'SF Mono', Menlo, Consolas, monospace;
+}
+
+[data-theme=mongodb] body {
+  background-color: #ffffff !important;
+  color: #001e2b !important;
+  font-family: var(--font-sans) !important;
+}
+
+[data-theme=mongodb].dark body,
+.dark[data-theme=mongodb] body,
+[data-theme=mongodb] .dark body {
+  background-color: #001e2b !important;
+  color: #ffffff !important;
+}
+
+/* Primary Action Button: MongoDB Green Pill (#00ed64) with Deep Teal Text (#001e2b) */
+[data-theme=mongodb] button.btn-kraken-primary,
+[data-theme=mongodb] .btn-kraken-primary,
+[data-theme=mongodb] button.bg-\[\#7132f5\],
+[data-theme=mongodb] a.bg-\[\#7132f5\] {
+  background-color: #00ed64 !important;
+  color: #001e2b !important;
+  border-radius: 9999px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 10px rgba(0, 237, 100, 0.28) !important;
+  border: none !important;
+}
+
+[data-theme=mongodb] .btn-kraken-primary:hover,
+[data-theme=mongodb] button.btn-kraken-primary:hover,
+[data-theme=mongodb] .hover\:bg-\[\#5741d8\]:hover {
+  background-color: #00b545 !important;
+  color: #001e2b !important;
+}
+
+[data-theme=mongodb] .btn-kraken-primary:active,
+[data-theme=mongodb] button.btn-kraken-primary:active {
+  background-color: #008c34 !important;
+  color: #001e2b !important;
+}
+
+[data-theme=mongodb] .bg-\[\#5741d8\] {
+  background-color: #00684a !important;
+  color: #ffffff !important;
+  border-radius: 9999px !important;
+}
+
+/* Hero Balance Card: Signature Dark Teal Band with Green Border */
+[data-theme=mongodb] .hero-balance-card,
+[data-theme=mongodb] div.bg-\[\#7132f5\] {
+  background: linear-gradient(135deg, #001e2b 0%, #003847 100%) !important;
+  border-radius: 12px !important;
+  border: 1px solid #00684a !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 24px -4px rgba(0, 30, 43, 0.35) !important;
+}
+
+/* Hero Debt Card: Semantic Down Red with 12px Card Radius */
+[data-theme=mongodb] .hero-debt-card {
+  background: linear-gradient(135deg, #c5221f 0%, #90131e 100%) !important;
+  border-radius: 12px !important;
+  border: 1px solid #e53935 !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 20px -2px rgba(197, 34, 31, 0.3) !important;
+}
+
+[data-theme=mongodb].dark .hero-debt-card,
+[data-theme=mongodb] .dark .hero-debt-card {
+  background: linear-gradient(135deg, #90131e 0%, #5c0b13 100%) !important;
+  border: 1px solid #c5221f !important;
+  box-shadow: 0 6px 24px -2px rgba(197, 34, 31, 0.4) !important;
+}
+
+[data-theme=mongodb] .hero-debt-card .debt-card-header,
+[data-theme=mongodb] .hero-debt-card .debt-card-icon {
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+[data-theme=mongodb] .hero-debt-card .debt-card-badge {
+  background-color: rgba(0, 0, 0, 0.3) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-radius: 9999px !important;
+  font-family: var(--font-sans) !important;
+}
+
+[data-theme=mongodb] .hero-debt-card .debt-card-amount {
+  color: #ffffff !important;
+}
+
+[data-theme=mongodb] .hero-debt-card .debt-card-sub {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+[data-theme=mongodb] .hero-debt-card .debt-card-divider {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+[data-theme=mongodb] .hero-debt-card .debt-card-btn {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+
+[data-theme=mongodb] .hero-debt-card .debt-card-btn:hover {
+  color: #fee2e2 !important;
+}
+
+[data-theme=mongodb] .hero-debt-card .debt-card-status {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Numerical Data: Source Code Pro Technical Figures */
+[data-theme=mongodb] .balance-card-amount,
+[data-theme=mongodb] .hero-balance-card .balance-card-amount,
+[data-theme=mongodb] .hero-balance-card .text-3xl,
+[data-theme=mongodb] .hero-balance-card .text-4xl,
+[data-theme=mongodb] .hero-debt-card .debt-card-amount,
+[data-theme=mongodb] .net-worth-amount,
+[data-theme=mongodb] .cashflow-amount,
+[data-theme=mongodb] .tabular-nums,
+[data-theme=mongodb] .font-mono {
+  font-family: var(--font-mono) !important;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* Subtle Pill Badges & Chips */
+[data-theme=mongodb] .btn-kraken-subtle,
+[data-theme=mongodb] .bg-\[\#855bfb\]\/15,
+[data-theme=mongodb] .bg-\[\#855bfb\]\/10,
+[data-theme=mongodb] .bg-\[\#855bfb\]\/20 {
+  background-color: #e3fcef !important;
+  color: #00684a !important;
+  border-radius: 9999px !important;
+  font-weight: 600 !important;
+}
+
+[data-theme=mongodb].dark .btn-kraken-subtle,
+[data-theme=mongodb] .dark .btn-kraken-subtle,
+[data-theme=mongodb].dark .bg-\[\#855bfb\]\/15,
+[data-theme=mongodb] .dark .bg-\[\#855bfb\]\/15 {
+  background-color: rgba(0, 237, 100, 0.16) !important;
+  color: #00ed64 !important;
+  border-radius: 9999px !important;
+}
+
+/* Primary text & link colors */
+[data-theme=mongodb] .text-\[\#7132f5\] {
+  color: #00684a !important;
+}
+
+[data-theme=mongodb].dark .text-\[\#7132f5\],
+[data-theme=mongodb].dark .dark\:text-\[\#a78bfa\],
+[data-theme=mongodb] .dark .text-\[\#7132f5\],
+[data-theme=mongodb] .dark .dark\:text-\[\#a78bfa\] {
+  color: #00ed64 !important;
+}
+
+[data-theme=mongodb] .border-\[\#7132f5\] {
+  border-color: #00684a !important;
+}
+
+[data-theme=mongodb].dark .border-\[\#7132f5\],
+[data-theme=mongodb] .dark .border-\[\#7132f5\] {
+  border-color: #00ed64 !important;
+}
+
+[data-theme=mongodb] .focus\:border-\[\#7132f5\]:focus {
+  border-color: #00684a !important;
+}
+
+[data-theme=mongodb].dark .focus\:border-\[\#7132f5\]:focus {
+  border-color: #00ed64 !important;
+}
+
+/* Container & Surface card colors in LIGHT MODE */
+[data-theme=mongodb]:not(.dark) .bg-white,
+html[data-theme=mongodb]:not(.dark) .bg-white {
+  background-color: #ffffff !important;
+}
+
+[data-theme=mongodb]:not(.dark) .bg-\[\#fafbfe\],
+html[data-theme=mongodb]:not(.dark) .bg-\[\#fafbfe\] {
+  background-color: #f9fbfa !important;
+}
+
+[data-theme=mongodb]:not(.dark) .border-\[\#dedee5\],
+html[data-theme=mongodb]:not(.dark) .border-\[\#dedee5\] {
+  border-color: #e1e5e8 !important;
+}
+
+[data-theme=mongodb]:not(.dark) .text-\[\#101114\],
+html[data-theme=mongodb]:not(.dark) .text-\[\#101114\] {
+  color: #001e2b !important;
+}
+
+[data-theme=mongodb]:not(.dark) .text-\[\#686b82\],
+html[data-theme=mongodb]:not(.dark) .text-\[\#686b82\] {
+  color: #5c6c7a !important;
+}
+
+/* ==============================================================
+   MONGODB DARK MODE OVERRIDES (#001E2B Canvas, #0A2533 Cards)
+   ============================================================== */
+[data-theme=mongodb].dark body,
+.dark[data-theme=mongodb] body,
+[data-theme=mongodb] .dark body {
+  background-color: #001e2b !important;
+  color: #ffffff !important;
+}
+
+/* Card surfaces and containers in dark mode */
+[data-theme=mongodb].dark .bg-white,
+.dark[data-theme=mongodb] .bg-white,
+[data-theme=mongodb] .dark .bg-white,
+[data-theme=mongodb].dark .dark\:bg-\[\#16171f\],
+.dark[data-theme=mongodb] .dark\:bg-\[\#16171f\],
+[data-theme=mongodb] .dark .dark\:bg-\[\#16171f\] {
+  background-color: #0a2533 !important;
+}
+
+/* Nested cards & secondary panels in dark mode */
+[data-theme=mongodb].dark .dark\:bg-\[\#1e202b\],
+.dark[data-theme=mongodb] .dark\:bg-\[\#1e202b\],
+[data-theme=mongodb] .dark .dark\:bg-\[\#1e202b\],
+[data-theme=mongodb].dark .dark\:bg-\[\#13141c\],
+.dark[data-theme=mongodb] .dark\:bg-\[\#13141c\],
+[data-theme=mongodb] .dark .dark\:bg-\[\#13141c\] {
+  background-color: #061d28 !important;
+}
+
+/* Inactive button backgrounds in dark mode */
+[data-theme=mongodb].dark .bg-\[\#fafbfe\],
+.dark[data-theme=mongodb] .bg-\[\#fafbfe\],
+[data-theme=mongodb] .dark .bg-\[\#fafbfe\],
+[data-theme=mongodb].dark button.bg-\[\#fafbfe\],
+.dark[data-theme=mongodb] button.bg-\[\#fafbfe\],
+[data-theme=mongodb] .dark button.bg-\[\#fafbfe\] {
+  background-color: #0d2d3e !important;
+}
+
+/* Segmented control backgrounds in dark mode */
+[data-theme=mongodb].dark .bg-\[\#edeef3\],
+.dark[data-theme=mongodb] .bg-\[\#edeef3\],
+[data-theme=mongodb] .dark .bg-\[\#edeef3\] {
+  background-color: #061d28 !important;
+}
+
+/* Active segmented buttons in dark mode */
+[data-theme=mongodb].dark .dark\:bg-\[\#282937\],
+.dark[data-theme=mongodb] .dark\:bg-\[\#282937\],
+[data-theme=mongodb] .dark .dark\:bg-\[\#282937\],
+[data-theme=mongodb].dark .dark\:bg-\[\#232534\],
+.dark[data-theme=mongodb] .dark\:bg-\[\#232534\],
+[data-theme=mongodb] .dark .dark\:bg-\[\#232534\] {
+  background-color: #12384c !important;
+}
+
+/* Borders in dark mode */
+[data-theme=mongodb].dark .border-\[\#dedee5\],
+.dark[data-theme=mongodb] .border-\[\#dedee5\],
+[data-theme=mongodb] .dark .border-\[\#dedee5\],
+[data-theme=mongodb].dark .dark\:border-\[\#282937\],
+.dark[data-theme=mongodb] .dark\:border-\[\#282937\],
+[data-theme=mongodb] .dark .dark\:border-\[\#282937\] {
+  border-color: #1c3848 !important;
+}
+
+/* Text in dark mode */
+[data-theme=mongodb].dark .text-\[\#101114\],
+.dark[data-theme=mongodb] .text-\[\#101114\],
+[data-theme=mongodb] .dark .text-\[\#101114\],
+[data-theme=mongodb].dark .dark\:text-\[\#f3f4f8\],
+.dark[data-theme=mongodb] .dark\:text-\[\#f3f4f8\],
+[data-theme=mongodb] .dark .dark\:text-\[\#f3f4f8\] {
+  color: #ffffff !important;
+}
+
+[data-theme=mongodb].dark .text-\[\#686b82\],
+.dark[data-theme=mongodb] .text-\[\#686b82\],
+[data-theme=mongodb] .dark .text-\[\#686b82\],
+[data-theme=mongodb].dark .dark\:text-\[\#9ca0ba\],
+.dark[data-theme=mongodb] .dark\:text-\[\#9ca0ba\],
+[data-theme=mongodb] .dark .dark\:text-\[\#9ca0ba\] {
+  color: #a8b3bc !important;
+}
+
+/* Card Geometry: 12px rounded (rounded.lg) */
+[data-theme=mongodb] .rounded-\[16px\],
+[data-theme=mongodb] .rounded-\[14px\] {
+  border-radius: 12px !important;
+}
+
+/* Elevation Shadows */
+[data-theme=mongodb] .shadow-whisper {
+  box-shadow: 0px 4px 12px rgba(0, 30, 43, 0.06) !important;
+}
+[data-theme=mongodb].dark .shadow-whisper,
+.dark[data-theme=mongodb] .shadow-whisper {
+  box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* MongoDB active segmented button for pengeluaran in dark mode */
+[data-theme=mongodb].dark button.bg-\[\#101114\],
+.dark[data-theme=mongodb] button.bg-\[\#101114\],
+[data-theme=mongodb] .dark button.bg-\[\#101114\] {
+  background-color: #12384c !important;
+  color: #ffffff !important;
+}
+
+/* ==============================================================
    THEME SHOWROOM STYLES (IMMUNE TO ACTIVE THEME OVERRIDES)
    ============================================================== */
 .theme-card-tagline[data-theme-id="coinbase"] {
@@ -914,6 +1311,12 @@ html[data-theme=autumn]:not(.dark) .text-\[\#686b82\] {
 }
 .theme-card-tagline[data-theme-id="autumn"] {
   color: #ea580c !important;
+}
+.theme-card-tagline[data-theme-id="mongodb"] {
+  color: #00684a !important;
+}
+.dark .theme-card-tagline[data-theme-id="mongodb"] {
+  color: #00ed64 !important;
 }
 
 button.theme-preview-cta[data-preview-theme="coinbase"] {
@@ -932,6 +1335,10 @@ button.theme-preview-cta[data-preview-theme="autumn"] {
   background-color: #ea580c !important;
   color: #ffffff !important;
 }
+button.theme-preview-cta[data-preview-theme="mongodb"] {
+  background-color: #00ed64 !important;
+  color: #001e2b !important;
+}
 
 .theme-active-badge[data-active-theme="coinbase"] {
   background-color: #0052ff !important;
@@ -949,6 +1356,10 @@ button.theme-preview-cta[data-preview-theme="autumn"] {
   background-color: #ea580c !important;
   color: #ffffff !important;
 }
+.theme-active-badge[data-active-theme="mongodb"] {
+  background-color: #00ed64 !important;
+  color: #001e2b !important;
+}
 
 .theme-card-container[data-selected="true"][data-theme-id="coinbase"] {
   border-color: #0052ff !important;
@@ -961,6 +1372,9 @@ button.theme-preview-cta[data-preview-theme="autumn"] {
 }
 .theme-card-container[data-selected="true"][data-theme-id="autumn"] {
   border-color: #ea580c !important;
+}
+.theme-card-container[data-selected="true"][data-theme-id="mongodb"] {
+  border-color: #00ed64 !important;
 }
 
 /* Autumn active segmented button for pengeluaran in dark mode */
