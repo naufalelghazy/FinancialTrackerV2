@@ -17,38 +17,48 @@ import {
   Palette,
   Check,
   Search,
+  Zap,
 } from 'lucide-react';
-import type { Account, Category } from '../../types';
+import type { Account, Category, QuickTemplate } from '../../types';
 import { formatCurrency } from '../../lib/formatters';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { AccountAvatar } from '../../features/accounts/AccountsView';
 import { CategoryIcon } from '../ui/CategoryIcon';
 import { getLogoDevToken, setLogoDevToken } from '../../services/logoService';
 import { useTheme, type DesignSystem } from '../../contexts/ThemeContext';
+import { resolveTemplateAccount, resolveTemplateCategory } from '../../services/templateService';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   accounts?: Account[];
   categories?: Category[];
+  templates?: QuickTemplate[];
   onEditAccount?: (account: Account) => void;
   onAddAccount?: () => void;
   onEditCategory?: (category: Category) => void;
   onAddCategory?: () => void;
+  onEditTemplate?: (template: QuickTemplate) => void;
+  onAddTemplate?: () => void;
+  onDeleteTemplate?: (id: string) => void;
   initialTab?: SettingsTab;
 }
 
-export type SettingsTab = 'akun' | 'kategori' | 'tampilan' | 'backend';
+export type SettingsTab = 'akun' | 'kategori' | 'template' | 'tampilan' | 'backend';
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
   onClose,
   accounts = [],
   categories = [],
+  templates = [],
   onEditAccount,
   onAddAccount,
   onEditCategory,
   onAddCategory,
+  onEditTemplate,
+  onAddTemplate,
+  onDeleteTemplate: _onDeleteTemplate,
   initialTab = 'akun',
 }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
@@ -195,10 +205,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   const tabs: { id: SettingsTab; label: string; icon: React.FC<{ className?: string }> }[] = [
-    { id: 'akun', label: 'Akun & Rekening', icon: Wallet },
+    { id: 'akun', label: 'Rekening', icon: Wallet },
     { id: 'kategori', label: 'Kategori', icon: Layers },
-    { id: 'tampilan', label: 'Tema & Tampilan', icon: Palette },
-    { id: 'backend', label: 'Backend Database', icon: Server },
+    { id: 'template', label: 'Template', icon: Zap },
+    { id: 'tampilan', label: 'Tema', icon: Palette },
+    { id: 'backend', label: 'Backend', icon: Server },
   ];
 
   return (
@@ -219,7 +230,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 Pengaturan Aplikasi
               </h2>
               <p className="text-[11px] text-[#686b82] dark:text-[#9ca0ba]">
-                Kelola akun, data kategori, tema tampilan, dan koneksi backend
+                Kelola rekening, kategori, template cepat, tema, dan koneksi backend
               </p>
             </div>
           </div>
@@ -234,7 +245,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
         {/* Tab Navigation */}
         <div className="p-2 sm:px-5 sm:pt-3 border-b border-[#dedee5] dark:border-[#282937] bg-[#fafbfe] dark:bg-[#13141c] shrink-0">
-          <div className="grid grid-cols-4 gap-1 p-1 bg-[#edeef3] dark:bg-[#1e202b] rounded-[11px]">
+          <div className="grid grid-cols-5 gap-1 p-1 bg-[#edeef3] dark:bg-[#1e202b] rounded-[11px]">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -242,13 +253,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-[9px] text-xs font-bold transition-all ${
+                  className={`flex items-center justify-center gap-1.5 py-2 px-1.5 sm:px-2.5 rounded-[9px] text-[11px] sm:text-xs font-bold transition-all ${
                     isActive
                       ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-micro'
                       : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
                   }`}
                 >
-                  <Icon className="w-3.5 h-3.5" />
+                  <Icon className="w-3.5 h-3.5 shrink-0" />
                   <span className="truncate">{tab.label}</span>
                 </button>
               );
@@ -479,6 +490,112 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       </div>
                     </div>
                   ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ================= TAB 2.5: TEMPLATE FAVORIT ================= */}
+          {activeTab === 'template' && (
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div>
+                  <h3 className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8]">
+                    Daftar Template Favorit ({templates.length})
+                  </h3>
+                  <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
+                    Kelola pintasan transaksi untuk pencatatan cepat di Dashboard dan Form
+                  </p>
+                </div>
+                {onAddTemplate && (
+                  <button
+                    type="button"
+                    onClick={onAddTemplate}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-[9px] bg-[#7132f5] hover:bg-[#5b1ecf] text-white text-xs font-bold transition-all shadow-micro self-start sm:self-auto shrink-0"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Tambah Template</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Template List */}
+              <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
+                {templates.length === 0 ? (
+                  <div className="py-8 text-center bg-[#fafbfe] dark:bg-[#1e202b]/40 rounded-[12px] border border-dashed border-[#dedee5] dark:border-[#282937]">
+                    <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
+                      Belum ada template transaksi favorit.
+                    </p>
+                    {onAddTemplate && (
+                      <button
+                        type="button"
+                        onClick={onAddTemplate}
+                        className="mt-2 text-xs font-bold text-[#7132f5] dark:text-[#a78bfa] hover:underline"
+                      >
+                        Buat Template Baru
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  templates.map((tpl) => {
+                    const srcAcc = resolveTemplateAccount(accounts, tpl.sourceAccountId);
+                    const dstAcc = tpl.destinationAccountId
+                      ? resolveTemplateAccount(accounts, tpl.destinationAccountId)
+                      : null;
+                    const cat = tpl.categoryId ? resolveTemplateCategory(categories, tpl.categoryId) : null;
+
+                    return (
+                      <div
+                        key={tpl.id}
+                        className="flex items-center justify-between p-3 rounded-[12px] bg-[#fafbfe] dark:bg-[#1e202b] border border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/40 transition-all group"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="text-xl w-9 h-9 rounded-[9px] bg-white dark:bg-[#282937] border border-[#dedee5] dark:border-[#35374d] flex items-center justify-center shrink-0 shadow-2xs">
+                            {tpl.emoji || '⚡'}
+                          </span>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-bold text-xs sm:text-sm text-[#101114] dark:text-[#f3f4f8] truncate">
+                                {tpl.name}
+                              </h4>
+                              <span
+                                className={`text-[10px] font-bold px-1.5 py-0.5 rounded-[5px] uppercase ${
+                                  tpl.type === 'pengeluaran'
+                                    ? 'bg-red-500/10 text-red-600 dark:text-red-400'
+                                    : tpl.type === 'transfer'
+                                    ? 'bg-[#7132f5]/10 text-[#7132f5] dark:text-[#a78bfa]'
+                                    : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                }`}
+                              >
+                                {tpl.type === 'pengeluaran' ? 'Keluar' : tpl.type === 'transfer' ? 'Transfer' : 'Masuk'}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] truncate mt-0.5">
+                              {srcAcc?.name || 'Akun'}
+                              {tpl.type === 'transfer' ? ` → ${dstAcc?.name || 'Tujuan'}` : cat ? ` • ${cat.name}` : ''}
+                              {tpl.notes ? ` (${tpl.notes})` : ''}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-xs font-bold text-[#101114] dark:text-[#f3f4f8] tabular-nums whitespace-nowrap">
+                            {formatCurrency(tpl.amount)}
+                          </span>
+                          {onEditTemplate && (
+                            <button
+                              type="button"
+                              onClick={() => onEditTemplate(tpl)}
+                              className="p-1.5 rounded-[8px] text-[#686b82] dark:text-[#9ca0ba] hover:text-[#7132f5] hover:bg-white dark:hover:bg-[#282937] transition-colors"
+                              title="Edit template"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
                 )}
               </div>
             </div>

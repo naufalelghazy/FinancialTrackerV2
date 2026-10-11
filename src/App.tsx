@@ -14,6 +14,8 @@ import { SettingsModal, type SettingsTab } from './components/modals/SettingsMod
 import { EditAccountModal } from './components/modals/EditAccountModal';
 import { EditTransactionModal } from './components/modals/EditTransactionModal';
 import { EditCategoryModal } from './components/modals/EditCategoryModal';
+import { EditTemplateModal } from './components/modals/EditTemplateModal';
+import { Toast, type ToastItem } from './components/ui/Toast';
 import { INITIAL_ACCOUNTS, INITIAL_CATEGORIES } from './lib/constants';
 import {
   loadFinancialData,
@@ -29,7 +31,16 @@ import {
   calculateAccountBalances,
   getAccountIcon,
 } from './services/financialService';
-import type { Account, AccountType, Category, Transaction, TransactionType } from './types';
+import {
+  loadQuickTemplates,
+  addQuickTemplate,
+  updateQuickTemplate,
+  deleteQuickTemplate,
+  resolveTemplateAccount,
+  resolveTemplateCategory,
+} from './services/templateService';
+import type { Account, AccountType, Category, Transaction, TransactionType, QuickTemplate } from './types';
+import { formatCurrency } from './lib/formatters';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
@@ -50,6 +61,12 @@ export function App() {
   const [isTxModalOpen, setIsTxModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<QuickTemplate | null>(null);
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [activeToast, setActiveToast] = useState<ToastItem | null>(null);
+
+  // Quick Templates state
+  const [templates, setTemplates] = useState<QuickTemplate[]>(() => loadQuickTemplates());
 
   // Accounts state
   const [accounts, setAccounts] = useState<Account[]>(() => {
@@ -194,6 +211,100 @@ export function App() {
     setAccounts(nextAccounts);
 
     await deleteTransactionFromDatabase(id);
+  };
+
+  // Handle direct execution of template from Dashboard
+  const handleUseTemplateDirectly = async (tpl: QuickTemplate) => {
+    const today = new Date().toISOString().slice(0, 10);
+    const resolvedSrc = resolveTemplateAccount(accounts, tpl.sourceAccountId) || accounts[0];
+    const resolvedDst = tpl.destinationAccountId
+      ? resolveTemplateAccount(accounts, tpl.destinationAccountId)
+      : undefined;
+    const resolvedCat = tpl.categoryId
+      ? resolveTemplateCategory(categories, tpl.categoryId)
+      : undefined;
+
+    const txData = {
+      type: tpl.type,
+      amount: tpl.amount,
+      sourceAccountId: resolvedSrc?.id || tpl.sourceAccountId,
+      destinationAccountId: resolvedDst?.id,
+      categoryId: resolvedCat?.id,
+      date: today,
+      notes: tpl.notes || tpl.name,
+    };
+
+    let createdId = '';
+    try {
+      const newTx = await addTransactionToDatabase(txData);
+      createdId = newTx.id;
+      const nextTransactions = [newTx, ...transactions];
+      const nextAccounts = calculateAccountBalances(accounts, nextTransactions);
+      setTransactions(nextTransactions);
+      setAccounts(nextAccounts);
+    } catch (err) {
+      console.error('Error adding transaction from template:', err);
+      const fallbackTx: Transaction = {
+        id: crypto.randomUUID(),
+        type: txData.type,
+        amount: txData.amount,
+        sourceAccountId: txData.sourceAccountId,
+        destinationAccountId: txData.destinationAccountId,
+        categoryId: txData.categoryId,
+        notes: txData.notes,
+        date: txData.date,
+        createdAt: new Date().toISOString(),
+      };
+      createdId = fallbackTx.id;
+      const nextTransactions = [fallbackTx, ...transactions];
+      const nextAccounts = calculateAccountBalances(accounts, nextTransactions);
+      setTransactions(nextTransactions);
+      setAccounts(nextAccounts);
+      localStorage.setItem('ft_transactions', JSON.stringify(nextTransactions));
+    }
+
+    if (navigator.vibrate) {
+      navigator.vibrate([35, 35]);
+    }
+
+    setActiveToast({
+      id: String(Date.now()),
+      title: `${tpl.emoji || '⚡'} ${tpl.name} (${formatCurrency(tpl.amount)}) berhasil dicatat!`,
+      subtitle: `${resolvedSrc?.name || 'Akun'} • ${resolvedCat?.name || (tpl.type === 'transfer' ? 'Transfer' : 'Transaksi')}`,
+      onUndo: () => {
+        if (createdId) {
+          handleDeleteTransaction(createdId);
+        }
+      },
+    });
+  };
+
+  // Handle save template
+  const handleSaveTemplate = (data: Omit<QuickTemplate, 'id'> & { id?: string }) => {
+    if (data.id) {
+      const updated = updateQuickTemplate(data as QuickTemplate, templates);
+      setTemplates(updated);
+    } else {
+      const { updatedList } = addQuickTemplate(data, templates);
+      setTemplates(updatedList);
+    }
+  };
+
+  // Handle delete template
+  const handleDeleteTemplate = (id: string) => {
+    const updated = deleteQuickTemplate(id, templates);
+    setTemplates(updated);
+  };
+
+  // Handle save current transaction as template from form
+  const handleSaveAsTemplate = (data: Omit<QuickTemplate, 'id'>) => {
+    const { newTemplate, updatedList } = addQuickTemplate(data, templates);
+    setTemplates(updatedList);
+    setActiveToast({
+      id: String(Date.now()),
+      title: `Template "${newTemplate.name}" berhasil disimpan!`,
+      subtitle: 'Dapat digunakan kapan saja di Dashboard atau Form',
+    });
   };
 
   // Handle edit or add account
@@ -352,12 +463,22 @@ export function App() {
                 accounts={accounts}
                 transactions={transactions}
                 categories={categories}
+                templates={templates}
                 onNavigateTab={setActiveTab}
                 onEditTransaction={(t) => {
                   setSelectedTransaction(t);
                   setIsTxModalOpen(true);
                 }}
                 onAddTransaction={() => setActiveTab('input')}
+                onUseTemplateDirectly={handleUseTemplateDirectly}
+                onEditTemplate={(tpl) => {
+                  setSelectedTemplate(tpl);
+                  setIsTemplateModalOpen(true);
+                }}
+                onAddTemplate={() => {
+                  setSelectedTemplate(null);
+                  setIsTemplateModalOpen(true);
+                }}
               />
             )}
 
@@ -366,7 +487,9 @@ export function App() {
                 <TransactionForm
                   accounts={accounts}
                   categories={categories}
+                  templates={templates}
                   onSubmit={handleAddTransaction}
+                  onSaveAsTemplate={handleSaveAsTemplate}
                 />
               </div>
             )}
@@ -434,6 +557,7 @@ export function App() {
         onClose={() => setIsSettingsOpen(false)}
         accounts={accounts}
         categories={categories}
+        templates={templates}
         onEditAccount={(acc) => {
           setSelectedAccount(acc);
           setIsAccountModalOpen(true);
@@ -450,6 +574,15 @@ export function App() {
           setSelectedCategory(null);
           setIsCategoryModalOpen(true);
         }}
+        onEditTemplate={(tpl) => {
+          setSelectedTemplate(tpl);
+          setIsTemplateModalOpen(true);
+        }}
+        onAddTemplate={() => {
+          setSelectedTemplate(null);
+          setIsTemplateModalOpen(true);
+        }}
+        onDeleteTemplate={handleDeleteTemplate}
       />
 
       {/* Edit / Add Account Modal */}
@@ -470,6 +603,17 @@ export function App() {
         onDelete={handleDeleteCategory}
       />
 
+      {/* Edit / Add Template Modal */}
+      <EditTemplateModal
+        isOpen={isTemplateModalOpen}
+        template={selectedTemplate}
+        accounts={accounts}
+        categories={categories}
+        onClose={() => setIsTemplateModalOpen(false)}
+        onSave={handleSaveTemplate}
+        onDelete={handleDeleteTemplate}
+      />
+
       {/* Edit Transaction Modal */}
       <EditTransactionModal
         isOpen={isTxModalOpen}
@@ -480,7 +624,11 @@ export function App() {
         onSave={handleSaveTransaction}
         onDelete={handleDeleteTransaction}
       />
-          <ReloadPrompt />
+
+      {/* Global Toast with Undo Action */}
+      <Toast toast={activeToast} onClose={() => setActiveToast(null)} />
+
+      <ReloadPrompt />
     </div>
   );
 }

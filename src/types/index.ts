@@ -31,3 +31,16 @@ export interface Transaction {
   notes?: string;
   createdAt: string;
 }
+
+export interface QuickTemplate {
+  id: string;
+  name: string;
+  type: TransactionType;
+  amount: number;
+  sourceAccountId: string;
+  destinationAccountId?: string;
+  categoryId?: string;
+  notes?: string;
+  emoji?: string;
+  color?: string;
+}

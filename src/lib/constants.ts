@@ -1,4 +1,4 @@
-﻿import type { Account, Category } from '../types';
+import type { Account, Category, QuickTemplate } from '../types';
 
 export const INITIAL_ACCOUNTS: Account[] = [
   { id: 'cash', name: 'CASH', type: 'cash', emoji: '💵', balance: 0 },
@@ -53,4 +53,48 @@ export const INITIAL_CATEGORIES: Category[] = [
   { id: 'loan', name: 'Loan', type: 'pemasukan', emoji: '🤝' },
   { id: 'cashback', name: 'Cashback', type: 'pemasukan', emoji: '💸' },
   { id: 'gift', name: 'Gift', type: 'pemasukan', emoji: '🎁' },
+];
+
+export const INITIAL_TEMPLATES: QuickTemplate[] = [
+  {
+    id: 'tpl_makan_siang',
+    name: 'Makan Siang',
+    type: 'pengeluaran',
+    amount: 25000,
+    sourceAccountId: 'gopay',
+    categoryId: 'makan',
+    notes: 'Makan siang harian',
+    emoji: '🍔',
+  },
+  {
+    id: 'tpl_kopi',
+    name: 'Kopi & Jajan',
+    type: 'pengeluaran',
+    amount: 18000,
+    sourceAccountId: 'gopay',
+    categoryId: 'coffee',
+    notes: 'Kopi / snack sore',
+    emoji: '☕',
+  },
+  {
+    id: 'tpl_bensin',
+    name: 'Bensin Motor',
+    type: 'pengeluaran',
+    amount: 35000,
+    sourceAccountId: 'cash',
+    categoryId: 'bensin',
+    notes: 'Bensin motor',
+    emoji: '⛽',
+  },
+  {
+    id: 'tpl_topup_gopay',
+    name: 'Top Up GoPay',
+    type: 'transfer',
+    amount: 100000,
+    sourceAccountId: 'bca',
+    destinationAccountId: 'gopay',
+    notes: 'Top up saldo e-wallet',
+    emoji: '🔄',
+  },
+
 ];

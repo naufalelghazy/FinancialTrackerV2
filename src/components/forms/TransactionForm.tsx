@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import type { TransactionType, Account, Category } from '../../types';
+import type { TransactionType, Account, Category, QuickTemplate } from '../../types';
 import { formatNumberWithDots, parseRawAmount } from '../../lib/formatters';
-import { ArrowUpRight, ArrowDownLeft, ArrowLeftRight, CheckCircle2 } from 'lucide-react';
+import { ArrowUpRight, ArrowDownLeft, ArrowLeftRight, CheckCircle2, Zap, BookmarkPlus } from 'lucide-react';
 import { CategoryIcon } from '../ui/CategoryIcon';
+import { resolveTemplateAccount, resolveTemplateCategory } from '../../services/templateService';
 
 interface TransactionFormProps {
   accounts: Account[];
   categories: Category[];
+  templates?: QuickTemplate[];
   onSubmit: (data: {
     type: TransactionType;
     amount: number;
@@ -16,12 +18,15 @@ interface TransactionFormProps {
     date: string;
     notes: string;
   }) => void;
+  onSaveAsTemplate?: (data: Omit<QuickTemplate, 'id'>) => void;
 }
 
 export const TransactionForm: React.FC<TransactionFormProps> = ({
   accounts,
   categories,
+  templates = [],
   onSubmit,
+  onSaveAsTemplate,
 }) => {
   const [type, setType] = useState<TransactionType>('pengeluaran');
   const [amountDisplay, setAmountDisplay] = useState('');
@@ -67,8 +72,87 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
     }
   };
 
+  const [savedTemplateSuccess, setSavedTemplateSuccess] = useState(false);
+
+  const handleApplyTemplate = (tpl: QuickTemplate) => {
+    const srcAcc = resolveTemplateAccount(accounts, tpl.sourceAccountId);
+    const dstAcc = tpl.destinationAccountId
+      ? resolveTemplateAccount(accounts, tpl.destinationAccountId)
+      : null;
+    const cat = tpl.categoryId ? resolveTemplateCategory(categories, tpl.categoryId) : null;
+
+    setType(tpl.type);
+    setAmountDisplay(formatNumberWithDots(String(tpl.amount)));
+    setSourceAccountId(srcAcc?.id || accounts[0]?.id || '');
+    if (tpl.type === 'transfer') {
+      setDestinationAccountId(dstAcc?.id || '');
+      setCategoryId('');
+    } else {
+      setCategoryId(cat?.id || '');
+      setDestinationAccountId('');
+    }
+    if (tpl.notes) {
+      setNotes(tpl.notes);
+    }
+    if (navigator.vibrate) {
+      navigator.vibrate(25);
+    }
+  };
+
+  const handleSaveCurrentAsTemplate = () => {
+    const rawAmount = parseRawAmount(amountDisplay);
+    if (!rawAmount || !sourceAccountId) return;
+    if (type === 'transfer' && !destinationAccountId) return;
+    if (type !== 'transfer' && !categoryId) return;
+
+    onSaveAsTemplate?.({
+      name: notes.trim() || (type === 'transfer' ? 'Transfer Saldo' : selectedCategory?.name || 'Transaksi Favorit'),
+      type,
+      amount: rawAmount,
+      sourceAccountId,
+      destinationAccountId: type === 'transfer' ? destinationAccountId : undefined,
+      categoryId: type !== 'transfer' ? categoryId : undefined,
+      notes: notes.trim(),
+      emoji: selectedCategory?.emoji || (type === 'transfer' ? '🔄' : '⚡'),
+    });
+
+    setSavedTemplateSuccess(true);
+    setTimeout(() => setSavedTemplateSuccess(false), 2500);
+    if (navigator.vibrate) {
+      navigator.vibrate([30, 30]);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4 pb-24">
+      {/* Quick Template Chips */}
+      {templates && templates.length > 0 && (
+        <div className="space-y-1.5 pb-1">
+          <div className="flex items-center justify-between text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba]">
+            <span className="flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-[#7132f5] fill-current" />
+              Pilih dari Template Favorit:
+            </span>
+          </div>
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {templates.map((tpl) => (
+              <button
+                key={tpl.id}
+                type="button"
+                onClick={() => handleApplyTemplate(tpl)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] bg-white dark:bg-[#181a20] border border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5] dark:hover:border-[#7132f5] shadow-2xs text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] shrink-0 transition-all active:scale-95"
+              >
+                <span>{tpl.emoji || '⚡'}</span>
+                <span>{tpl.name}</span>
+                <span className="text-[10px] text-[#686b82] dark:text-[#9ca0ba] font-normal tabular-nums">
+                  ({formatNumberWithDots(String(tpl.amount))})
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Type Toggle - Kraken Style Segmented Control */}
       <div className="grid grid-cols-3 p-1 bg-[#edeef3] dark:bg-[#232534] rounded-[12px] gap-1 border border-[#dedee5] dark:border-[#282937]">
         <button
@@ -259,6 +343,25 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         <div className="flex items-center gap-2 p-3 bg-[#149e61]/15 border border-[#149e61]/30 text-[#026b3f] rounded-[10px] text-xs font-semibold animate-in fade-in">
           <CheckCircle2 className="w-4 h-4 text-[#149e61] shrink-0" />
           <span>Transaksi berhasil disimpan!</span>
+        </div>
+      )}
+
+      {/* Save as Template Option */}
+      {onSaveAsTemplate && amountDisplay && sourceAccountId && (
+        <div className="flex items-center justify-between p-2.5 rounded-[10px] bg-[#fafbfe] dark:bg-[#16171f] border border-[#dedee5]/80 dark:border-[#282937]">
+          <div className="flex items-center gap-2 min-w-0">
+            <BookmarkPlus className="w-4 h-4 text-[#7132f5] shrink-0" />
+            <span className="text-xs text-[#686b82] dark:text-[#9ca0ba] truncate">
+              Jadikan transaksi ini sebagai template cepat?
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleSaveCurrentAsTemplate}
+            className="px-2.5 py-1 rounded-[6px] bg-[#7132f5]/10 hover:bg-[#7132f5]/20 text-[#7132f5] dark:text-[#a78bfa] text-xs font-bold transition-colors shrink-0"
+          >
+            {savedTemplateSuccess ? 'Tersimpan!' : 'Simpan Template'}
+          </button>
         </div>
       )}
 

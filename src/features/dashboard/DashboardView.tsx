@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react';
-import type { Account, Category, Transaction } from '../../types';
+import type { Account, Category, Transaction, QuickTemplate } from '../../types';
 import type { NavTab } from '../../components/layout/BottomNav';
 import { formatCurrency } from '../../lib/formatters';
 import { CategoryIcon } from '../../components/ui/CategoryIcon';
 import { AccountAvatar } from '../accounts/AccountsView';
+import { resolveTemplateAccount, resolveTemplateCategory } from '../../services/templateService';
 import {
   Wallet,
   CreditCard,
@@ -14,23 +15,34 @@ import {
   Calendar,
   PieChart,
   Edit2,
+  Zap,
+  Plus,
 } from 'lucide-react';
 
 interface DashboardViewProps {
   accounts: Account[];
   transactions: Transaction[];
   categories: Category[];
+  templates?: QuickTemplate[];
   onNavigateTab: (tab: NavTab) => void;
   onEditTransaction: (transaction: Transaction) => void;
   onAddTransaction?: () => void;
+  onUseTemplateDirectly?: (template: QuickTemplate) => void;
+  onUseTemplateInForm?: (template: QuickTemplate) => void;
+  onEditTemplate?: (template: QuickTemplate) => void;
+  onAddTemplate?: () => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
   accounts,
   transactions,
   categories,
+  templates = [],
   onNavigateTab,
   onEditTransaction,
+  onUseTemplateDirectly,
+  onEditTemplate,
+  onAddTemplate,
 }) => {
   const getAccountName = (id?: string) => accounts.find((a) => a.id === id)?.name || id || '-';
   const getCategoryName = (id?: string) => categories.find((c) => c.id === id)?.name || id || '-';
@@ -257,29 +269,151 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </div>
 
+      {/* ===================== QUICK TEMPLATES SECTION ===================== */}
+      <div className="bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-4 sm:p-5 space-y-3.5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[8px] bg-[#7132f5]/10 text-[#7132f5] flex items-center justify-center shrink-0">
+              <Zap className="w-4 h-4 fill-current" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-bold text-sm sm:text-base text-[#101114] dark:text-[#f3f4f8] tracking-tight">
+                Transaksi Cepat & Template Favorit
+              </h3>
+              <p className="text-xs text-[#686b82] dark:text-[#9ca0ba] truncate">
+                Tap kartu untuk langsung mencatat transaksi harian dalam 1-klik
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+            {onAddTemplate && (
+              <button
+                type="button"
+                onClick={onAddTemplate}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] bg-[#7132f5]/10 hover:bg-[#7132f5]/20 text-[#7132f5] dark:text-[#a78bfa] text-xs font-semibold transition-all border border-[#7132f5]/20"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Tambah Template</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Templates Grid */}
+        {templates && templates.length > 0 ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+            {templates.map((tpl) => {
+              const srcAcc = resolveTemplateAccount(accounts, tpl.sourceAccountId);
+              const dstAcc = tpl.destinationAccountId
+                ? resolveTemplateAccount(accounts, tpl.destinationAccountId)
+                : null;
+              const cat = tpl.categoryId ? resolveTemplateCategory(categories, tpl.categoryId) : null;
+
+              return (
+                <div
+                  key={tpl.id}
+                  onClick={() => onUseTemplateDirectly?.(tpl)}
+                  className="group relative bg-[#fafbfe] dark:bg-[#12141a] hover:bg-white dark:hover:bg-[#181a20] rounded-[12px] p-3 border border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/50 dark:hover:border-[#7132f5]/50 shadow-micro hover:shadow-md transition-all cursor-pointer flex flex-col justify-between text-left active:scale-[0.98]"
+                >
+                  {/* Top: Emoji & Edit button */}
+                  <div className="flex items-center justify-between gap-1 mb-2">
+                    <span className="text-xl w-8 h-8 rounded-[8px] bg-white dark:bg-[#1f222e] border border-[#dedee5]/60 dark:border-[#282937] flex items-center justify-center shrink-0 shadow-2xs">
+                      {tpl.emoji || '⚡'}
+                    </span>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span
+                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-[5px] uppercase tracking-wider shrink-0 ${
+                          tpl.type === 'pengeluaran'
+                            ? 'bg-red-500/10 text-red-600 dark:text-red-400'
+                            : tpl.type === 'transfer'
+                            ? 'bg-[#7132f5]/10 text-[#7132f5] dark:text-[#a78bfa]'
+                            : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                        }`}
+                      >
+                        {tpl.type === 'pengeluaran' ? 'Keluar' : tpl.type === 'transfer' ? 'Transfer' : 'Masuk'}
+                      </span>
+                      {onEditTemplate && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditTemplate(tpl);
+                          }}
+                          className="p-1 rounded-[6px] text-[#686b82] dark:text-[#9ca0ba] hover:text-[#7132f5] hover:bg-white dark:hover:bg-[#232534] transition-colors shrink-0"
+                          title="Edit template"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Middle: Title & Account/Category info */}
+                  <div className="min-w-0 my-1">
+                    <h4 className="text-xs sm:text-sm font-bold text-[#101114] dark:text-[#f3f4f8] truncate">
+                      {tpl.name}
+                    </h4>
+                    <p className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] truncate mt-0.5">
+                      {srcAcc?.name || 'Akun'}
+                      {tpl.type === 'transfer' ? ` → ${dstAcc?.name || 'Tujuan'}` : cat ? ` • ${cat.name}` : ''}
+                    </p>
+                  </div>
+
+                  {/* Bottom: Nominal & Action button */}
+                  <div className="pt-2 border-t border-[#dedee5]/70 dark:border-[#282937] flex items-center justify-between gap-1 mt-1">
+                    <span className="text-xs font-bold text-[#101114] dark:text-[#f3f4f8] tabular-nums whitespace-nowrap">
+                      {formatCurrency(tpl.amount)}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#7132f5] dark:text-[#a78bfa] group-hover:translate-x-0.5 transition-transform">
+                      <Zap className="w-2.5 h-2.5 fill-current" />
+                      Catat
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="p-6 text-center border border-dashed border-[#dedee5] dark:border-[#282937] rounded-[12px]">
+            <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">Belum ada template transaksi.</p>
+            {onAddTemplate && (
+              <button
+                type="button"
+                onClick={onAddTemplate}
+                className="mt-2 text-xs font-bold text-[#7132f5] dark:text-[#a78bfa] hover:underline"
+              >
+                Buat template pertama Anda
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* ===================== TWO-COLUMN MAIN CONTENT ===================== */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 2xl:gap-8">
         {/* Left Column (7 cols): Top Categories Breakdown & Recent Transactions */}
         <div className="lg:col-span-7 space-y-6">
           {/* Top Spending Categories */}
-          <div className="bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-5 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-[8px] bg-[#f59e0b]/15 text-[#b45309] flex items-center justify-center">
+          <div className="bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-4 sm:p-5 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[8px] bg-[#f59e0b]/15 text-[#b45309] flex items-center justify-center shrink-0">
                   <PieChart className="w-4 h-4" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <h3 className="text-sm font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
                     Pengeluaran Terbesar ({currentMonthLabel})
                   </h3>
-                  <p className="text-[11px] text-[#686b82] dark:text-[#9ca0ba]">
+                  <p className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] truncate">
                     Kategori dengan belanja tertinggi
                   </p>
                 </div>
               </div>
-              <span className="text-xs font-bold text-[#101114] dark:text-[#f3f4f8]">
-                Total: {formatCurrency(monthExpense)}
-              </span>
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] bg-[#855bfb]/10 dark:bg-[#855bfb]/15 text-xs font-bold text-[#7132f5] dark:text-[#a78bfa] self-start sm:self-auto shrink-0 border border-[#855bfb]/20">
+                <span className="text-[11px] font-medium text-[#686b82] dark:text-[#9ca0ba]">Total:</span>
+                <span className="tabular-nums font-bold text-[#101114] dark:text-[#f3f4f8]">{formatCurrency(monthExpense)}</span>
+              </div>
             </div>
 
             {topCategories.length === 0 ? (
@@ -292,8 +426,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   const catObj = getCategory(cat.catId);
                   return (
                     <div key={cat.catId} className="space-y-1.5">
-                      <div className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-between text-xs gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
                           <CategoryIcon
                             name={cat.name}
                             type="pengeluaran"
@@ -301,12 +435,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                             emoji={catObj?.emoji}
                             size="sm"
                           />
-                          <span className="font-semibold text-[#101114] dark:text-[#f3f4f8]">{cat.name}</span>
-                          <span className="text-[11px] text-[#686b82] dark:text-[#9ca0ba]">
+                          <span className="font-semibold text-[#101114] dark:text-[#f3f4f8] truncate">{cat.name}</span>
+                          <span className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] shrink-0">
                             ({cat.percentage}%)
                           </span>
                         </div>
-                        <span className="font-bold text-[#101114] dark:text-[#f3f4f8] tabular-nums">
+                        <span className="font-bold text-[#101114] dark:text-[#f3f4f8] tabular-nums shrink-0">
                           {formatCurrency(cat.amount)}
                         </span>
                       </div>
