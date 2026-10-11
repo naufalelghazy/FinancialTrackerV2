@@ -31,6 +31,19 @@
     scrollbar-gutter: stable;
   }
 
+  /* Fluid Root Scaling for High-Resolution Desktop Displays (2K / 1440p / Ultrawide) */
+  @media (min-width: 1921px) {
+    html {
+      font-size: 17.5px;
+    }
+  }
+
+  @media (min-width: 2560px) {
+    html {
+      font-size: 18px;
+    }
+  }
+
   body {
     background-color: #fafbfe;
     color: #101114;

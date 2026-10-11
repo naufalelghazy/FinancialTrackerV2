@@ -130,9 +130,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   }, [transactions, categories]);
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6 2xl:space-y-8 pb-24">
       {/* ===================== HERO CARDS GRID ===================== */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 2xl:gap-6">
         {/* Total Saldo Tersedia (Kraken Purple Hero) */}
         <div className="hero-balance-card bg-[#7132f5] text-white rounded-[16px] p-5 sm:p-6 shadow-whisper relative overflow-hidden border border-[#5741d8] flex flex-col justify-between">
           <div className="flex items-center justify-between">
@@ -257,7 +257,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* ===================== TWO-COLUMN MAIN CONTENT ===================== */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 2xl:gap-8">
         {/* Left Column (7 cols): Top Categories Breakdown & Recent Transactions */}
         <div className="lg:col-span-7 space-y-6">
           {/* Top Spending Categories */}

@@ -277,7 +277,7 @@ export function App() {
         </header>
 
         {/* Main Content Area - Responsive Container */}
-        <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1">
+        <main className="w-full max-w-7xl 2xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 py-6 2xl:py-8 flex-1">
         {isLoading && accounts.length === 0 ? (
           <div className="py-24 flex flex-col items-center justify-center text-center space-y-3">
             <div className="w-10 h-10 border-3 border-[#7132f5]/20 border-t-[#7132f5] rounded-full animate-spin" />
@@ -305,7 +305,7 @@ export function App() {
             )}
 
             {activeTab === 'input' && (
-              <div className="max-w-xl mx-auto">
+              <div className="max-w-xl 2xl:max-w-2xl mx-auto">
                 <TransactionForm
                   accounts={accounts}
                   categories={categories}
@@ -339,7 +339,7 @@ export function App() {
             )}
 
             {activeTab === 'riwayat' && (
-              <div className="max-w-4xl mx-auto">
+              <div className="max-w-4xl 2xl:max-w-5xl mx-auto">
                 <HistoryView
                   transactions={transactions}
                   accounts={accounts}
@@ -353,7 +353,7 @@ export function App() {
             )}
 
             {activeTab === 'report' && (
-              <div className="max-w-7xl mx-auto">
+              <div className="max-w-7xl 2xl:max-w-[1536px] mx-auto">
                 <ReportView
                   transactions={transactions}
                   accounts={accounts}
