@@ -150,6 +150,8 @@ const EditModalContent: React.FC<EditModalContentProps> = ({
             <CategoryIcon
               name={type === 'transfer' ? 'Pindah Akun' : selectedCategory?.name}
               type={type}
+              icon={type === 'transfer' ? undefined : selectedCategory?.icon}
+              emoji={type === 'transfer' ? undefined : selectedCategory?.emoji}
               size="md"
             />
             <div>
@@ -305,7 +307,13 @@ const EditModalContent: React.FC<EditModalContentProps> = ({
                 </label>
                 {selectedCategory && (
                   <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-[6px] bg-[#edeef3] text-[11px] font-semibold text-[#101114]">
-                    <CategoryIcon name={selectedCategory.name} type={type} size="sm" />
+                    <CategoryIcon
+                      name={selectedCategory.name}
+                      type={type}
+                      icon={selectedCategory.icon}
+                      emoji={selectedCategory.emoji}
+                      size="sm"
+                    />
                     <span>{selectedCategory.name}</span>
                   </div>
                 )}

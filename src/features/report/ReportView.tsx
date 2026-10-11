@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import type { Transaction, Account, Category } from '../../types';
 import { formatCurrency } from '../../lib/formatters';
 import { CategoryIcon } from '../../components/ui/CategoryIcon';
@@ -37,7 +37,7 @@ interface ReportViewProps {
   categories: Category[];
 }
 
-type PeriodType = 'this_month' | 'last_3_months' | 'last_6_months' | 'this_year' | 'all';
+type PeriodType = 'this_month' | 'last_month' | 'last_3_months' | 'last_6_months' | 'this_year' | 'all' | 'custom';
 
 // Curated harmonious color palette for charts
 const CATEGORY_COLORS = [
@@ -60,6 +60,14 @@ export const ReportView: React.FC<ReportViewProps> = ({
 }) => {
   const { isDark } = useTheme();
   const [period, setPeriod] = useState<PeriodType>('this_month');
+  const [customStartDate, setCustomStartDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    return d.toISOString().slice(0, 10);
+  });
+  const [customEndDate, setCustomEndDate] = useState(() => {
+    return new Date().toISOString().slice(0, 10);
+  });
   const [activeChartTab, setActiveChartTab] = useState<'flow' | 'category' | 'source' | 'account'>('category');
   const [chartRadius, setChartRadius] = useState(() => {
     if (typeof window === 'undefined') return { inner: 70, outer: 105 };
@@ -96,14 +104,14 @@ export const ReportView: React.FC<ReportViewProps> = ({
   }, [categories]);
 
   // Check if a transaction is an internal transfer / "Pindah Akun"
-  const isTransferTx = (t: Transaction): boolean => {
+  const isTransferTx = useCallback((t: Transaction): boolean => {
     const cat = t.categoryId ? categoryMap.get(t.categoryId) : undefined;
     return (
       t.type === 'transfer' ||
       Boolean(t.destinationAccountId) ||
       Boolean(cat?.name && cat.name.toLowerCase().includes('pindah akun'))
     );
-  };
+  }, [categoryMap]);
 
   // Filter transactions by period
   const filteredTransactions = useMemo(() => {
@@ -121,6 +129,13 @@ export const ReportView: React.FC<ReportViewProps> = ({
       if (period === 'this_month') {
         return txDate.getFullYear() === currentYear && txDate.getMonth() === currentMonth;
       }
+      if (period === 'last_month') {
+        const prevMonthDate = new Date(currentYear, currentMonth - 1, 1);
+        return (
+          txDate.getFullYear() === prevMonthDate.getFullYear() &&
+          txDate.getMonth() === prevMonthDate.getMonth()
+        );
+      }
       if (period === 'last_3_months') {
         const threeMonthsAgo = new Date(currentYear, currentMonth - 2, 1);
         return txDate >= threeMonthsAgo && txDate <= now;
@@ -132,9 +147,15 @@ export const ReportView: React.FC<ReportViewProps> = ({
       if (period === 'this_year') {
         return txDate.getFullYear() === currentYear;
       }
+      if (period === 'custom') {
+        const dateStr = t.date.slice(0, 10);
+        if (customStartDate && dateStr < customStartDate) return false;
+        if (customEndDate && dateStr > customEndDate) return false;
+        return true;
+      }
       return true; // 'all'
     });
-  }, [transactions, period, categoryMap]);
+  }, [transactions, period, customStartDate, customEndDate, isTransferTx]);
 
   // Aggregate Executive KPIs
   const { totalIncome, totalExpense, netCashflow, savingsRate } = useMemo(() => {
@@ -164,23 +185,33 @@ export const ReportView: React.FC<ReportViewProps> = ({
   const timelineData = useMemo(() => {
     if (filteredTransactions.length === 0) return [];
 
-    if (period === 'this_month') {
+    const isDaily =
+      period === 'this_month' ||
+      period === 'last_month' ||
+      (period === 'custom' &&
+        Boolean(customStartDate) &&
+        Boolean(customEndDate) &&
+        (new Date(customEndDate).getTime() - new Date(customStartDate).getTime()) / (1000 * 60 * 60 * 24) <= 45);
+
+    if (isDaily) {
       // Group by Day
-      const dayMap: { [day: string]: { date: string; pemasukan: number; pengeluaran: number; net: number } } = {};
-      
+      const dayMap: { [key: string]: { date: string; sortKey: string; pemasukan: number; pengeluaran: number; net: number } } = {};
+
       filteredTransactions.forEach((t) => {
-        const dayStr = t.date.slice(8, 10); // DD
-        if (!dayMap[dayStr]) {
-          dayMap[dayStr] = { date: `Tgl ${parseInt(dayStr, 10)}`, pemasukan: 0, pengeluaran: 0, net: 0 };
+        const rawDate = t.date.slice(0, 10);
+        const dayNum = parseInt(t.date.slice(8, 10), 10);
+        const monthNum = parseInt(t.date.slice(5, 7), 10);
+        const displayLabel = period === 'custom' ? `${dayNum}/${monthNum}` : `Tgl ${dayNum}`;
+
+        if (!dayMap[rawDate]) {
+          dayMap[rawDate] = { date: displayLabel, sortKey: rawDate, pemasukan: 0, pengeluaran: 0, net: 0 };
         }
-        if (t.type === 'pemasukan') dayMap[dayStr].pemasukan += t.amount;
-        if (t.type === 'pengeluaran') dayMap[dayStr].pengeluaran += t.amount;
-        dayMap[dayStr].net = dayMap[dayStr].pemasukan - dayMap[dayStr].pengeluaran;
+        if (t.type === 'pemasukan') dayMap[rawDate].pemasukan += t.amount;
+        if (t.type === 'pengeluaran') dayMap[rawDate].pengeluaran += t.amount;
+        dayMap[rawDate].net = dayMap[rawDate].pemasukan - dayMap[rawDate].pengeluaran;
       });
 
-      return Object.keys(dayMap)
-        .sort((a, b) => parseInt(a, 10) - parseInt(b, 10))
-        .map((k) => dayMap[k]);
+      return Object.values(dayMap).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
     } else {
       // Group by Month (YYYY-MM)
       const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
@@ -201,11 +232,11 @@ export const ReportView: React.FC<ReportViewProps> = ({
 
       return Object.values(monthMap).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
     }
-  }, [filteredTransactions, period]);
+  }, [filteredTransactions, period, customStartDate, customEndDate]);
 
   // 2. Category Expense Breakdown (Donut Chart & List)
   const expenseByCategory = useMemo(() => {
-    const catMap: { [catId: string]: { name: string; emoji: string; amount: number } } = {};
+    const catMap: { [catId: string]: { name: string; emoji: string; icon?: string; amount: number } } = {};
     let total = 0;
 
     filteredTransactions
@@ -214,10 +245,11 @@ export const ReportView: React.FC<ReportViewProps> = ({
         const cat = t.categoryId ? categoryMap.get(t.categoryId) : undefined;
         const catName = cat?.name || 'Lain-lain';
         const emoji = cat?.emoji || '🏷️';
+        const icon = cat?.icon || cat?.emoji;
         const id = t.categoryId || 'unknown';
 
         if (!catMap[id]) {
-          catMap[id] = { name: catName, emoji, amount: 0 };
+          catMap[id] = { name: catName, emoji, icon, amount: 0 };
         }
         catMap[id].amount += t.amount;
         total += t.amount;
@@ -234,7 +266,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
 
   // 3. Category Income Breakdown (Donut Chart & List)
   const incomeByCategory = useMemo(() => {
-    const catMap: { [catId: string]: { name: string; emoji: string; amount: number } } = {};
+    const catMap: { [catId: string]: { name: string; emoji: string; icon?: string; amount: number } } = {};
     let total = 0;
 
     filteredTransactions
@@ -243,10 +275,11 @@ export const ReportView: React.FC<ReportViewProps> = ({
         const cat = t.categoryId ? categoryMap.get(t.categoryId) : undefined;
         const catName = cat?.name || 'Pemasukan Lainnya';
         const emoji = cat?.emoji || '💰';
+        const icon = cat?.icon || cat?.emoji;
         const id = t.categoryId || 'unknown';
 
         if (!catMap[id]) {
-          catMap[id] = { name: catName, emoji, amount: 0 };
+          catMap[id] = { name: catName, emoji, icon, amount: 0 };
         }
         catMap[id].amount += t.amount;
         total += t.amount;
@@ -314,76 +347,178 @@ export const ReportView: React.FC<ReportViewProps> = ({
   return (
     <div className="space-y-6 pb-24">
       {/* Header & Period Filter Controls */}
-      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3.5 sm:gap-4 bg-white dark:bg-[#16171f] p-4 sm:p-5 rounded-[14px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-[10px] bg-[#855bfb]/15 text-[#7132f5] dark:text-[#a78bfa] flex items-center justify-center shrink-0">
-              <BarChart3 className="w-4.5 h-4.5 stroke-[2.2]" />
+      <div className="bg-white dark:bg-[#16171f] p-4 sm:p-5 rounded-[14px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper space-y-3.5">
+        <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3.5 sm:gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-[10px] bg-[#855bfb]/15 text-[#7132f5] dark:text-[#a78bfa] flex items-center justify-center shrink-0">
+                <BarChart3 className="w-4.5 h-4.5 stroke-[2.2]" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-base sm:text-lg lg:text-xl font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
+                  Laporan & Analisis Keuangan
+                </h1>
+                <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
+                  Visualisasi tren pemasukan, pengeluaran, dan alokasi kategori
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <h1 className="text-base sm:text-lg lg:text-xl font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
-                Laporan & Analisis Keuangan
-              </h1>
-              <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
-                Visualisasi tren pemasukan, pengeluaran, dan alokasi kategori
-              </p>
-            </div>
+          </div>
+
+          {/* Period Selector Tabs */}
+          <div className="flex items-center gap-1 overflow-x-auto pb-0.5 sm:pb-0 bg-[#edeef3] dark:bg-[#1e202b] p-1 rounded-[12px] border border-[#dedee5] dark:border-[#282937] shrink-0 self-start xl:self-auto max-w-full scrollbar-none">
+            <button
+              onClick={() => setPeriod('this_month')}
+              className={`px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap ${
+                period === 'this_month'
+                  ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-micro'
+                  : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
+              }`}
+            >
+              Bulan Ini
+            </button>
+            <button
+              onClick={() => setPeriod('last_month')}
+              className={`px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap ${
+                period === 'last_month'
+                  ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-micro'
+                  : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
+              }`}
+            >
+              Bulan Lalu
+            </button>
+            <button
+              onClick={() => setPeriod('last_3_months')}
+              className={`px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap ${
+                period === 'last_3_months'
+                  ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-micro'
+                  : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
+              }`}
+            >
+              3 Bulan
+            </button>
+            <button
+              onClick={() => setPeriod('last_6_months')}
+              className={`px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap ${
+                period === 'last_6_months'
+                  ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-micro'
+                  : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
+              }`}
+            >
+              6 Bulan
+            </button>
+            <button
+              onClick={() => setPeriod('this_year')}
+              className={`px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap ${
+                period === 'this_year'
+                  ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-micro'
+                  : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
+              }`}
+            >
+              Tahun Ini
+            </button>
+            <button
+              onClick={() => setPeriod('all')}
+              className={`px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap ${
+                period === 'all'
+                  ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-micro'
+                  : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
+              }`}
+            >
+              Semua
+            </button>
+            <button
+              onClick={() => setPeriod('custom')}
+              className={`px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                period === 'custom'
+                  ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-micro'
+                  : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
+              }`}
+            >
+              <Calendar className="w-3.5 h-3.5 shrink-0" />
+              <span>Pilih Tanggal</span>
+            </button>
           </div>
         </div>
 
-        {/* Period Selector Tabs */}
-        <div className="flex items-center gap-1 overflow-x-auto pb-0.5 sm:pb-0 bg-[#edeef3] dark:bg-[#1e202b] p-1 rounded-[12px] border border-[#dedee5] dark:border-[#282937] shrink-0 self-start xl:self-auto max-w-full scrollbar-none">
-          <button
-            onClick={() => setPeriod('this_month')}
-            className={`px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap ${
-              period === 'this_month'
-                ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-micro'
-                : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
-            }`}
-          >
-            Bulan Ini
-          </button>
-          <button
-            onClick={() => setPeriod('last_3_months')}
-            className={`px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap ${
-              period === 'last_3_months'
-                ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-micro'
-                : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
-            }`}
-          >
-            3 Bulan
-          </button>
-          <button
-            onClick={() => setPeriod('last_6_months')}
-            className={`px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap ${
-              period === 'last_6_months'
-                ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-micro'
-                : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
-            }`}
-          >
-            6 Bulan
-          </button>
-          <button
-            onClick={() => setPeriod('this_year')}
-            className={`px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap ${
-              period === 'this_year'
-                ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-micro'
-                : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
-            }`}
-          >
-            Tahun Ini
-          </button>
-          <button
-            onClick={() => setPeriod('all')}
-            className={`px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap ${
-              period === 'all'
-                ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-micro'
-                : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
-            }`}
-          >
-            Semua
-          </button>
-        </div>
+        {/* Custom Date Range Picker (Active when period === 'custom') */}
+        {period === 'custom' && (
+          <div className="pt-3 border-t border-[#dedee5]/70 dark:border-[#282937] flex flex-col md:flex-row md:items-center md:justify-between gap-3 animate-in fade-in duration-200">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-[8px] bg-[#855bfb]/15 text-[#7132f5] dark:text-[#a78bfa] flex items-center justify-center shrink-0">
+                <Calendar className="w-3.5 h-3.5 stroke-[2.2]" />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-[#101114] dark:text-[#f3f4f8] block">
+                  Rentang Tanggal Kustom
+                </span>
+                <span className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] block">
+                  Tentukan tanggal awal dan akhir untuk laporan
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 bg-[#edeef3] dark:bg-[#1e202b] px-3 py-1.5 rounded-[10px] border border-[#dedee5] dark:border-[#282937]">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[#9497a9]">
+                  Dari
+                </label>
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  className="bg-transparent text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] outline-none cursor-pointer"
+                  style={{ colorScheme: isDark ? 'dark' : 'light' }}
+                />
+              </div>
+
+              <span className="text-xs font-bold text-[#9497a9] px-0.5">s/d</span>
+
+              <div className="flex items-center gap-1.5 bg-[#edeef3] dark:bg-[#1e202b] px-3 py-1.5 rounded-[10px] border border-[#dedee5] dark:border-[#282937]">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-[#9497a9]">
+                  Sampai
+                </label>
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  className="bg-transparent text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] outline-none cursor-pointer"
+                  style={{ colorScheme: isDark ? 'dark' : 'light' }}
+                />
+              </div>
+
+              {/* Quick Presets for Custom Range */}
+              <div className="flex items-center gap-1 pl-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const end = new Date();
+                    const start = new Date();
+                    start.setDate(end.getDate() - 7);
+                    setCustomStartDate(start.toISOString().slice(0, 10));
+                    setCustomEndDate(end.toISOString().slice(0, 10));
+                  }}
+                  className="px-2.5 py-1 rounded-[8px] bg-white dark:bg-[#282937] hover:bg-[#edeef3] dark:hover:bg-[#343647] border border-[#dedee5] dark:border-[#282937] text-[11px] font-semibold text-[#686b82] dark:text-[#9ca0ba] transition-all shadow-micro"
+                >
+                  7 Hari
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const end = new Date();
+                    const start = new Date();
+                    start.setDate(end.getDate() - 30);
+                    setCustomStartDate(start.toISOString().slice(0, 10));
+                    setCustomEndDate(end.toISOString().slice(0, 10));
+                  }}
+                  className="px-2.5 py-1 rounded-[8px] bg-white dark:bg-[#282937] hover:bg-[#edeef3] dark:hover:bg-[#343647] border border-[#dedee5] dark:border-[#282937] text-[11px] font-semibold text-[#686b82] dark:text-[#9ca0ba] transition-all shadow-micro"
+                >
+                  30 Hari
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 4 Executive KPI Cards - Compact 2x2 grid on mobile so charts fit without scrolling */}
@@ -642,7 +777,13 @@ export const ReportView: React.FC<ReportViewProps> = ({
                     <div className="flex items-center justify-between gap-3">
                       {/* Left: Standard CategoryIcon + Name + Percentage subtitle */}
                       <div className="flex items-center gap-3 min-w-0">
-                        <CategoryIcon name={cat.name} type="pengeluaran" size="md" />
+                        <CategoryIcon
+                          name={cat.name}
+                          type="pengeluaran"
+                          icon={cat.icon}
+                          emoji={cat.emoji}
+                          size="md"
+                        />
                         <div className="min-w-0">
                           <span className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8] block tracking-tight truncate">
                             {cat.name}
@@ -690,7 +831,13 @@ export const ReportView: React.FC<ReportViewProps> = ({
                   Perbandingan Pemasukan vs Pengeluaran
                 </h3>
                 <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
-                  {period === 'this_month' ? 'Rincian transaksi harian bulan ini' : 'Tren perbandingan dari waktu ke waktu'}
+                  {period === 'this_month'
+                    ? 'Rincian transaksi harian bulan ini'
+                    : period === 'last_month'
+                    ? 'Rincian transaksi harian bulan lalu'
+                    : period === 'custom'
+                    ? `Periode kustom: ${customStartDate} s/d ${customEndDate}`
+                    : 'Tren perbandingan dari waktu ke waktu'}
                 </p>
               </div>
 
@@ -937,7 +1084,13 @@ export const ReportView: React.FC<ReportViewProps> = ({
                     <div className="flex items-center justify-between gap-3">
                       {/* Left: Standard CategoryIcon + Name + Subtitle */}
                       <div className="flex items-center gap-3 min-w-0">
-                        <CategoryIcon name={cat.name} type="pemasukan" size="md" />
+                        <CategoryIcon
+                          name={cat.name}
+                          type="pemasukan"
+                          icon={cat.icon}
+                          emoji={cat.emoji}
+                          size="md"
+                        />
                         <div className="min-w-0">
                           <span className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8] block tracking-tight truncate">
                             {cat.name}

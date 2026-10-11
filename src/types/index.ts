@@ -17,6 +17,7 @@ export interface Category {
   name: string;
   type: 'pengeluaran' | 'pemasukan';
   emoji: string;
+  icon?: string;
 }
 
 export interface Transaction {

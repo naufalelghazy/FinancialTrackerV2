@@ -34,6 +34,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 }) => {
   const getAccountName = (id?: string) => accounts.find((a) => a.id === id)?.name || id || '-';
   const getCategoryName = (id?: string) => categories.find((c) => c.id === id)?.name || id || '-';
+  const getCategory = (id?: string) => categories.find((c) => c.id === id);
 
   // 1. Account Balances Overview
   const { totalAvailable, totalDebt, netWorth, liquidAccounts, creditAccounts } = useMemo(() => {
@@ -287,29 +288,38 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </p>
             ) : (
               <div className="space-y-3 pt-1">
-                {topCategories.map((cat) => (
-                  <div key={cat.catId} className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <CategoryIcon name={cat.name} type="pengeluaran" size="sm" />
-                        <span className="font-semibold text-[#101114] dark:text-[#f3f4f8]">{cat.name}</span>
-                        <span className="text-[11px] text-[#686b82] dark:text-[#9ca0ba]">
-                          ({cat.percentage}%)
+                {topCategories.map((cat) => {
+                  const catObj = getCategory(cat.catId);
+                  return (
+                    <div key={cat.catId} className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <CategoryIcon
+                            name={cat.name}
+                            type="pengeluaran"
+                            icon={catObj?.icon}
+                            emoji={catObj?.emoji}
+                            size="sm"
+                          />
+                          <span className="font-semibold text-[#101114] dark:text-[#f3f4f8]">{cat.name}</span>
+                          <span className="text-[11px] text-[#686b82] dark:text-[#9ca0ba]">
+                            ({cat.percentage}%)
+                          </span>
+                        </div>
+                        <span className="font-bold text-[#101114] dark:text-[#f3f4f8] tabular-nums">
+                          {formatCurrency(cat.amount)}
                         </span>
                       </div>
-                      <span className="font-bold text-[#101114] dark:text-[#f3f4f8] tabular-nums">
-                        {formatCurrency(cat.amount)}
-                      </span>
+                      {/* Kraken Progress Bar */}
+                      <div className="w-full h-2 rounded-full bg-[#edeef3] dark:bg-[#232534] overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-[#7132f5] transition-all duration-500"
+                          style={{ width: `${cat.percentage}%` }}
+                        />
+                      </div>
                     </div>
-                    {/* Kraken Progress Bar */}
-                    <div className="w-full h-2 rounded-full bg-[#edeef3] dark:bg-[#232534] overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-[#7132f5] transition-all duration-500"
-                        style={{ width: `${cat.percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -346,6 +356,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 const isTransfer = t.type === 'transfer';
                 const sourceName = getAccountName(t.sourceAccountId);
                 const categoryName = getCategoryName(t.categoryId);
+                const catObj = t.categoryId ? getCategory(t.categoryId) : undefined;
 
                 return (
                     <div
@@ -356,6 +367,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       <CategoryIcon
                         name={isTransfer ? 'Pindah Akun' : categoryName}
                         type={t.type}
+                        icon={isTransfer ? undefined : catObj?.icon}
+                        emoji={isTransfer ? undefined : catObj?.emoji}
                         size="md"
                       />
                       <div className="min-w-0">

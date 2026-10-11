@@ -114,8 +114,15 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
     return map;
   }, [categories]);
 
+  const categoryObjectMap = useMemo(() => {
+    const map = new Map<string, Category>();
+    for (const c of categories) map.set(c.id, c);
+    return map;
+  }, [categories]);
+
   const getAccountName = useCallback((id?: string) => (id ? accountMap.get(id) || id : '-'), [accountMap]);
   const getCategoryName = useCallback((id?: string) => (id ? categoryMap.get(id) || id : '-'), [categoryMap]);
+  const getCategory = useCallback((id?: string) => (id ? categoryObjectMap.get(id) : undefined), [categoryObjectMap]);
 
   const currentMonthKey = useMemo(() => getCurrentMonthKey(), []);
 
@@ -499,6 +506,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                             const sourceName = getAccountName(t.sourceAccountId);
                             const destName = t.destinationAccountId ? getAccountName(t.destinationAccountId) : '';
                             const categoryName = getCategoryName(t.categoryId);
+                            const catObj = t.categoryId ? getCategory(t.categoryId) : undefined;
 
                             return (
                               <div
@@ -510,6 +518,8 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                                   <CategoryIcon
                                     name={isTransfer ? 'Pindah Akun' : categoryName}
                                     type={t.type}
+                                    icon={isTransfer ? undefined : catObj?.icon}
+                                    emoji={isTransfer ? undefined : catObj?.emoji}
                                     size="md"
                                   />
                                 </div>

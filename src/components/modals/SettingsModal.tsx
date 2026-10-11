@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   X,
   CheckCircle2,
@@ -16,6 +16,7 @@ import {
   Laptop,
   Palette,
   Check,
+  Search,
 } from 'lucide-react';
 import type { Account, Category } from '../../types';
 import { formatCurrency } from '../../lib/formatters';
@@ -32,6 +33,8 @@ interface SettingsModalProps {
   categories?: Category[];
   onEditAccount?: (account: Account) => void;
   onAddAccount?: () => void;
+  onEditCategory?: (category: Category) => void;
+  onAddCategory?: () => void;
   initialTab?: SettingsTab;
 }
 
@@ -44,10 +47,36 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   categories = [],
   onEditAccount,
   onAddAccount,
+  onEditCategory,
+  onAddCategory,
   initialTab = 'akun',
 }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
   const { theme, setTheme, designSystem, setDesignSystem, currentConfig } = useTheme();
+
+  // Category Tab state
+  const [categorySearch, setCategorySearch] = useState('');
+  const [categoryTypeFilter, setCategoryTypeFilter] = useState<'semua' | 'pengeluaran' | 'pemasukan'>('semua');
+
+  const filteredCategories = useMemo(() => {
+    return categories.filter((c) => {
+      if (categoryTypeFilter !== 'semua' && c.type !== categoryTypeFilter) {
+        return false;
+      }
+      if (!categorySearch.trim()) return true;
+      const q = categorySearch.toLowerCase().trim();
+      return c.name.toLowerCase().includes(q);
+    });
+  }, [categories, categoryTypeFilter, categorySearch]);
+
+  const expenseCategoryCount = useMemo(
+    () => categories.filter((c) => c.type === 'pengeluaran').length,
+    [categories]
+  );
+  const incomeCategoryCount = useMemo(
+    () => categories.filter((c) => c.type === 'pemasukan').length,
+    [categories]
+  );
 
   useEffect(() => {
     if (isOpen && initialTab) {
@@ -310,41 +339,147 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
           {/* ================= TAB 2: KATEGORI ================= */}
           {activeTab === 'kategori' && (
-            <div className="space-y-3">
-              <div>
-                <h3 className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8]">
-                  Kategori Transaksi ({categories.length})
-                </h3>
-                <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
-                  Ikon dan klasifikasi pengeluaran & pemasukan
-                </p>
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8]">
+                    Kategori Transaksi ({categories.length})
+                  </h3>
+                  <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
+                    Kelola kategori transaksi dan kustomisasi ikon sesuai kebutuhan
+                  </p>
+                </div>
+                {onAddCategory && (
+                  <button
+                    type="button"
+                    onClick={onAddCategory}
+                    className="btn-kraken-primary text-xs py-2 px-3 shadow-micro flex items-center justify-center gap-1.5 shrink-0 self-start sm:self-auto"
+                  >
+                    <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                    <span>Tambah Kategori</span>
+                  </button>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[380px] overflow-y-auto pr-1">
-                {categories.map((cat) => (
-                  <div
-                    key={cat.id}
-                    className="flex items-center justify-between p-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#1e202b] border border-[#dedee5] dark:border-[#282937]"
+              {/* Search & Type Filter Bar */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#9497a9]" />
+                  <input
+                    type="text"
+                    value={categorySearch}
+                    onChange={(e) => setCategorySearch(e.target.value)}
+                    placeholder="Cari nama kategori..."
+                    className="w-full pl-8.5 pr-3 py-1.5 rounded-[10px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-xs text-[#101114] dark:text-[#f3f4f8] placeholder-[#9497a9] outline-none focus:border-[#7132f5] transition-all"
+                  />
+                  {categorySearch && (
+                    <button
+                      type="button"
+                      onClick={() => setCategorySearch('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-[#9497a9] hover:text-[#101114] dark:hover:text-[#f3f4f8]"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1 bg-[#edeef3] dark:bg-[#13141c] p-1 rounded-[10px] shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setCategoryTypeFilter('semua')}
+                    className={`px-2.5 py-1 rounded-[8px] text-[11px] font-bold transition-all ${
+                      categoryTypeFilter === 'semua'
+                        ? 'bg-white dark:bg-[#282937] text-[#101114] dark:text-[#f3f4f8] shadow-micro'
+                        : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
+                    }`}
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-8 h-8 rounded-[8px] bg-white dark:bg-[#282937] border border-[#dedee5] dark:border-[#35374d] flex items-center justify-center text-[#7132f5] dark:text-[#a78bfa] shadow-micro shrink-0">
-                        <CategoryIcon name={cat.name} type={cat.type} className="w-4 h-4" />
-                      </div>
-                      <span className="font-bold text-xs text-[#101114] dark:text-[#f3f4f8] truncate">
-                        {cat.name}
-                      </span>
-                    </div>
-                    <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-[6px] ${
-                        cat.type === 'pemasukan'
-                          ? 'bg-[#149e61]/12 text-[#026b3f] dark:text-[#34d399]'
-                          : 'bg-[#dedee5]/50 dark:bg-[#282937] text-[#686b82] dark:text-[#9ca0ba]'
+                    Semua ({categories.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCategoryTypeFilter('pengeluaran')}
+                    className={`px-2.5 py-1 rounded-[8px] text-[11px] font-bold transition-all ${
+                      categoryTypeFilter === 'pengeluaran'
+                        ? 'bg-white dark:bg-[#282937] text-[#101114] dark:text-[#f3f4f8] shadow-micro'
+                        : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
+                    }`}
+                  >
+                    Keluar ({expenseCategoryCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCategoryTypeFilter('pemasukan')}
+                    className={`px-2.5 py-1 rounded-[8px] text-[11px] font-bold transition-all ${
+                      categoryTypeFilter === 'pemasukan'
+                        ? 'bg-white dark:bg-[#282937] text-[#101114] dark:text-[#f3f4f8] shadow-micro'
+                        : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
+                    }`}
+                  >
+                    Masuk ({incomeCategoryCount})
+                  </button>
+                </div>
+              </div>
+
+              {/* Category Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[360px] overflow-y-auto pr-1">
+                {filteredCategories.length === 0 ? (
+                  <div className="col-span-full py-8 text-center bg-[#fafbfe] dark:bg-[#1e202b]/40 rounded-[12px] border border-dashed border-[#dedee5] dark:border-[#282937]">
+                    <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
+                      Tidak ada kategori yang sesuai filter
+                    </p>
+                  </div>
+                ) : (
+                  filteredCategories.map((cat) => (
+                    <div
+                      key={cat.id}
+                      onClick={() => onEditCategory?.(cat)}
+                      className={`flex items-center justify-between p-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#1e202b] border border-[#dedee5] dark:border-[#282937] transition-all group ${
+                        onEditCategory
+                          ? 'hover:border-[#7132f5]/50 hover:bg-white dark:hover:bg-[#232534] cursor-pointer shadow-none hover:shadow-micro'
+                          : ''
                       }`}
                     >
-                      {cat.type === 'pemasukan' ? 'Masuk' : 'Keluar'}
-                    </span>
-                  </div>
-                ))}
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-[8px] bg-white dark:bg-[#282937] border border-[#dedee5] dark:border-[#35374d] flex items-center justify-center text-[#7132f5] dark:text-[#a78bfa] shadow-micro shrink-0 group-hover:scale-105 transition-transform">
+                          <CategoryIcon
+                            icon={cat.icon}
+                            emoji={cat.emoji}
+                            name={cat.name}
+                            type={cat.type}
+                            className="w-4 h-4"
+                          />
+                        </div>
+                        <span className="font-bold text-xs text-[#101114] dark:text-[#f3f4f8] truncate group-hover:text-[#7132f5] dark:group-hover:text-[#a78bfa] transition-colors">
+                          {cat.name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-[6px] ${
+                            cat.type === 'pemasukan'
+                              ? 'bg-[#149e61]/12 text-[#026b3f] dark:text-[#34d399]'
+                              : 'bg-[#dedee5]/50 dark:bg-[#282937] text-[#686b82] dark:text-[#9ca0ba]'
+                          }`}
+                        >
+                          {cat.type === 'pemasukan' ? 'Masuk' : 'Keluar'}
+                        </span>
+                        {onEditCategory && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEditCategory(cat);
+                            }}
+                            className="p-1 rounded-[6px] text-[#9497a9] group-hover:text-[#7132f5] dark:group-hover:text-[#a78bfa] hover:bg-[#edeef3] dark:hover:bg-[#282937] transition-colors"
+                            title="Edit Kategori"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}

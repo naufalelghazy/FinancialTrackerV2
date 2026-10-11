@@ -197,7 +197,13 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                 </label>
                 {selectedCategory && (
                   <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-[6px] bg-[#edeef3] dark:bg-[#232534] text-[11px] font-semibold text-[#101114] dark:text-[#f3f4f8]">
-                    <CategoryIcon name={selectedCategory.name} type={type} size="sm" />
+                    <CategoryIcon
+                      name={selectedCategory.name}
+                      type={type}
+                      icon={selectedCategory.icon}
+                      emoji={selectedCategory.emoji}
+                      size="sm"
+                    />
                     <span>{selectedCategory.name}</span>
                   </div>
                 )}

@@ -13,6 +13,7 @@ import { HistoryView } from './features/history/HistoryView';
 import { SettingsModal, type SettingsTab } from './components/modals/SettingsModal';
 import { EditAccountModal } from './components/modals/EditAccountModal';
 import { EditTransactionModal } from './components/modals/EditTransactionModal';
+import { EditCategoryModal } from './components/modals/EditCategoryModal';
 import { INITIAL_ACCOUNTS, INITIAL_CATEGORIES } from './lib/constants';
 import {
   loadFinancialData,
@@ -22,6 +23,9 @@ import {
   updateAccountInDatabase,
   addAccountToDatabase,
   deleteAccountFromDatabase,
+  addCategoryToDatabase,
+  updateCategoryInDatabase,
+  deleteCategoryFromDatabase,
   calculateAccountBalances,
   getAccountIcon,
 } from './services/financialService';
@@ -44,6 +48,8 @@ export function App() {
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [isTxModalOpen, setIsTxModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
   // Accounts state
   const [accounts, setAccounts] = useState<Account[]>(() => {
@@ -66,7 +72,14 @@ export function App() {
   });
 
   // Categories state
-  const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
+  const [categories, setCategories] = useState<Category[]>(() => {
+    try {
+      const saved = localStorage.getItem('ft_categories');
+      return saved ? JSON.parse(saved) : INITIAL_CATEGORIES;
+    } catch {
+      return INITIAL_CATEGORIES;
+    }
+  });
 
   // Load from Supabase on mount
   useEffect(() => {
@@ -236,6 +249,50 @@ export function App() {
     await deleteAccountFromDatabase(id);
   };
 
+  // Handle edit or add category
+  const handleSaveCategory = async (data: {
+    id?: string;
+    name: string;
+    type: 'pengeluaran' | 'pemasukan';
+    emoji: string;
+    icon?: string;
+  }) => {
+    if (data.id) {
+      // Update existing
+      const nextCategories = categories.map((c) =>
+        c.id === data.id
+          ? {
+              ...c,
+              name: data.name,
+              type: data.type,
+              emoji: data.emoji,
+              icon: data.icon,
+            }
+          : c
+      );
+      setCategories(nextCategories);
+      localStorage.setItem('ft_categories', JSON.stringify(nextCategories));
+
+      await updateCategoryInDatabase(data.id, data);
+    } else {
+      // Add new
+      const created = await addCategoryToDatabase(data);
+      const nextCategories = [...categories, created];
+      setCategories(nextCategories);
+      localStorage.setItem('ft_categories', JSON.stringify(nextCategories));
+    }
+    setIsCategoryModalOpen(false);
+  };
+
+  // Handle delete category
+  const handleDeleteCategory = async (id: string) => {
+    const nextCategories = categories.filter((c) => c.id !== id);
+    setCategories(nextCategories);
+    localStorage.setItem('ft_categories', JSON.stringify(nextCategories));
+    await deleteCategoryFromDatabase(id);
+    setIsCategoryModalOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-[#fafbfe] dark:bg-[#0d0e12] text-[#101114] dark:text-[#f3f4f8] flex flex-col md:flex-row font-sans selection:bg-[#855bfb]/20 selection:text-[#7132f5] transition-colors duration-200">
       {/* Desktop Left Sidebar (Visible on md and above) */}
@@ -385,6 +442,14 @@ export function App() {
           setSelectedAccount(null);
           setIsAccountModalOpen(true);
         }}
+        onEditCategory={(cat) => {
+          setSelectedCategory(cat);
+          setIsCategoryModalOpen(true);
+        }}
+        onAddCategory={() => {
+          setSelectedCategory(null);
+          setIsCategoryModalOpen(true);
+        }}
       />
 
       {/* Edit / Add Account Modal */}
@@ -394,6 +459,15 @@ export function App() {
         onClose={() => setIsAccountModalOpen(false)}
         onSave={handleSaveAccount}
         onDelete={handleDeleteAccount}
+      />
+
+      {/* Edit / Add Category Modal */}
+      <EditCategoryModal
+        isOpen={isCategoryModalOpen}
+        category={selectedCategory}
+        onClose={() => setIsCategoryModalOpen(false)}
+        onSave={handleSaveCategory}
+        onDelete={handleDeleteCategory}
       />
 
       {/* Edit Transaction Modal */}

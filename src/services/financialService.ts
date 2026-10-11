@@ -67,11 +67,13 @@ export async function loadFinancialData(): Promise<FinancialData> {
   if (!isSupabaseConfigured || !supabase) {
     const savedAcc = localStorage.getItem('ft_accounts');
     const savedTx = localStorage.getItem('ft_transactions');
+    const savedCat = localStorage.getItem('ft_categories');
     const localAccounts = savedAcc ? JSON.parse(savedAcc) : INITIAL_ACCOUNTS;
     const localTx = savedTx ? JSON.parse(savedTx) : [];
+    const localCat = savedCat ? JSON.parse(savedCat) : INITIAL_CATEGORIES;
     return {
       accounts: calculateAccountBalances(localAccounts, localTx),
-      categories: INITIAL_CATEGORIES,
+      categories: localCat,
       transactions: localTx,
     };
   }
@@ -115,6 +117,7 @@ export async function loadFinancialData(): Promise<FinancialData> {
       name: c.name,
       type: c.type,
       emoji: c.emoji || '🏷️',
+      icon: c.emoji || undefined,
     }));
 
     const transactions: Transaction[] = allTxs.map((t: any) => ({
@@ -143,6 +146,7 @@ export async function loadFinancialData(): Promise<FinancialData> {
 
     localStorage.setItem('ft_accounts', JSON.stringify(accountsWithBalances));
     localStorage.setItem('ft_transactions', JSON.stringify(transactions));
+    localStorage.setItem('ft_categories', JSON.stringify(categories.length > 0 ? categories : INITIAL_CATEGORIES));
 
     return {
       accounts: accountsWithBalances,
@@ -153,11 +157,13 @@ export async function loadFinancialData(): Promise<FinancialData> {
     console.error('Failed to load from Supabase:', err);
     const savedAcc = localStorage.getItem('ft_accounts');
     const savedTx = localStorage.getItem('ft_transactions');
+    const savedCat = localStorage.getItem('ft_categories');
     const localAccounts = savedAcc ? JSON.parse(savedAcc) : INITIAL_ACCOUNTS;
     const localTx = savedTx ? JSON.parse(savedTx) : [];
+    const localCat = savedCat ? JSON.parse(savedCat) : INITIAL_CATEGORIES;
     return {
       accounts: calculateAccountBalances(localAccounts, localTx),
-      categories: INITIAL_CATEGORIES,
+      categories: localCat,
       transactions: localTx,
     };
   }
@@ -381,3 +387,99 @@ export async function deleteAccountFromDatabase(id: string): Promise<void> {
     }
   }
 }
+
+/**
+ * Creates a new category in Supabase.
+ */
+export async function addCategoryToDatabase(catData: {
+  name: string;
+  type: 'pengeluaran' | 'pemasukan';
+  emoji: string;
+  icon?: string;
+}): Promise<Category> {
+  const tempId = crypto.randomUUID();
+  const storedIcon = catData.icon || catData.emoji;
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .insert({
+          name: catData.name,
+          type: catData.type,
+          emoji: storedIcon,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      if (data) {
+        return {
+          id: data.id,
+          name: data.name,
+          type: data.type,
+          emoji: data.emoji || storedIcon,
+          icon: data.emoji || storedIcon,
+        };
+      }
+    } catch (err) {
+      console.error('Failed to insert category to Supabase:', err);
+    }
+  }
+
+  return {
+    id: tempId,
+    name: catData.name,
+    type: catData.type,
+    emoji: storedIcon,
+    icon: storedIcon,
+  };
+}
+
+/**
+ * Updates an existing category in Supabase.
+ */
+export async function updateCategoryInDatabase(
+  id: string,
+  updates: {
+    name: string;
+    type: 'pengeluaran' | 'pemasukan';
+    emoji: string;
+    icon?: string;
+  }
+): Promise<void> {
+  if (isSupabaseConfigured && supabase) {
+    const storedIcon = updates.icon || updates.emoji;
+    const { error } = await supabase
+      .from('categories')
+      .update({
+        name: updates.name,
+        type: updates.type,
+        emoji: storedIcon,
+      })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Failed to update category in Supabase:', error);
+      throw error;
+    }
+  }
+}
+
+/**
+ * Deletes a category from Supabase.
+ */
+export async function deleteCategoryFromDatabase(id: string): Promise<void> {
+  if (isSupabaseConfigured && supabase) {
+    const { error } = await supabase
+      .from('categories')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Failed to delete category from Supabase:', error);
+      throw error;
+    }
+  }
+}
+
