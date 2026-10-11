@@ -61,12 +61,23 @@ export const ReportView: React.FC<ReportViewProps> = ({
   const { isDark } = useTheme();
   const [period, setPeriod] = useState<PeriodType>('this_month');
   const [activeChartTab, setActiveChartTab] = useState<'flow' | 'category' | 'source' | 'account'>('category');
-  const [isDesktop, setIsDesktop] = useState(
-    () => typeof window !== 'undefined' && window.innerWidth >= 1024
-  );
+  const [chartRadius, setChartRadius] = useState(() => {
+    if (typeof window === 'undefined') return { inner: 70, outer: 105 };
+    if (window.innerWidth >= 1280) return { inner: 105, outer: 155 };
+    if (window.innerWidth >= 768) return { inner: 85, outer: 125 };
+    return { inner: 65, outer: 95 };
+  });
 
   useEffect(() => {
-    const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
+    const handleResize = () => {
+      if (window.innerWidth >= 1280) {
+        setChartRadius({ inner: 105, outer: 155 });
+      } else if (window.innerWidth >= 768) {
+        setChartRadius({ inner: 85, outer: 125 });
+      } else {
+        setChartRadius({ inner: 65, outer: 95 });
+      }
+    };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -303,17 +314,17 @@ export const ReportView: React.FC<ReportViewProps> = ({
   return (
     <div className="space-y-6 pb-24">
       {/* Header & Period Filter Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-[#16171f] p-3 sm:p-5 rounded-[14px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-[8px] bg-[#855bfb]/15 text-[#7132f5] dark:text-[#a78bfa] flex items-center justify-center">
-              <BarChart3 className="w-4 h-4 stroke-[2.2]" />
+      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3.5 sm:gap-4 bg-white dark:bg-[#16171f] p-4 sm:p-5 rounded-[14px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-[10px] bg-[#855bfb]/15 text-[#7132f5] dark:text-[#a78bfa] flex items-center justify-center shrink-0">
+              <BarChart3 className="w-4.5 h-4.5 stroke-[2.2]" />
             </div>
-            <div>
-              <h1 className="text-lg sm:text-xl font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg lg:text-xl font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
                 Laporan & Analisis Keuangan
               </h1>
-              <p className="text-xs text-[#686b82] dark:text-[#9ca0ba] hidden sm:block">
+              <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
                 Visualisasi tren pemasukan, pengeluaran, dan alokasi kategori
               </p>
             </div>
@@ -321,7 +332,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
         </div>
 
         {/* Period Selector Tabs */}
-        <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 bg-[#edeef3] dark:bg-[#1e202b] p-1 rounded-[12px] border border-[#dedee5] dark:border-[#282937] shrink-0">
+        <div className="flex items-center gap-1 overflow-x-auto pb-0.5 sm:pb-0 bg-[#edeef3] dark:bg-[#1e202b] p-1 rounded-[12px] border border-[#dedee5] dark:border-[#282937] shrink-0 self-start xl:self-auto max-w-full scrollbar-none">
           <button
             onClick={() => setPeriod('this_month')}
             className={`px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap ${
@@ -387,7 +398,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
               <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.2]" />
             </div>
           </div>
-          <div className="text-sm sm:text-2xl font-bold tracking-tight text-[#026b3f] dark:text-[#34d399] mt-1 sm:mt-2 tabular-nums truncate">
+          <div className="text-sm sm:text-xl lg:text-lg xl:text-2xl font-bold tracking-tight text-[#026b3f] dark:text-[#34d399] mt-1 sm:mt-2 tabular-nums truncate">
             +{formatCurrency(totalIncome)}
           </div>
           <div className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] mt-1 hidden sm:flex items-center gap-1">
@@ -406,7 +417,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
               <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.2]" />
             </div>
           </div>
-          <div className="text-sm sm:text-2xl font-bold tracking-tight text-[#e53e3e] dark:text-[#f87171] mt-1 sm:mt-2 tabular-nums truncate">
+          <div className="text-sm sm:text-xl lg:text-lg xl:text-2xl font-bold tracking-tight text-[#e53e3e] dark:text-[#f87171] mt-1 sm:mt-2 tabular-nums truncate">
             -{formatCurrency(totalExpense)}
           </div>
           <div className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] mt-1 hidden sm:flex items-center gap-1">
@@ -426,7 +437,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
             </div>
           </div>
           <div
-            className={`text-sm sm:text-2xl font-bold tracking-tight mt-1 sm:mt-2 tabular-nums truncate ${
+            className={`text-sm sm:text-xl lg:text-lg xl:text-2xl font-bold tracking-tight mt-1 sm:mt-2 tabular-nums truncate ${
               netCashflow >= 0
                 ? 'text-[#026b3f] dark:text-[#34d399]'
                 : 'text-[#e53e3e] dark:text-[#f87171]'
@@ -454,7 +465,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
               <Percent className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.2]" />
             </div>
           </div>
-          <div className="text-sm sm:text-2xl font-bold tracking-tight text-[#101114] dark:text-[#f3f4f8] mt-1 sm:mt-2 tabular-nums truncate">
+          <div className="text-sm sm:text-xl lg:text-lg xl:text-2xl font-bold tracking-tight text-[#101114] dark:text-[#f3f4f8] mt-1 sm:mt-2 tabular-nums truncate">
             {savingsRate.toFixed(1)}%
           </div>
           <div className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] mt-1 hidden sm:block">
@@ -469,66 +480,54 @@ export const ReportView: React.FC<ReportViewProps> = ({
         </div>
       </div>
 
-      {/* Main Analysis Tabs */}
-      <div className="grid grid-cols-2 sm:flex sm:items-center gap-1.5 sm:gap-2 border-b border-[#dedee5] dark:border-[#282937] pb-3">
+      {/* Main Analysis Tabs - Smooth scrollable pill bar with zero layout shift or overflow */}
+      <div className="flex items-center gap-2 border-b border-[#dedee5] dark:border-[#282937] pb-3 overflow-x-auto scrollbar-none w-full -mx-1 px-1">
         <button
           onClick={() => setActiveChartTab('category')}
-          className={`flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-3 py-2.5 sm:py-2 sm:px-3.5 rounded-[10px] text-xs font-bold transition-all ${
+          className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-[10px] text-xs font-bold transition-all ${
             activeChartTab === 'category'
               ? 'bg-[#7132f5] text-white shadow-micro'
               : 'bg-[#fafbfe] sm:bg-transparent dark:bg-[#1e202b] sm:dark:bg-transparent border border-[#dedee5] sm:border-transparent dark:border-[#282937] text-[#686b82] dark:text-[#9ca0ba] hover:bg-[#edeef3] dark:hover:bg-[#1e202b]'
           }`}
         >
-          <PieChartIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-          <span className="truncate">
-            <span className="sm:hidden">Pengeluaran</span>
-            <span className="hidden sm:inline">Kategori Pengeluaran</span>
-          </span>
+          <PieChartIcon className="w-4 h-4 shrink-0" />
+          <span>Kategori Pengeluaran</span>
         </button>
 
         <button
           onClick={() => setActiveChartTab('flow')}
-          className={`flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-3 py-2.5 sm:py-2 sm:px-3.5 rounded-[10px] text-xs font-bold transition-all ${
+          className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-[10px] text-xs font-bold transition-all ${
             activeChartTab === 'flow'
               ? 'bg-[#7132f5] text-white shadow-micro'
               : 'bg-[#fafbfe] sm:bg-transparent dark:bg-[#1e202b] sm:dark:bg-transparent border border-[#dedee5] sm:border-transparent dark:border-[#282937] text-[#686b82] dark:text-[#9ca0ba] hover:bg-[#edeef3] dark:hover:bg-[#1e202b]'
           }`}
         >
-          <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-          <span className="truncate">
-            <span className="sm:hidden">Arus Kas</span>
-            <span className="hidden sm:inline">Tren Arus Kas (Masuk vs Keluar)</span>
-          </span>
+          <TrendingUp className="w-4 h-4 shrink-0" />
+          <span>Tren Arus Kas</span>
         </button>
 
         <button
           onClick={() => setActiveChartTab('source')}
-          className={`flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-3 py-2.5 sm:py-2 sm:px-3.5 rounded-[10px] text-xs font-bold transition-all ${
+          className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-[10px] text-xs font-bold transition-all ${
             activeChartTab === 'source'
               ? 'bg-[#7132f5] text-white shadow-micro'
               : 'bg-[#fafbfe] sm:bg-transparent dark:bg-[#1e202b] sm:dark:bg-transparent border border-[#dedee5] sm:border-transparent dark:border-[#282937] text-[#686b82] dark:text-[#9ca0ba] hover:bg-[#edeef3] dark:hover:bg-[#1e202b]'
           }`}
         >
-          <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-          <span className="truncate">
-            <span className="sm:hidden">Pemasukan</span>
-            <span className="hidden sm:inline">Sumber Pemasukan</span>
-          </span>
+          <TrendingUp className="w-4 h-4 shrink-0" />
+          <span>Sumber Pemasukan</span>
         </button>
 
         <button
           onClick={() => setActiveChartTab('account')}
-          className={`flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-3 py-2.5 sm:py-2 sm:px-3.5 rounded-[10px] text-xs font-bold transition-all ${
+          className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-[10px] text-xs font-bold transition-all ${
             activeChartTab === 'account'
               ? 'bg-[#7132f5] text-white shadow-micro'
               : 'bg-[#fafbfe] sm:bg-transparent dark:bg-[#1e202b] sm:dark:bg-transparent border border-[#dedee5] sm:border-transparent dark:border-[#282937] text-[#686b82] dark:text-[#9ca0ba] hover:bg-[#edeef3] dark:hover:bg-[#1e202b]'
           }`}
         >
-          <CreditCard className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-          <span className="truncate">
-            <span className="sm:hidden">Per Akun</span>
-            <span className="hidden sm:inline">Pengeluaran per Akun</span>
-          </span>
+          <CreditCard className="w-4 h-4 shrink-0" />
+          <span>Pengeluaran per Akun</span>
         </button>
       </div>
 
@@ -552,7 +551,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
               </div>
             ) : (
               <div className="flex-1 flex flex-col justify-center my-2">
-                <div className="h-64 sm:h-72 lg:h-[380px] xl:h-[420px] w-full relative flex items-center justify-center">
+                <div className="h-64 sm:h-72 lg:h-[350px] xl:h-[400px] w-full relative flex items-center justify-center">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Tooltip
@@ -565,8 +564,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
                         nameKey="name"
                         cx="50%"
                         cy="50%"
-                        innerRadius={isDesktop ? 100 : 65}
-                        outerRadius={isDesktop ? 155 : 95}
+                        innerRadius={chartRadius.inner}
+                        outerRadius={chartRadius.outer}
                         paddingAngle={3}
                       >
                         {expenseByCategory.map((entry, index) => (
@@ -847,7 +846,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
               </div>
             ) : (
               <div className="flex-1 flex flex-col justify-center my-2">
-                <div className="h-64 sm:h-72 lg:h-[380px] xl:h-[420px] w-full relative flex items-center justify-center">
+                <div className="h-64 sm:h-72 lg:h-[350px] xl:h-[400px] w-full relative flex items-center justify-center">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Tooltip
@@ -860,8 +859,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
                         nameKey="name"
                         cx="50%"
                         cy="50%"
-                        innerRadius={isDesktop ? 100 : 65}
-                        outerRadius={isDesktop ? 155 : 95}
+                        innerRadius={chartRadius.inner}
+                        outerRadius={chartRadius.outer}
                         paddingAngle={3}
                       >
                         {incomeByCategory.map((entry, index) => (
@@ -1043,7 +1042,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
       )}
 
       {/* Financial Insights Footer Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
         {/* Rata-rata Harian */}
         <div className="p-4 rounded-[14px] bg-[#fafbfe] dark:bg-[#16171f] border border-[#dedee5] dark:border-[#282937] flex items-center justify-between">
           <div>
