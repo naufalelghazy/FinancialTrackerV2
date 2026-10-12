@@ -1,5 +1,5 @@
-﻿import React from 'react';
-import { Wallet, LayoutDashboard, CreditCard, History, Plus, RefreshCw, Sun, Moon, BarChart3, Settings } from 'lucide-react';
+import React from 'react';
+import { Wallet, LayoutDashboard, CreditCard, History, Plus, RefreshCw, Sun, Moon, BarChart3, Settings, Mic } from 'lucide-react';
 import type { NavTab } from './BottomNav';
 import { useTheme } from '../../contexts/ThemeContext';
 
@@ -7,6 +7,7 @@ interface HeaderProps {
   activeTab: NavTab;
   onChangeTab: (tab: NavTab) => void;
   onOpenSettings: (tab?: 'akun' | 'kategori' | 'tampilan' | 'backend') => void;
+  onOpenVoiceModal?: () => void;
   isRefreshing?: boolean;
   isLoading?: boolean;
   onSync?: () => void;
@@ -16,6 +17,7 @@ export const Header: React.FC<HeaderProps> = ({
   activeTab,
   onChangeTab,
   onOpenSettings,
+  onOpenVoiceModal,
   isRefreshing = false,
   isLoading = false,
   onSync,
@@ -78,15 +80,28 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Quick Catat Transaksi Button on Desktop */}
           <button
             onClick={() => onChangeTab('input')}
-            className={`hidden sm:flex items-center gap-1.5 py-2 px-3.5 rounded-[12px] text-xs font-bold transition-all shadow-micro ${
+            className={`hidden sm:flex items-center gap-1.5 py-2 px-3.5 rounded-[12px] text-xs font-bold transition-all shadow-micro btn-kraken-primary ${
               activeTab === 'input'
-                ? 'bg-[#5741d8] text-white'
-                : 'btn-kraken-primary text-white'
+                ? 'ring-2 ring-black/25 dark:ring-white/30 brightness-95'
+                : ''
             }`}
           >
             <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
             <span>Catat Transaksi</span>
           </button>
+
+          {/* Quick Voice Input Button */}
+          {onOpenVoiceModal && (
+            <button
+              type="button"
+              onClick={onOpenVoiceModal}
+              className="w-9 h-9 rounded-[10px] flex items-center justify-center text-[#7132f5] dark:text-[#3cffd0] hover:bg-[#edeef3] dark:hover:bg-[#1e202b] transition-colors border border-[#dedee5] dark:border-[#282937]"
+              title="Input Transaksi Pakai Suara"
+              aria-label="Input Transaksi Pakai Suara"
+            >
+              <Mic className="w-4 h-4" />
+            </button>
+          )}
 
 
           {/* Theme Quick Toggle Button */}

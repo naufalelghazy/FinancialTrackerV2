@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import {
   LayoutDashboard,
   Wallet,
@@ -10,6 +10,7 @@ import {
   Sun,
   Moon,
   BarChart3,
+  Mic,
 } from 'lucide-react';
 import type { NavTab } from './BottomNav';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -19,6 +20,7 @@ interface SidebarProps {
   activeTab: NavTab;
   onChangeTab: (tab: NavTab) => void;
   onOpenSettings: (tab?: 'akun' | 'kategori' | 'tampilan' | 'backend') => void;
+  onOpenVoiceModal?: () => void;
   isRefreshing?: boolean;
   isLoading?: boolean;
   onSync?: () => void;
@@ -28,6 +30,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   onChangeTab,
   onOpenSettings,
+  onOpenVoiceModal,
   isRefreshing = false,
   isLoading = false,
   onSync,
@@ -64,18 +67,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </span>
         </div>
 
-        {/* Primary CTA: Catat Transaksi */}
-        <button
-          onClick={() => onChangeTab('input')}
-          className={`w-full py-2.5 px-4 rounded-[12px] text-xs font-bold flex items-center justify-center gap-2 shadow-whisper transition-all active:scale-[0.98] ${
-            activeTab === 'input'
-              ? 'bg-[#5741d8] text-white ring-2 ring-[#855bfb]/30'
-              : 'btn-kraken-primary text-white'
-          }`}
-        >
-          <Plus className="w-4 h-4 stroke-[2.5]" />
-          <span>Catat Transaksi Baru</span>
-        </button>
+        {/* Primary CTA: Catat Transaksi & Voice Button */}
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => onChangeTab('input')}
+            className={`flex-1 py-2.5 px-3 rounded-[12px] text-xs font-bold flex items-center justify-center gap-2 shadow-whisper transition-all active:scale-[0.98] btn-kraken-primary ${
+              activeTab === 'input'
+                ? 'ring-2 ring-black/25 dark:ring-white/30 brightness-95'
+                : ''
+            }`}
+          >
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+            <span className="truncate">Catat Transaksi</span>
+          </button>
+          {onOpenVoiceModal && (
+            <button
+              type="button"
+              onClick={onOpenVoiceModal}
+              className="w-10 h-10 rounded-[12px] flex items-center justify-center border border-[#dedee5] dark:border-[#282937] bg-[#fafbfe] dark:bg-[#1e202b] text-[#7132f5] dark:text-[#3cffd0] hover:bg-[#edeef3] dark:hover:bg-[#282937] transition-all shadow-micro shrink-0 active:scale-95 group"
+              title="Input Transaksi Pakai Suara"
+              aria-label="Input Transaksi Pakai Suara"
+            >
+              <Mic className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            </button>
+          )}
+        </div>
 
         {/* Main Navigation Menu */}
         <nav className="space-y-1 pt-1">

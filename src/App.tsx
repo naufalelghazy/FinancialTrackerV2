@@ -15,6 +15,7 @@ import { EditAccountModal } from './components/modals/EditAccountModal';
 import { EditTransactionModal } from './components/modals/EditTransactionModal';
 import { EditCategoryModal } from './components/modals/EditCategoryModal';
 import { EditTemplateModal } from './components/modals/EditTemplateModal';
+import { VoiceTransactionModal } from './components/modals/VoiceTransactionModal';
 import { Toast, type ToastItem } from './components/ui/Toast';
 import { INITIAL_ACCOUNTS, INITIAL_CATEGORIES } from './lib/constants';
 import {
@@ -63,7 +64,25 @@ export function App() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<QuickTemplate | null>(null);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
+  const [prefilledVoiceData, setPrefilledVoiceData] = useState<{
+    type: TransactionType;
+    amount: number;
+    sourceAccountId: string;
+    destinationAccountId?: string;
+    categoryId?: string;
+    date: string;
+    notes: string;
+  } | null>(null);
   const [activeToast, setActiveToast] = useState<ToastItem | null>(null);
+
+  const showToast = useCallback((title: string, subtitle?: string) => {
+    setActiveToast({
+      id: crypto.randomUUID(),
+      title,
+      subtitle,
+    });
+  }, []);
 
   // Quick Templates state
   const [templates, setTemplates] = useState<QuickTemplate[]>(() => loadQuickTemplates());
@@ -411,6 +430,7 @@ export function App() {
         activeTab={activeTab}
         onChangeTab={setActiveTab}
         onOpenSettings={handleOpenSettings}
+        onOpenVoiceModal={() => setIsVoiceModalOpen(true)}
         isRefreshing={isRefreshing}
         isLoading={isLoading}
         onSync={handleRefresh}
@@ -424,6 +444,7 @@ export function App() {
             activeTab={activeTab}
             onChangeTab={setActiveTab}
             onOpenSettings={handleOpenSettings}
+            onOpenVoiceModal={() => setIsVoiceModalOpen(true)}
             isRefreshing={isRefreshing}
             isLoading={isLoading}
             onSync={handleRefresh}
@@ -488,6 +509,9 @@ export function App() {
                   accounts={accounts}
                   categories={categories}
                   templates={templates}
+                  prefilledData={prefilledVoiceData}
+                  onClearPrefilledData={() => setPrefilledVoiceData(null)}
+                  onOpenVoiceModal={() => setIsVoiceModalOpen(true)}
                   onSubmit={handleAddTransaction}
                   onSaveAsTemplate={handleSaveAsTemplate}
                 />
@@ -627,6 +651,23 @@ export function App() {
         onClose={() => setIsTxModalOpen(false)}
         onSave={handleSaveTransaction}
         onDelete={handleDeleteTransaction}
+      />
+
+      {/* Voice Transaction Modal */}
+      <VoiceTransactionModal
+        isOpen={isVoiceModalOpen}
+        onClose={() => setIsVoiceModalOpen(false)}
+        accounts={accounts}
+        categories={categories}
+        onApplyToForm={(data) => {
+          setPrefilledVoiceData(data);
+          setActiveTab('input');
+          showToast('Data ucapan diterapkan ke formulir!', 'Tinjau detail sebelum menyimpan');
+        }}
+        onDirectSave={async (data) => {
+          await handleAddTransaction(data);
+          showToast('Transaksi berhasil disimpan via suara!', data.notes);
+        }}
       />
 
       {/* Global Toast with Undo Action */}

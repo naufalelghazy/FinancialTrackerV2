@@ -33,10 +33,10 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onChangeTab }) 
                 aria-label="Catat Transaksi"
               >
                 <div
-                  className={`w-11 h-11 rounded-[12px] flex items-center justify-center text-white shadow-whisper transition-all active:scale-95 ${
+                  className={`w-11 h-11 rounded-[12px] flex items-center justify-center shadow-whisper transition-all active:scale-95 btn-kraken-primary ${
                     isActive
-                      ? 'bg-[#5741d8] ring-4 ring-[#855bfb]/20'
-                      : 'bg-[#7132f5] hover:bg-[#5741d8]'
+                      ? 'ring-4 ring-black/20 dark:ring-white/30 brightness-95'
+                      : ''
                   }`}
                 >
                   <Icon className="w-5 h-5 stroke-[2.5]" />

@@ -495,7 +495,10 @@ html[data-theme=coinbase]:not(.dark) .border-\[\#dedee5\] {
 [data-theme=theverge] button.btn-kraken-primary,
 [data-theme=theverge] .btn-kraken-primary,
 [data-theme=theverge] button.bg-\[\#7132f5\],
-[data-theme=theverge] a.bg-\[\#7132f5\] {
+[data-theme=theverge] a.bg-\[\#7132f5\],
+[data-theme=theverge] button.bg-\[\#5741d8\],
+[data-theme=theverge] .bg-\[\#5741d8\],
+[data-theme=theverge] a.bg-\[\#5741d8\] {
   background-color: #3cffd0 !important;
   color: #000000 !important;
   font-weight: 700 !important;
@@ -505,15 +508,11 @@ html[data-theme=coinbase]:not(.dark) .border-\[\#dedee5\] {
 
 [data-theme=theverge] .btn-kraken-primary:hover,
 [data-theme=theverge] button.btn-kraken-primary:hover,
+[data-theme=theverge] button.bg-\[\#5741d8\]:hover,
+[data-theme=theverge] .bg-\[\#5741d8\]:hover,
 [data-theme=theverge] .hover\:bg-\[\#5741d8\]:hover {
   background-color: #309875 !important;
   color: #ffffff !important;
-}
-
-[data-theme=theverge] .bg-\[\#5741d8\] {
-  background-color: #5200ff !important;
-  color: #ffffff !important;
-  border-radius: 9999px !important;
 }
 
 /* The Verge Hero Balance Card (Pitch-black editorial spotlight card with neon Mint outline in both light and dark) */

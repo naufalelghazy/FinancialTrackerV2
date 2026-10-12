@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { TransactionType, Account, Category, QuickTemplate } from '../../types';
 import { formatNumberWithDots, parseRawAmount } from '../../lib/formatters';
-import { ArrowUpRight, ArrowDownLeft, ArrowLeftRight, CheckCircle2, Zap, BookmarkPlus } from 'lucide-react';
+import { ArrowUpRight, ArrowDownLeft, ArrowLeftRight, CheckCircle2, Zap, BookmarkPlus, Mic } from 'lucide-react';
 import { CategoryIcon } from '../ui/CategoryIcon';
 import { resolveTemplateAccount, resolveTemplateCategory } from '../../services/templateService';
 
@@ -9,6 +9,17 @@ interface TransactionFormProps {
   accounts: Account[];
   categories: Category[];
   templates?: QuickTemplate[];
+  prefilledData?: {
+    type: TransactionType;
+    amount: number;
+    sourceAccountId: string;
+    destinationAccountId?: string;
+    categoryId?: string;
+    date: string;
+    notes: string;
+  } | null;
+  onClearPrefilledData?: () => void;
+  onOpenVoiceModal?: () => void;
   onSubmit: (data: {
     type: TransactionType;
     amount: number;
@@ -25,6 +36,9 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   accounts,
   categories,
   templates = [],
+  prefilledData,
+  onClearPrefilledData,
+  onOpenVoiceModal,
   onSubmit,
   onSaveAsTemplate,
 }) => {
@@ -36,6 +50,20 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
+
+  // Efek untuk mengisi data dari hasil input suara jika tersedia
+  useEffect(() => {
+    if (prefilledData) {
+      setType(prefilledData.type);
+      setAmountDisplay(formatNumberWithDots(String(prefilledData.amount)));
+      setSourceAccountId(prefilledData.sourceAccountId);
+      setDestinationAccountId(prefilledData.destinationAccountId || '');
+      setCategoryId(prefilledData.categoryId || '');
+      setDate(prefilledData.date);
+      setNotes(prefilledData.notes);
+      onClearPrefilledData?.();
+    }
+  }, [prefilledData, onClearPrefilledData]);
 
   const filteredCategories = categories.filter((c) => c.type === type);
   const selectedCategory = categories.find((c) => c.id === categoryId);
@@ -207,11 +235,24 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         </button>
       </div>
 
-      {/* Amount Card - Clean Kraken Display */}
-      <div className="bg-white dark:bg-[#16171f] rounded-[16px] p-6 border border-[#dedee5] dark:border-[#282937] shadow-whisper text-center">
-        <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block">
-          Nominal Transaksi
-        </label>
+      {/* Amount Card - Clean Display with Voice Input */}
+      <div className="bg-white dark:bg-[#16171f] rounded-[16px] p-5 sm:p-6 border border-[#dedee5] dark:border-[#282937] shadow-whisper text-center">
+        <div className="flex items-center justify-between min-h-[26px]">
+          <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba]">
+            Nominal Transaksi
+          </label>
+          {onOpenVoiceModal && (
+            <button
+              type="button"
+              onClick={onOpenVoiceModal}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold text-[#7132f5] dark:text-[#3cffd0] bg-[#7132f5]/10 dark:bg-[#3cffd0]/10 hover:bg-[#7132f5]/20 dark:hover:bg-[#3cffd0]/20 transition-all active:scale-95 border border-[#7132f5]/20 dark:border-[#3cffd0]/30 shadow-2xs"
+              title="Input Transaksi Pakai Suara"
+            >
+              <Mic className="w-3.5 h-3.5" />
+              <span>Input Suara</span>
+            </button>
+          )}
+        </div>
         <div className="flex items-center justify-center gap-1.5 mt-2">
           <span className="text-2xl font-bold text-[#9497a9]">Rp</span>
           <input
