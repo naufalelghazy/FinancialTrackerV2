@@ -47,7 +47,7 @@ export function useSpeechRecognition({
   const [transcript, setTranscript] = useState('');
   const [interimTranscript, setInterimTranscript] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [isSupported] = useState(() => {
+  const [isSupported, setIsSupported] = useState(() => {
     if (typeof window === 'undefined') return false;
     return Boolean(
       (window as unknown as { SpeechRecognition?: unknown }).SpeechRecognition ||
