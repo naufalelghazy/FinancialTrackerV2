@@ -85,10 +85,45 @@ function parseSpokenIndoWords(words: string[]): number | null {
 }
 
 /**
+ * Bersihkan frasa atau kata yang terulang berturut-turut khas speech engine Android
+ */
+export function deduplicateRepeatingPhrases(text: string): string {
+  if (!text) return '';
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length <= 1) return text.trim();
+
+  for (let phraseLen = Math.min(6, Math.floor(words.length / 2)); phraseLen >= 1; phraseLen--) {
+    let i = 0;
+    while (i + 2 * phraseLen <= words.length) {
+      const first = words.slice(i, i + phraseLen).join(' ').toLowerCase();
+      const second = words.slice(i + phraseLen, i + 2 * phraseLen).join(' ').toLowerCase();
+      if (first === second) {
+        words.splice(i + phraseLen, phraseLen);
+      } else {
+        i++;
+      }
+    }
+  }
+
+  return words.join(' ');
+}
+
+/**
  * Ekstraksi angka nominal dari teks ucapan bahasa Indonesia
  */
 export function extractAmountFromVoiceText(text: string): { amount: number; matchedText: string } | null {
   const clean = text.toLowerCase().trim();
+
+  // 0. Pola dengan awalan Rupiah / IDR: "Rp35.000", "Rp 35.000", "rp50000", "idr 25.000"
+  const rupiahPrefixRegex = /(?:rp\.?|idr)\s*(\d{1,3}(?:\.\d{3})+|\d+)/i;
+  const rupiahPrefixMatch = clean.match(rupiahPrefixRegex);
+  if (rupiahPrefixMatch) {
+    const rawVal = rupiahPrefixMatch[1].replace(/\./g, '');
+    const val = parseInt(rawVal, 10);
+    if (!isNaN(val) && val > 0) {
+      return { amount: val, matchedText: rupiahPrefixMatch[0] };
+    }
+  }
 
   // 1. Pola dengan singkatan juta: "1.5jt", "1,5 juta", "2 juta"
   const jutaRegex = /\b(\d+(?:[.,]\d+)?)\s*(?:jt|juta)\b/i;
@@ -120,17 +155,35 @@ export function extractAmountFromVoiceText(text: string): { amount: number; matc
     }
   }
 
-  // 4. Pola angka ribuan standar berformat titik: "50.000", "1.500.000"
-  const dotNumberRegex = /\b(\d{1,3}(?:\.\d{3})+)\b/;
+  // 4. Pola slang Indonesia: ceban (10k), goceng (5k), gocap (50k), noban (20k), cepek (100k), seceng (1k), gopek (500)
+  const indoSlang: Record<string, number> = {
+    goceng: 5000,
+    ceban: 10000,
+    noban: 20000,
+    gocap: 50000,
+    cepek: 100000,
+    seceng: 1000,
+    gopek: 500,
+  };
+  for (const [slangWord, slangVal] of Object.entries(indoSlang)) {
+    const slangRegex = new RegExp(`\\b${slangWord}\\b`, 'i');
+    const slangMatch = clean.match(slangRegex);
+    if (slangMatch) {
+      return { amount: slangVal, matchedText: slangMatch[0] };
+    }
+  }
+
+  // 5. Pola angka ribuan standar berformat titik: "50.000", "1.500.000", "35.000"
+  const dotNumberRegex = /(?:^|\s|[^\d])(\d{1,3}(?:\.\d{3})+)(?:\s|[^\d]|$)/;
   const dotMatch = clean.match(dotNumberRegex);
   if (dotMatch) {
     const val = parseInt(dotMatch[1].replace(/\./g, ''), 10);
     if (!isNaN(val)) {
-      return { amount: val, matchedText: dotMatch[0] };
+      return { amount: val, matchedText: dotMatch[1] };
     }
   }
 
-  // 5. Pola angka polos diikuti "rupiah" atau "perak": "50000 rupiah", "2000 perak"
+  // 6. Pola angka polos diikuti "rupiah" atau "perak": "50000 rupiah", "2000 perak"
   const rupiahSuffixRegex = /\b(\d+)\s*(?:rupiah|perak)\b/i;
   const rupiahMatch = clean.match(rupiahSuffixRegex);
   if (rupiahMatch) {
@@ -279,7 +332,8 @@ export function parseVoiceTransaction(
   accounts: Account[],
   categories: Category[]
 ): ParsedVoiceTransaction {
-  const clean = transcript.toLowerCase().trim();
+  const dedupedTranscript = deduplicateRepeatingPhrases(transcript);
+  const clean = dedupedTranscript.toLowerCase().trim();
 
   // 1. Deteksi Tipe Transaksi
   let type: TransactionType = 'pengeluaran';
@@ -365,19 +419,21 @@ export function parseVoiceTransaction(
   }
 
   // 6. Ekstraksi Catatan (Bersihkan kata-kata akun, nominal, dan kata hubung)
-  let notes = transcript.trim();
+  let notes = dedupedTranscript.trim();
   if (amountResult) {
-    notes = notes.replace(new RegExp(amountResult.matchedText, 'gi'), '');
+    const escaped = amountResult.matchedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    notes = notes.replace(new RegExp(escaped, 'gi'), '');
   }
 
   // Hapus kata-kata keterangan akun ("pakai bca", "lewat mandiri", dll)
   const accountWordsToRemove = accounts.map((a) => a.name.toLowerCase());
-  accountWordsToRemove.push('pakai', 'pake', 'dengan', 'lewat', 'dari', 'ke', 'cash', 'tunai', 'rupiah');
+  accountWordsToRemove.push('pakai', 'pake', 'dengan', 'lewat', 'dari', 'ke', 'cash', 'tunai', 'rupiah', 'sebesar', 'seharga');
   for (const w of accountWordsToRemove) {
     notes = notes.replace(new RegExp(`\\b${w}\\b`, 'gi'), '');
   }
 
-  // Bersihkan spasi berlebih dan karakter sisa
+  // Bersihkan spasi berlebih dan sisa frasa berulang
+  notes = deduplicateRepeatingPhrases(notes);
   notes = notes.replace(/\s+/g, ' ').replace(/^[\s,.-]+|[\s,.-]+$/g, '').trim();
 
   // Jika setelah dibersihkan catatan kosong, gunakan deskripsi dari kategori

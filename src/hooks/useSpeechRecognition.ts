@@ -39,6 +39,28 @@ interface UseSpeechRecognitionOptions {
   onFinalResult?: (transcript: string) => void;
 }
 
+function deduplicateRepeatingPhrases(text: string): string {
+  if (!text) return '';
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length <= 1) return text.trim();
+
+  // Bersihkan repetisi n-gram berurutan (1 kata, 2 kata, 3 kata, dst.)
+  for (let phraseLen = Math.min(6, Math.floor(words.length / 2)); phraseLen >= 1; phraseLen--) {
+    let i = 0;
+    while (i + 2 * phraseLen <= words.length) {
+      const first = words.slice(i, i + phraseLen).join(' ').toLowerCase();
+      const second = words.slice(i + phraseLen, i + 2 * phraseLen).join(' ').toLowerCase();
+      if (first === second) {
+        words.splice(i + phraseLen, phraseLen);
+      } else {
+        i++;
+      }
+    }
+  }
+
+  return words.join(' ');
+}
+
 export function useSpeechRecognition({
   lang = 'id-ID',
   onFinalResult,
@@ -78,24 +100,42 @@ export function useSpeechRecognition({
         };
 
         recognition.onresult = (event: SpeechRecognitionEvent) => {
-          let currentFinal = '';
-          let currentInterim = '';
+          const finalChunks: string[] = [];
+          const interimChunks: string[] = [];
 
-          // Loop seluruh item hasil terkini
+          // Android Chrome bisa mengirim hasil kumulatif di setiap event.results[i]
           for (let i = 0; i < event.results.length; i++) {
             const item = event.results[i];
-            const text = item[0]?.transcript || '';
-            if (item.isFinal) {
-              currentFinal += text + ' ';
+            const text = (item[0]?.transcript || '').trim();
+            if (!text) continue;
+
+            const targetList = item.isFinal ? finalChunks : interimChunks;
+
+            if (targetList.length === 0) {
+              targetList.push(text);
             } else {
-              currentInterim += text + ' ';
+              const prev = targetList[targetList.length - 1];
+              const prevLower = prev.toLowerCase();
+              const currLower = text.toLowerCase();
+
+              // Jika teks baru perpanjangan dari teks sebelumnya, ganti item terakhir
+              if (currLower.startsWith(prevLower)) {
+                targetList[targetList.length - 1] = text;
+              } else if (prevLower.endsWith(currLower) || prevLower.includes(currLower)) {
+                // Sudah ada di teks sebelumnya, abaikan
+              } else {
+                targetList.push(text);
+              }
             }
           }
 
-          const cleanedFinal = currentFinal.replace(/\s+/g, ' ').trim();
-          const cleanedInterim = currentInterim.replace(/\s+/g, ' ').trim();
+          let cleanedFinal = finalChunks.join(' ').replace(/\s+/g, ' ').trim();
+          let cleanedInterim = interimChunks.join(' ').replace(/\s+/g, ' ').trim();
 
-          // Hindari menumpuk ke prev state agar tidak menduplikasi kata di Android
+          // Bersihkan sisa pengulangan kata berturut-turut khas speech engine Android
+          cleanedFinal = deduplicateRepeatingPhrases(cleanedFinal);
+          cleanedInterim = deduplicateRepeatingPhrases(cleanedInterim);
+
           if (cleanedFinal) {
             setTranscript(cleanedFinal);
             finalResultCallbackRef.current?.(cleanedFinal);
