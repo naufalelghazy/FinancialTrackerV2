@@ -89,7 +89,7 @@ export const BillsView: React.FC<BillsViewProps> = ({ accounts, onEditAccount })
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onEditAccount && onEditAccount(acc);
+                      onEditAccount?.(acc);
                     }}
                     className="w-8 h-8 rounded-[8px] flex items-center justify-center text-[#9497a9] hover:text-[#7132f5] dark:hover:text-[#a78bfa] hover:bg-[#855bfb]/15 transition-all cursor-pointer active:scale-95 border border-transparent hover:border-[#855bfb]/30"
                     title="Ubah Tagihan / Akun"

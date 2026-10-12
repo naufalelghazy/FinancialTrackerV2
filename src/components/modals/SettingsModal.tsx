@@ -125,7 +125,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       name: 'MongoDB',
       edition: 'MongoDB Edition',
       tagline: 'Developer Data Platform',
-      description: 'Aksen hijau MongoDB (#00ed64), kanvas deep-teal (#001e2b), tombol pill, sudut 12px, dan tipografi Euclid Circular A.',
+      description: 'Tampilan sederhana, bersih, dan profesional dengan nuansa hijau khas MongoDB.',
       primaryColor: '#00ed64',
       accentColor: '#00684a',
       darkCanvas: '#001e2b',
@@ -726,22 +726,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       Sesuaikan tingkat keterangan antarmuka
                     </span>
                   </div>
-                  {designSystem === 'theverge' && (
-                    <span className="text-[10px] font-mono text-[#3cffd0] bg-[#3cffd0]/10 px-2 py-0.5 rounded-full border border-[#3cffd0]/30">
-                      Terkunci Cyber Dark (#131313)
-                    </span>
-                  )}
                 </div>
 
                 <div className="grid grid-cols-3 gap-2">
                   <button
-                    disabled={designSystem === 'theverge'}
                     onClick={() => setTheme('light')}
                     className={`p-3 rounded-[12px] border text-left transition-all ${
-                      theme === 'light' && designSystem !== 'theverge'
+                      theme === 'light'
                         ? 'bg-white dark:bg-[#282937] border-[#7132f5] shadow-micro'
                         : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/40'
-                    } ${designSystem === 'theverge' ? 'opacity-40 cursor-not-allowed' : ''}`}
+                    }`}
                   >
                     <Sun className="w-4 h-4 text-[#f59e0b] mb-1.5" />
                     <span className="block font-bold text-xs text-[#101114] dark:text-[#f3f4f8]">
@@ -755,7 +749,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <button
                     onClick={() => setTheme('dark')}
                     className={`p-3 rounded-[12px] border text-left transition-all ${
-                      theme === 'dark' || designSystem === 'theverge'
+                      theme === 'dark'
                         ? 'bg-white dark:bg-[#282937] border-[#7132f5] shadow-micro'
                         : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/40'
                     }`}
@@ -770,13 +764,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </button>
 
                   <button
-                    disabled={designSystem === 'theverge'}
                     onClick={() => setTheme('system')}
                     className={`p-3 rounded-[12px] border text-left transition-all ${
-                      theme === 'system' && designSystem !== 'theverge'
+                      theme === 'system'
                         ? 'bg-white dark:bg-[#282937] border-[#7132f5] shadow-micro'
                         : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/40'
-                    } ${designSystem === 'theverge' ? 'opacity-40 cursor-not-allowed' : ''}`}
+                    }`}
                   >
                     <Laptop className="w-4 h-4 text-[#686b82] mb-1.5" />
                     <span className="block font-bold text-xs text-[#101114] dark:text-[#f3f4f8]">

@@ -8,11 +8,8 @@ import { resolveTemplateAccount, resolveTemplateCategory } from '../../services/
 import {
   Wallet,
   CreditCard,
-  TrendingUp,
-  TrendingDown,
   ArrowRight,
   History,
-  Calendar,
   PieChart,
   Edit2,
   Zap,
@@ -76,8 +73,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     return false;
   };
 
-  // 2. Active Month Cash Flow (Excluding Pindah Akun / Transfer)
-  const { currentMonthLabel, monthExpense, monthIncome, netCashflow, topCategories } =
+  // 2. Active Month Spending Breakdown (Excluding Pindah Akun / Transfer)
+  const { currentMonthLabel, monthExpense, topCategories } =
     useMemo(() => {
       // Find latest date in transactions to dynamically detect active month
       const latestDate = transactions[0]?.date || new Date().toISOString().slice(0, 10);
@@ -145,7 +142,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   return (
     <div className="space-y-6 2xl:space-y-8 pb-24">
       {/* ===================== HERO CARDS GRID ===================== */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 2xl:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 2xl:gap-6">
         {/* Total Saldo Tersedia (Kraken Purple Hero) */}
         <div className="hero-balance-card bg-[#7132f5] text-white rounded-[16px] p-5 sm:p-6 shadow-whisper relative overflow-hidden border border-[#5741d8] flex flex-col justify-between">
           <div className="flex items-center justify-between">
@@ -175,65 +172,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        {/* Arus Kas Bulan Ini (White Card with Cashflow metrics) */}
-        <div className="bg-white dark:bg-[#16171f] rounded-[16px] p-5 sm:p-6 shadow-whisper border border-[#dedee5] dark:border-[#282937] flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[#686b82] dark:text-[#9ca0ba] text-[11px] font-semibold uppercase tracking-wider flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-[#7132f5]" />
-              Arus Kas ({currentMonthLabel})
-            </span>
-            <span
-              className={`px-2 py-0.5 rounded-[6px] text-[11px] font-bold ${
-                netCashflow >= 0
-                  ? 'bg-[#d1fae5] text-[#026b3f]'
-                  : 'bg-[#fee2e2] text-[#b91c1c]'
-              }`}
-            >
-              {netCashflow >= 0 ? '+Surplus' : '-Defisit'}
-            </span>
-          </div>
-
-          <div className="my-3 space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-[6px] bg-[#149e61]/15 text-[#026b3f] flex items-center justify-center">
-                  <TrendingUp className="w-3.5 h-3.5" />
-                </div>
-                <span className="text-xs text-[#686b82] dark:text-[#9ca0ba]">Pemasukan</span>
-              </div>
-              <span className="cashflow-amount text-sm font-bold text-[#026b3f]">
-                +{formatCurrency(monthIncome)}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-[6px] bg-[#e53e3e]/12 text-[#b91c1c] flex items-center justify-center">
-                  <TrendingDown className="w-3.5 h-3.5" />
-                </div>
-                <span className="text-xs text-[#686b82] dark:text-[#9ca0ba]">Pengeluaran</span>
-              </div>
-              <span className="cashflow-amount text-sm font-bold text-[#e53e3e]">
-                -{formatCurrency(monthExpense)}
-              </span>
-            </div>
-          </div>
-
-          <div className="pt-2 border-t border-[#dedee5] dark:border-[#282937] flex items-center justify-between text-xs">
-            <span className="text-[#686b82] dark:text-[#9ca0ba]">Selisih Bersih</span>
-            <span
-              className={`cashflow-amount font-bold tracking-tight ${
-                netCashflow >= 0 ? 'text-[#026b3f]' : 'text-[#b91c1c]'
-              }`}
-            >
-              {netCashflow >= 0 ? '+' : ''}
-              {formatCurrency(netCashflow)}
-            </span>
-          </div>
-        </div>
-
         {/* Total Tagihan & Hutang Card (Red Hero Debt Card) */}
-        <div className="hero-debt-card bg-gradient-to-br from-[#dc2626] to-[#b91c1c] text-white rounded-[16px] p-5 sm:p-6 shadow-whisper border border-[#ef4444]/40 flex flex-col justify-between sm:col-span-2 lg:col-span-1 relative overflow-hidden">
+        <div className="hero-debt-card bg-gradient-to-br from-[#dc2626] to-[#b91c1c] text-white rounded-[16px] p-5 sm:p-6 shadow-whisper border border-[#ef4444]/40 flex flex-col justify-between relative overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="debt-card-header text-white/90 text-[11px] font-semibold uppercase tracking-wider flex items-center gap-1.5">
               <CreditCard className="debt-card-icon w-3.5 h-3.5 text-white/90" />
@@ -268,6 +208,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
       </div>
+
 
       {/* ===================== QUICK TEMPLATES SECTION ===================== */}
       <div className="bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-4 sm:p-5 space-y-3.5">

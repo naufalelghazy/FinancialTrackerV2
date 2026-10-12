@@ -468,6 +468,13 @@ html[data-theme=coinbase]:not(.dark) .border-\[\#dedee5\] {
 
 [data-theme=theverge] body {
   font-family: var(--font-sans);
+  background-color: #f7f7f9 !important;
+  color: #131313 !important;
+}
+
+[data-theme=theverge].dark body,
+.dark[data-theme=theverge] body,
+[data-theme=theverge] .dark body {
   background-color: #131313 !important;
   color: #ffffff !important;
 }
@@ -496,10 +503,23 @@ html[data-theme=coinbase]:not(.dark) .border-\[\#dedee5\] {
   border: none !important;
 }
 
-/* The Verge Hero Balance Card (Dark Slate #191919 with 1.5px Neon Mint #3cffd0 Outline) */
+[data-theme=theverge] .btn-kraken-primary:hover,
+[data-theme=theverge] button.btn-kraken-primary:hover,
+[data-theme=theverge] .hover\:bg-\[\#5741d8\]:hover {
+  background-color: #309875 !important;
+  color: #ffffff !important;
+}
+
+[data-theme=theverge] .bg-\[\#5741d8\] {
+  background-color: #5200ff !important;
+  color: #ffffff !important;
+  border-radius: 9999px !important;
+}
+
+/* The Verge Hero Balance Card (Pitch-black editorial spotlight card with neon Mint outline in both light and dark) */
 [data-theme=theverge] .hero-balance-card,
 [data-theme=theverge] div.bg-\[\#7132f5\] {
-  background-color: #191919 !important;
+  background-color: #131313 !important;
   border: 1.5px solid #3cffd0 !important;
   border-radius: 20px !important;
   box-shadow: none !important;
@@ -551,172 +571,78 @@ html[data-theme=coinbase]:not(.dark) .border-\[\#dedee5\] {
   color: #ffffff !important;
 }
 
-  /* The Verge Hero Debt Card (Saturated Neon/Crimson Danger Red #c9182b with 1.5px Neon Red #ff4d5a Outline) */
-  [data-theme=theverge] .hero-debt-card {
-    background-color: #c9182b !important;
-    border: 1.5px solid #ff4d5a !important;
-    border-radius: 20px !important;
-    box-shadow: none !important;
-    color: #ffffff !important;
-  }
-
-  [data-theme=theverge] .hero-debt-card .debt-card-header,
-  [data-theme=theverge] .hero-debt-card .debt-card-icon {
-    color: #ffffff !important;
-    font-family: var(--font-mono) !important;
-    text-transform: uppercase !important;
-    letter-spacing: 1.2px !important;
-  }
-
-  [data-theme=theverge] .hero-debt-card .debt-card-badge {
-    background-color: #131313 !important;
-    color: #ffffff !important;
-    border: 1px solid #ff4d5a !important;
-    border-radius: 9999px !important;
-    font-family: var(--font-mono) !important;
-    text-transform: uppercase !important;
-    letter-spacing: 1px !important;
-  }
-
-  [data-theme=theverge] .hero-debt-card .debt-card-amount {
-    color: #ffffff !important;
-  }
-
-  /* The Verge Numerical Data: Anton Display for Hero Amounts, Space Mono for Secondary Figures */
-  [data-theme=theverge] .balance-card-amount,
-  [data-theme=theverge] .hero-balance-card .balance-card-amount,
-  [data-theme=theverge] .hero-balance-card .text-3xl,
-  [data-theme=theverge] .hero-balance-card .text-4xl,
-  [data-theme=theverge] .hero-debt-card .debt-card-amount {
-    font-family: var(--font-display) !important;
-    letter-spacing: 0.8px !important;
-  }
-
-  [data-theme=theverge] .net-worth-amount,
-  [data-theme=theverge] .cashflow-amount,
-  [data-theme=theverge] .tabular-nums {
-    font-family: var(--font-mono) !important;
-    letter-spacing: 0.5px !important;
-  }
-
-
-  [data-theme=theverge] .hero-debt-card .debt-card-sub {
-    color: #ffe2e5 !important;
-  }
-
-  [data-theme=theverge] .hero-debt-card .debt-card-divider {
-    border-color: rgba(255, 255, 255, 0.3) !important;
-  }
-
-  [data-theme=theverge] .hero-debt-card .debt-card-btn {
-    color: #ffffff !important;
-    font-family: var(--font-mono) !important;
-    font-weight: 700 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.8px !important;
-  }
-
-  [data-theme=theverge] .hero-debt-card .debt-card-btn:hover {
-    color: #ffe2e5 !important;
-  }
-
-  [data-theme=theverge] .hero-debt-card .debt-card-status {
-    color: #ffffff !important;
-    font-family: var(--font-mono) !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.8px !important;
-  }
-
-
-[data-theme=theverge] .btn-kraken-primary:hover,
-[data-theme=theverge] .hover\:bg-\[\#5741d8\]:hover {
-  background-color: #309875 !important;
+/* The Verge Hero Debt Card (Saturated Neon/Crimson Danger Red #c9182b with 1.5px Neon Red #ff4d5a Outline) */
+[data-theme=theverge] .hero-debt-card {
+  background-color: #c9182b !important;
+  border: 1.5px solid #ff4d5a !important;
+  border-radius: 20px !important;
+  box-shadow: none !important;
   color: #ffffff !important;
 }
 
-[data-theme=theverge] .bg-\[\#5741d8\] {
-  background-color: #5200ff !important;
+[data-theme=theverge] .hero-debt-card .debt-card-header,
+[data-theme=theverge] .hero-debt-card .debt-card-icon {
   color: #ffffff !important;
+  font-family: var(--font-mono) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1.2px !important;
+}
+
+[data-theme=theverge] .hero-debt-card .debt-card-badge {
+  background-color: #131313 !important;
+  color: #ffffff !important;
+  border: 1px solid #ff4d5a !important;
   border-radius: 9999px !important;
+  font-family: var(--font-mono) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
 }
 
-/* Text primary accents */
-[data-theme=theverge] .text-\[\#7132f5\],
-[data-theme=theverge] .dark\:text-\[\#a78bfa\] {
-  color: #3cffd0 !important;
-}
-
-/* Subtle tags & active chips */
-[data-theme=theverge] .btn-kraken-subtle,
-[data-theme=theverge] .bg-\[\#855bfb\]\/15,
-[data-theme=theverge] .bg-\[\#855bfb\]\/10,
-[data-theme=theverge] .bg-\[\#855bfb\]\/20 {
-  background-color: rgba(60, 255, 208, 0.15) !important;
-  color: #3cffd0 !important;
-  border: 1px solid rgba(60, 255, 208, 0.35) !important;
-  border-radius: 9999px !important;
-}
-
-/* Cards & Surface Slate */
-[data-theme=theverge] .bg-white,
-[data-theme=theverge] .bg-\[\#fafbfe\] {
-  background-color: #191919 !important;
-}
-
-[data-theme=theverge].dark .dark\:bg-\[\#16171f\],
-[data-theme=theverge] .dark .dark\:bg-\[\#16171f\],
-[data-theme=theverge].dark .dark\:bg-\[\#0d0e12\],
-[data-theme=theverge] .dark .dark\:bg-\[\#0d0e12\] {
-  background-color: #191919 !important;
-}
-
-[data-theme=theverge] .bg-\[\#edeef3\] {
-  background-color: #262626 !important;
-}
-
-[data-theme=theverge].dark .dark\:bg-\[\#1e202b\],
-[data-theme=theverge] .dark .dark\:bg-\[\#1e202b\],
-[data-theme=theverge].dark .dark\:bg-\[\#13141c\],
-[data-theme=theverge] .dark .dark\:bg-\[\#13141c\] {
-  background-color: #262626 !important;
-}
-
-/* Flat 1px Hairline Borders */
-[data-theme=theverge] .border-\[\#dedee5\] {
-  border-color: #313131 !important;
-}
-
-[data-theme=theverge].dark .border-\[\#282937\],
-[data-theme=theverge] .dark .border-\[\#282937\] {
-  border-color: #313131 !important;
-}
-
-[data-theme=theverge] .border-\[\#7132f5\] {
-  border-color: #3cffd0 !important;
-}
-
-[data-theme=theverge] .focus\:border-\[\#7132f5\]:focus {
-  border-color: #3cffd0 !important;
-  outline: 2px solid #5200ff !important;
-}
-
-/* Text colors */
-[data-theme=theverge] .text-\[\#101114\] {
+[data-theme=theverge] .hero-debt-card .debt-card-amount {
   color: #ffffff !important;
 }
 
-[data-theme=theverge].dark .dark\:text-\[\#f3f4f8\],
-[data-theme=theverge] .dark .dark\:text-\[\#f3f4f8\] {
+[data-theme=theverge] .balance-card-amount,
+[data-theme=theverge] .hero-balance-card .balance-card-amount,
+[data-theme=theverge] .hero-balance-card .text-3xl,
+[data-theme=theverge] .hero-balance-card .text-4xl,
+[data-theme=theverge] .hero-debt-card .debt-card-amount {
+  font-family: var(--font-display) !important;
+  letter-spacing: 0.8px !important;
+}
+
+[data-theme=theverge] .net-worth-amount,
+[data-theme=theverge] .cashflow-amount,
+[data-theme=theverge] .tabular-nums {
+  font-family: var(--font-mono) !important;
+  letter-spacing: 0.5px !important;
+}
+
+[data-theme=theverge] .hero-debt-card .debt-card-sub {
+  color: #ffe2e5 !important;
+}
+
+[data-theme=theverge] .hero-debt-card .debt-card-divider {
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+[data-theme=theverge] .hero-debt-card .debt-card-btn {
   color: #ffffff !important;
+  font-family: var(--font-mono) !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.8px !important;
 }
 
-[data-theme=theverge] .text-\[\#686b82\] {
-  color: #949494 !important;
+[data-theme=theverge] .hero-debt-card .debt-card-btn:hover {
+  color: #ffe2e5 !important;
 }
 
-[data-theme=theverge].dark .dark\:text-\[\#9ca0ba\],
-[data-theme=theverge] .dark .dark\:text-\[\#9ca0ba\] {
-  color: #949494 !important;
+[data-theme=theverge] .hero-debt-card .debt-card-status {
+  color: #ffffff !important;
+  font-family: var(--font-mono) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.8px !important;
 }
 
 /* UPPERCASE Mono Labels & Kickers */
@@ -737,6 +663,241 @@ html[data-theme=coinbase]:not(.dark) .border-\[\#dedee5\] {
 [data-theme=theverge] .shadow-whisper,
 [data-theme=theverge] .shadow-micro {
   box-shadow: none !important;
+}
+
+/* ==============================================================
+   THE VERGE LIGHT MODE (#f7f7f9 Canvas, #ffffff Cards, #5200ff Ultraviolet Accents)
+   ============================================================== */
+[data-theme=theverge]:not(.dark) body,
+html[data-theme=theverge]:not(.dark) body {
+  background-color: #f7f7f9 !important;
+  color: #131313 !important;
+}
+
+/* Surfaces and Cards in Light Mode */
+[data-theme=theverge]:not(.dark) .bg-white,
+html[data-theme=theverge]:not(.dark) .bg-white {
+  background-color: #ffffff !important;
+}
+
+[data-theme=theverge]:not(.dark) .bg-\[\#fafbfe\],
+html[data-theme=theverge]:not(.dark) .bg-\[\#fafbfe\] {
+  background-color: #f7f7f9 !important;
+}
+
+[data-theme=theverge]:not(.dark) .bg-\[\#edeef3\],
+html[data-theme=theverge]:not(.dark) .bg-\[\#edeef3\] {
+  background-color: #ededf2 !important;
+}
+
+/* Flat Hairline 1px Borders in Light Mode */
+[data-theme=theverge]:not(.dark) .border-\[\#dedee5\],
+html[data-theme=theverge]:not(.dark) .border-\[\#dedee5\] {
+  border-color: #e2e2e7 !important;
+}
+
+[data-theme=theverge]:not(.dark) .divide-\[\#dedee5\] > :not([hidden]) ~ :not([hidden]),
+html[data-theme=theverge]:not(.dark) .divide-\[\#dedee5\] > :not([hidden]) ~ :not([hidden]) {
+  border-color: #e2e2e7 !important;
+}
+
+/* Typography in Light Mode */
+[data-theme=theverge]:not(.dark) .text-\[\#101114\],
+html[data-theme=theverge]:not(.dark) .text-\[\#101114\] {
+  color: #131313 !important;
+}
+
+[data-theme=theverge]:not(.dark) .text-\[\#686b82\],
+html[data-theme=theverge]:not(.dark) .text-\[\#686b82\] {
+  color: #5d5d68 !important;
+}
+
+/* Primary Accents in Light Mode: Verge Ultraviolet (#5200ff) */
+[data-theme=theverge]:not(.dark) .text-\[\#7132f5\],
+html[data-theme=theverge]:not(.dark) .text-\[\#7132f5\] {
+  color: #5200ff !important;
+}
+
+[data-theme=theverge]:not(.dark) .border-\[\#7132f5\],
+html[data-theme=theverge]:not(.dark) .border-\[\#7132f5\] {
+  border-color: #5200ff !important;
+}
+
+[data-theme=theverge]:not(.dark) .focus\:border-\[\#7132f5\]:focus,
+html[data-theme=theverge]:not(.dark) .focus\:border-\[\#7132f5\]:focus {
+  border-color: #5200ff !important;
+  outline: 2px solid #3cffd0 !important;
+}
+
+/* Subtle Tags & Chips in Light Mode */
+[data-theme=theverge]:not(.dark) .btn-kraken-subtle,
+html[data-theme=theverge]:not(.dark) .btn-kraken-subtle,
+[data-theme=theverge]:not(.dark) .bg-\[\#855bfb\]\/15,
+html[data-theme=theverge]:not(.dark) .bg-\[\#855bfb\]\/15,
+[data-theme=theverge]:not(.dark) .bg-\[\#855bfb\]\/10,
+html[data-theme=theverge]:not(.dark) .bg-\[\#855bfb\]\/10,
+[data-theme=theverge]:not(.dark) .bg-\[\#855bfb\]\/20,
+html[data-theme=theverge]:not(.dark) .bg-\[\#855bfb\]\/20 {
+  background-color: rgba(82, 0, 255, 0.08) !important;
+  color: #5200ff !important;
+  border: 1px solid rgba(82, 0, 255, 0.22) !important;
+  border-radius: 9999px !important;
+}
+
+/* Segmented Buttons in Light Mode */
+[data-theme=theverge]:not(.dark) button.bg-white,
+html[data-theme=theverge]:not(.dark) button.bg-white {
+  background-color: #ffffff !important;
+  color: #131313 !important;
+  box-shadow: none !important;
+  border: 1px solid #e2e2e7 !important;
+}
+
+/* Hover States in Light Mode */
+[data-theme=theverge]:not(.dark) .hover\:bg-\[\#fafbfe\]:hover,
+html[data-theme=theverge]:not(.dark) .hover\:bg-\[\#fafbfe\]:hover,
+[data-theme=theverge]:not(.dark) .hover\:bg-\[\#edeef3\]:hover,
+html[data-theme=theverge]:not(.dark) .hover\:bg-\[\#edeef3\]:hover {
+  background-color: #f1f1f5 !important;
+}
+
+/* ==============================================================
+   THE VERGE DARK MODE (#131313 Canvas, #191919 Cards, #3cffd0 Mint Accents)
+   ============================================================== */
+[data-theme=theverge].dark body,
+.dark[data-theme=theverge] body,
+[data-theme=theverge] .dark body {
+  background-color: #131313 !important;
+  color: #ffffff !important;
+}
+
+/* Cards & Surface Slate in Dark Mode */
+[data-theme=theverge].dark .bg-white,
+.dark[data-theme=theverge] .bg-white,
+[data-theme=theverge] .dark .bg-white,
+[data-theme=theverge].dark .bg-\[\#fafbfe\],
+.dark[data-theme=theverge] .bg-\[\#fafbfe\],
+[data-theme=theverge] .dark .bg-\[\#fafbfe\],
+[data-theme=theverge].dark .dark\:bg-\[\#16171f\],
+.dark[data-theme=theverge] .dark\:bg-\[\#16171f\],
+[data-theme=theverge] .dark .dark\:bg-\[\#16171f\],
+[data-theme=theverge].dark .dark\:bg-\[\#0d0e12\],
+.dark[data-theme=theverge] .dark\:bg-\[\#0d0e12\],
+[data-theme=theverge] .dark .dark\:bg-\[\#0d0e12\] {
+  background-color: #191919 !important;
+}
+
+[data-theme=theverge].dark .bg-\[\#edeef3\],
+.dark[data-theme=theverge] .bg-\[\#edeef3\],
+[data-theme=theverge] .dark .bg-\[\#edeef3\],
+[data-theme=theverge].dark .dark\:bg-\[\#1e202b\],
+.dark[data-theme=theverge] .dark\:bg-\[\#1e202b\],
+[data-theme=theverge] .dark .dark\:bg-\[\#1e202b\],
+[data-theme=theverge].dark .dark\:bg-\[\#13141c\],
+.dark[data-theme=theverge] .dark\:bg-\[\#13141c\],
+[data-theme=theverge] .dark .dark\:bg-\[\#13141c\] {
+  background-color: #262626 !important;
+}
+
+/* Inactive button backgrounds in Dark Mode */
+[data-theme=theverge].dark button.bg-\[\#fafbfe\],
+.dark[data-theme=theverge] button.bg-\[\#fafbfe\],
+[data-theme=theverge] .dark button.bg-\[\#fafbfe\] {
+  background-color: #191919 !important;
+}
+
+/* Active segmented buttons in Dark Mode */
+[data-theme=theverge].dark .dark\:bg-\[\#282937\],
+.dark[data-theme=theverge] .dark\:bg-\[\#282937\],
+[data-theme=theverge] .dark .dark\:bg-\[\#282937\],
+[data-theme=theverge].dark .dark\:bg-\[\#232534\],
+.dark[data-theme=theverge] .dark\:bg-\[\#232534\],
+[data-theme=theverge] .dark .dark\:bg-\[\#232534\],
+[data-theme=theverge].dark button.bg-\[\#101114\],
+.dark[data-theme=theverge] button.bg-\[\#101114\],
+[data-theme=theverge] .dark button.bg-\[\#101114\] {
+  background-color: #2c2c2c !important;
+  color: #ffffff !important;
+}
+
+/* Flat 1px Hairline Borders in Dark Mode */
+[data-theme=theverge].dark .border-\[\#dedee5\],
+.dark[data-theme=theverge] .border-\[\#dedee5\],
+[data-theme=theverge] .dark .border-\[\#dedee5\],
+[data-theme=theverge].dark .dark\:border-\[\#282937\],
+.dark[data-theme=theverge] .dark\:border-\[\#282937\],
+[data-theme=theverge] .dark .dark\:border-\[\#282937\] {
+  border-color: #313131 !important;
+}
+
+[data-theme=theverge].dark .divide-\[\#dedee5\] > :not([hidden]) ~ :not([hidden]),
+.dark[data-theme=theverge] .divide-\[\#dedee5\] > :not([hidden]) ~ :not([hidden]),
+[data-theme=theverge] .dark .divide-\[\#dedee5\] > :not([hidden]) ~ :not([hidden]),
+[data-theme=theverge].dark .dark\:divide-\[\#282937\] > :not([hidden]) ~ :not([hidden]),
+.dark[data-theme=theverge] .dark\:divide-\[\#282937\] > :not([hidden]) ~ :not([hidden]),
+[data-theme=theverge] .dark .dark\:divide-\[\#282937\] > :not([hidden]) ~ :not([hidden]) {
+  border-color: #313131 !important;
+}
+
+[data-theme=theverge].dark .border-\[\#7132f5\],
+.dark[data-theme=theverge] .border-\[\#7132f5\],
+[data-theme=theverge] .dark .border-\[\#7132f5\] {
+  border-color: #3cffd0 !important;
+}
+
+[data-theme=theverge].dark .focus\:border-\[\#7132f5\]:focus,
+.dark[data-theme=theverge] .focus\:border-\[\#7132f5\]:focus,
+[data-theme=theverge] .dark .focus\:border-\[\#7132f5\]:focus {
+  border-color: #3cffd0 !important;
+  outline: 2px solid #5200ff !important;
+}
+
+/* Text colors in Dark Mode */
+[data-theme=theverge].dark .text-\[\#101114\],
+.dark[data-theme=theverge] .text-\[\#101114\],
+[data-theme=theverge] .dark .text-\[\#101114\],
+[data-theme=theverge].dark .dark\:text-\[\#f3f4f8\],
+.dark[data-theme=theverge] .dark\:text-\[\#f3f4f8\],
+[data-theme=theverge] .dark .dark\:text-\[\#f3f4f8\] {
+  color: #ffffff !important;
+}
+
+[data-theme=theverge].dark .text-\[\#686b82\],
+.dark[data-theme=theverge] .text-\[\#686b82\],
+[data-theme=theverge] .dark .text-\[\#686b82\],
+[data-theme=theverge].dark .dark\:text-\[\#9ca0ba\],
+.dark[data-theme=theverge] .dark\:text-\[\#9ca0ba\],
+[data-theme=theverge] .dark .dark\:text-\[\#9ca0ba\] {
+  color: #949494 !important;
+}
+
+/* Text primary accents in Dark Mode */
+[data-theme=theverge].dark .text-\[\#7132f5\],
+.dark[data-theme=theverge] .text-\[\#7132f5\],
+[data-theme=theverge] .dark .text-\[\#7132f5\],
+[data-theme=theverge].dark .dark\:text-\[\#a78bfa\],
+.dark[data-theme=theverge] .dark\:text-\[\#a78bfa\],
+[data-theme=theverge] .dark .dark\:text-\[\#a78bfa\] {
+  color: #3cffd0 !important;
+}
+
+/* Subtle tags & active chips in Dark Mode */
+[data-theme=theverge].dark .btn-kraken-subtle,
+.dark[data-theme=theverge] .btn-kraken-subtle,
+[data-theme=theverge] .dark .btn-kraken-subtle,
+[data-theme=theverge].dark .bg-\[\#855bfb\]\/15,
+.dark[data-theme=theverge] .bg-\[\#855bfb\]\/15,
+[data-theme=theverge] .dark .bg-\[\#855bfb\]\/15,
+[data-theme=theverge].dark .bg-\[\#855bfb\]\/10,
+.dark[data-theme=theverge] .bg-\[\#855bfb\]\/10,
+[data-theme=theverge] .dark .bg-\[\#855bfb\]\/10,
+[data-theme=theverge].dark .bg-\[\#855bfb\]\/20,
+.dark[data-theme=theverge] .bg-\[\#855bfb\]\/20,
+[data-theme=theverge] .dark .bg-\[\#855bfb\]\/20 {
+  background-color: rgba(60, 255, 208, 0.15) !important;
+  color: #3cffd0 !important;
+  border: 1px solid rgba(60, 255, 208, 0.35) !important;
+  border-radius: 9999px !important;
 }
 
 

@@ -24,7 +24,7 @@ export const DESIGN_SYSTEMS: Record<DesignSystem, ThemeConfig> = {
     name: 'MongoDB',
     tagline: 'Developer Data Platform',
     badge: 'MongoDB Edition',
-    description: 'Aksen hijau MongoDB (#00ed64), kanvas deep-teal (#001e2b), tombol pill, sudut 12px, dan tipografi Euclid Circular A.',
+    description: 'Aksen hijau MongoDB, kanvas deep-teal, tombol pill, dan tipografi Euclid Circular',
     primaryColor: '#00ed64',
     accentColor: '#00684a',
     canvasBg: { light: '#ffffff', dark: '#001e2b' },
@@ -38,7 +38,7 @@ export const DESIGN_SYSTEMS: Record<DesignSystem, ThemeConfig> = {
     name: 'Coinbase',
     tagline: 'Financial Institutional Edition',
     badge: 'Coinbase Edition',
-    description: 'Aksen Coinbase Blue (#0052ff), tombol pill, kartu 24px, dan tipografi Inter & JetBrains Mono.',
+    description: 'Aksen Coinbase Blue, tombol pill, dan tipografi Inter & JetBrains Mono.',
     primaryColor: '#0052ff',
     accentColor: '#003ecc',
     canvasBg: { light: '#ffffff', dark: '#0a0b0d' },
@@ -52,10 +52,10 @@ export const DESIGN_SYSTEMS: Record<DesignSystem, ThemeConfig> = {
     name: 'The Verge',
     tagline: 'Cyber Editorial Edition',
     badge: 'The Verge Edition',
-    description: 'Kanvas cyber gelap #131313, aksen neon Jelly Mint (#3cffd0), headline Anton, dan border flat 1px.',
+    description: 'Aksen neon Jelly Mint & Ultraviolet, kanvas editorial, dan headline Anton.',
     primaryColor: '#3cffd0',
     accentColor: '#5200ff',
-    canvasBg: { light: '#131313', dark: '#131313' },
+    canvasBg: { light: '#f7f7f9', dark: '#131313' },
     pillShape: true,
     fontDisplay: 'Anton',
     fontSans: 'Space Grotesk',
@@ -66,7 +66,7 @@ export const DESIGN_SYSTEMS: Record<DesignSystem, ThemeConfig> = {
     name: 'Kraken',
     tagline: 'Crypto Classic Edition',
     badge: 'Kraken Edition',
-    description: 'Aksen Kraken Purple (#7132f5), sudut rounded 12px, font IBM Plex Sans, dan bayangan lembut.',
+    description: 'Aksen Kraken Purple, font IBM Plex Sans, dan bayangan lembut.',
     primaryColor: '#7132f5',
     accentColor: '#5741d8',
     canvasBg: { light: '#fafbfe', dark: '#0d0e12' },
@@ -146,14 +146,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Determine actual active dark state
   const isDark = useMemo(() => {
-    if (designSystem === 'theverge') {
-      // The Verge is an inherently dark editorial canvas (#131313) as specified in DESIGN-theverge.md
-      return true;
-    }
     if (theme === 'dark') return true;
     if (theme === 'light') return false;
     return systemIsDark;
-  }, [theme, systemIsDark, designSystem]);
+  }, [theme, systemIsDark]);
 
   // Sync data-theme and dark class on <html>
   useEffect(() => {
@@ -172,7 +168,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (designSystem === 'coinbase') {
         metaThemeColor.setAttribute('content', isDark ? '#0a0b0d' : '#0052ff');
       } else if (designSystem === 'theverge') {
-        metaThemeColor.setAttribute('content', '#131313');
+        metaThemeColor.setAttribute('content', isDark ? '#131313' : '#f7f7f9');
       } else if (designSystem === 'autumn') {
         metaThemeColor.setAttribute('content', isDark ? '#1c1917' : '#ea580c');
       } else if (designSystem === 'mongodb') {

@@ -307,20 +307,16 @@ export const ThemeMenuDropdown: React.FC<ThemeMenuDropdownProps> = ({
               <span className="text-[9px] uppercase font-bold text-[#9497a9] dark:text-[#767993] tracking-wider">
                 Mode Tampilan
               </span>
-              {designSystem === 'theverge' && (
-                <span className="text-[8px] text-[#3cffd0] font-mono">Cyber Dark</span>
-              )}
             </div>
 
             <div className="grid grid-cols-3 gap-1 bg-[#edeef3] dark:bg-[#1e202b] p-1 rounded-[8px] border border-[#dedee5] dark:border-[#282937]">
               <button
-                disabled={designSystem === 'theverge'}
                 onClick={() => setTheme('light')}
                 className={`flex items-center justify-center gap-1 py-1 px-1 rounded-[6px] text-[10px] font-bold transition-all ${
-                  theme === 'light' && designSystem !== 'theverge'
+                  theme === 'light'
                     ? 'bg-white text-[#101114] shadow-micro'
                     : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114]'
-                } ${designSystem === 'theverge' ? 'opacity-40 cursor-not-allowed' : ''}`}
+                }`}
                 title="Mode Terang"
               >
                 <Sun className="w-3 h-3 text-[#f59e0b] shrink-0" />
@@ -330,7 +326,7 @@ export const ThemeMenuDropdown: React.FC<ThemeMenuDropdownProps> = ({
               <button
                 onClick={() => setTheme('dark')}
                 className={`flex items-center justify-center gap-1 py-1 px-1 rounded-[6px] text-[10px] font-bold transition-all ${
-                  theme === 'dark' || designSystem === 'theverge'
+                  theme === 'dark'
                     ? 'bg-white dark:bg-[#282937] text-[#101114] dark:text-[#f3f4f8] shadow-micro'
                     : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114]'
                 }`}
@@ -341,13 +337,12 @@ export const ThemeMenuDropdown: React.FC<ThemeMenuDropdownProps> = ({
               </button>
 
               <button
-                disabled={designSystem === 'theverge'}
                 onClick={() => setTheme('system')}
                 className={`flex items-center justify-center gap-1 py-1 px-1 rounded-[6px] text-[10px] font-bold transition-all ${
-                  theme === 'system' && designSystem !== 'theverge'
+                  theme === 'system'
                     ? 'bg-white dark:bg-[#282937] text-[#101114] dark:text-[#f3f4f8] shadow-micro'
                     : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114]'
-                } ${designSystem === 'theverge' ? 'opacity-40 cursor-not-allowed' : ''}`}
+                }`}
                 title="Ikuti Tema Sistem"
               >
                 <Laptop className="w-3 h-3 text-[#686b82] shrink-0" />

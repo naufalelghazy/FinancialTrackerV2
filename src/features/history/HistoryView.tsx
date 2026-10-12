@@ -150,18 +150,6 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
     });
   }, [transactions, search, filterType, getAccountName, getCategoryName]);
 
-  // 2. Summary stats for filtered items
-  const stats = useMemo(() => {
-    let totalExpense = 0;
-    let totalIncome = 0;
-
-    for (const t of filtered) {
-      if (t.type === 'pengeluaran') totalExpense += t.amount;
-      if (t.type === 'pemasukan') totalIncome += t.amount;
-    }
-
-    return { totalExpense, totalIncome, count: filtered.length };
-  }, [filtered]);
 
   // 3. Group by Month, then by Day (Sorted Descending)
   const groupedByMonth = useMemo(() => {
@@ -283,7 +271,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
           </div>
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-1 rounded-[8px] bg-[#edeef3] dark:bg-[#232534] text-xs font-bold text-[#101114] dark:text-[#f3f4f8]">
-              {stats.count} Transaksi
+              {filtered.length} Transaksi
             </span>
           </div>
         </div>
@@ -327,45 +315,22 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
           })}
         </div>
 
-        {/* Quick Filter Metrics & Accordion Toggle Controls */}
-        <div className="pt-1 border-t border-[#dedee5] dark:border-[#282937]/70 space-y-2">
-          {(filterType === 'all' || filterType === 'pengeluaran' || filterType === 'pemasukan') && (
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="bg-[#fafbfe] dark:bg-[#13141c] p-2.5 rounded-[10px] border border-[#dedee5] dark:border-[#282937]/60">
-                <span className="text-[10px] uppercase font-bold text-[#686b82] dark:text-[#9ca0ba] block tracking-wider">
-                  Total Keluar
-                </span>
-                <span className="text-sm font-bold text-[#e53e3e] tracking-tight">
-                  -{formatCurrency(stats.totalExpense)}
-                </span>
-              </div>
-              <div className="bg-[#fafbfe] dark:bg-[#13141c] p-2.5 rounded-[10px] border border-[#dedee5] dark:border-[#282937]/60">
-                <span className="text-[10px] uppercase font-bold text-[#686b82] dark:text-[#9ca0ba] block tracking-wider">
-                  Total Masuk
-                </span>
-                <span className="text-sm font-bold text-[#026b3f] tracking-tight">
-                  +{formatCurrency(stats.totalIncome)}
-                </span>
-              </div>
-            </div>
-          )}
-
-          {groupedByMonth.length > 1 && (
-            <div className="flex items-center justify-between text-xs pt-1 text-[#686b82] dark:text-[#9ca0ba]">
-              <span className="text-[11px]">
-                {groupedByMonth.length} Bulan Terdata
-              </span>
-              <button
-                type="button"
-                onClick={handleToggleAll}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/50 text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] transition-all cursor-pointer active:scale-95"
-              >
-                <ChevronsUpDown className="w-3.5 h-3.5 text-[#7132f5] shrink-0" />
-                <span>{allMonthsExpanded ? 'Tutup Semua Bulan' : 'Buka Semua Bulan'}</span>
-              </button>
-            </div>
-          )}
-        </div>
+        {/* Accordion Toggle Controls */}
+        {groupedByMonth.length > 1 && (
+          <div className="pt-2 border-t border-[#dedee5] dark:border-[#282937]/70 flex items-center justify-between text-xs text-[#686b82] dark:text-[#9ca0ba]">
+            <span className="text-[11px]">
+              {groupedByMonth.length} Bulan Terdata
+            </span>
+            <button
+              type="button"
+              onClick={handleToggleAll}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/50 text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] transition-all cursor-pointer active:scale-95"
+            >
+              <ChevronsUpDown className="w-3.5 h-3.5 text-[#7132f5] shrink-0" />
+              <span>{allMonthsExpanded ? 'Tutup Semua Bulan' : 'Buka Semua Bulan'}</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Monthly Grouped Transaction Accordions */}

@@ -6,14 +6,14 @@ import { AccountAvatar } from '../accounts/AccountsView';
 import {
   TrendingUp,
   TrendingDown,
-  Wallet,
   PieChart as PieChartIcon,
   BarChart3,
   Calendar,
   CreditCard,
-  Percent,
   ArrowUpRight,
   ArrowDownRight,
+  ChevronDown,
+  Edit2,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -35,6 +35,7 @@ interface ReportViewProps {
   transactions: Transaction[];
   accounts: Account[];
   categories: Category[];
+  onEditTransaction?: (transaction: Transaction) => void;
 }
 
 type PeriodType = 'this_month' | 'last_month' | 'last_3_months' | 'last_6_months' | 'this_year' | 'all' | 'custom';
@@ -53,10 +54,22 @@ const CATEGORY_COLORS = [
   '#6366f1', // Indigo
 ];
 
+function formatShortDate(dateStr: string): string {
+  if (!dateStr) return '-';
+  const parts = dateStr.slice(0, 10).split('-');
+  if (parts.length !== 3) return dateStr;
+  const day = parseInt(parts[2], 10);
+  const monthNum = parseInt(parts[1], 10);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  const month = months[monthNum - 1] || parts[1];
+  return `${day} ${month}`;
+}
+
 export const ReportView: React.FC<ReportViewProps> = ({
   transactions,
   accounts,
   categories,
+  onEditTransaction,
 }) => {
   const { isDark } = useTheme();
   const [period, setPeriod] = useState<PeriodType>('this_month');
@@ -69,6 +82,10 @@ export const ReportView: React.FC<ReportViewProps> = ({
     return new Date().toISOString().slice(0, 10);
   });
   const [activeChartTab, setActiveChartTab] = useState<'flow' | 'category' | 'source' | 'account'>('category');
+  const [activeExpenseIndex, setActiveExpenseIndex] = useState<number | null>(null);
+  const [activeIncomeIndex, setActiveIncomeIndex] = useState<number | null>(null);
+  const [expandedExpenseIndex, setExpandedExpenseIndex] = useState<number | null>(null);
+  const [expandedIncomeIndex, setExpandedIncomeIndex] = useState<number | null>(null);
   const [chartRadius, setChartRadius] = useState(() => {
     if (typeof window === 'undefined') return { inner: 70, outer: 105 };
     if (window.innerWidth >= 1280) return { inner: 105, outer: 155 };
@@ -158,7 +175,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
   }, [transactions, period, customStartDate, customEndDate, isTransferTx]);
 
   // Aggregate Executive KPIs
-  const { totalIncome, totalExpense, netCashflow, savingsRate } = useMemo(() => {
+  const { totalIncome, totalExpense } = useMemo(() => {
     let income = 0;
     let expense = 0;
 
@@ -170,14 +187,9 @@ export const ReportView: React.FC<ReportViewProps> = ({
       }
     });
 
-    const net = income - expense;
-    const rate = income > 0 ? ((income - expense) / income) * 100 : 0;
-
     return {
       totalIncome: income,
       totalExpense: expense,
-      netCashflow: net,
-      savingsRate: Math.max(Math.min(rate, 100), -100),
     };
   }, [filteredTransactions]);
 
@@ -236,7 +248,16 @@ export const ReportView: React.FC<ReportViewProps> = ({
 
   // 2. Category Expense Breakdown (Donut Chart & List)
   const expenseByCategory = useMemo(() => {
-    const catMap: { [catId: string]: { name: string; emoji: string; icon?: string; amount: number } } = {};
+    const catMap: {
+      [catId: string]: {
+        id: string;
+        name: string;
+        emoji: string;
+        icon?: string;
+        amount: number;
+        transactions: Transaction[];
+      };
+    } = {};
     let total = 0;
 
     filteredTransactions
@@ -249,15 +270,19 @@ export const ReportView: React.FC<ReportViewProps> = ({
         const id = t.categoryId || 'unknown';
 
         if (!catMap[id]) {
-          catMap[id] = { name: catName, emoji, icon, amount: 0 };
+          catMap[id] = { id, name: catName, emoji, icon, amount: 0, transactions: [] };
         }
         catMap[id].amount += t.amount;
+        catMap[id].transactions.push(t);
         total += t.amount;
       });
 
     return Object.values(catMap)
       .map((item, idx) => ({
         ...item,
+        transactions: item.transactions.sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        ),
         percentage: total > 0 ? (item.amount / total) * 100 : 0,
         color: CATEGORY_COLORS[idx % CATEGORY_COLORS.length],
       }))
@@ -266,7 +291,16 @@ export const ReportView: React.FC<ReportViewProps> = ({
 
   // 3. Category Income Breakdown (Donut Chart & List)
   const incomeByCategory = useMemo(() => {
-    const catMap: { [catId: string]: { name: string; emoji: string; icon?: string; amount: number } } = {};
+    const catMap: {
+      [catId: string]: {
+        id: string;
+        name: string;
+        emoji: string;
+        icon?: string;
+        amount: number;
+        transactions: Transaction[];
+      };
+    } = {};
     let total = 0;
 
     filteredTransactions
@@ -279,15 +313,19 @@ export const ReportView: React.FC<ReportViewProps> = ({
         const id = t.categoryId || 'unknown';
 
         if (!catMap[id]) {
-          catMap[id] = { name: catName, emoji, icon, amount: 0 };
+          catMap[id] = { id, name: catName, emoji, icon, amount: 0, transactions: [] };
         }
         catMap[id].amount += t.amount;
+        catMap[id].transactions.push(t);
         total += t.amount;
       });
 
     return Object.values(catMap)
       .map((item, idx) => ({
         ...item,
+        transactions: item.transactions.sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        ),
         percentage: total > 0 ? (item.amount / total) * 100 : 0,
         color: CATEGORY_COLORS[idx % CATEGORY_COLORS.length],
       }))
@@ -314,24 +352,6 @@ export const ReportView: React.FC<ReportViewProps> = ({
     return Object.values(accExpMap).sort((a, b) => b.amount - a.amount);
   }, [filteredTransactions, accountMap]);
 
-  // 5. Daily Average and Top Single Expense
-  const insights = useMemo(() => {
-    const expenseTxs = filteredTransactions.filter((t) => t.type === 'pengeluaran');
-    const topExpense = expenseTxs.reduce<Transaction | null>((max, t) => {
-      if (!max || t.amount > max.amount) return t;
-      return max;
-    }, null);
-
-    const uniqueDates = new Set(expenseTxs.map((t) => t.date));
-    const activeDays = Math.max(uniqueDates.size, 1);
-    const avgDailyExpense = totalExpense / activeDays;
-
-    return {
-      topExpense,
-      avgDailyExpense,
-      activeDays,
-    };
-  }, [filteredTransactions, totalExpense]);
 
   // Tooltip styles based on theme
   const tooltipStyle = {
@@ -343,6 +363,9 @@ export const ReportView: React.FC<ReportViewProps> = ({
     padding: '10px 14px',
     fontSize: '12px',
   };
+
+  const selectedExpenseIdx = activeExpenseIndex !== null ? activeExpenseIndex : expandedExpenseIndex;
+  const selectedIncomeIdx = activeIncomeIndex !== null ? activeIncomeIndex : expandedIncomeIndex;
 
   return (
     <div className="space-y-6 pb-24">
@@ -366,73 +389,38 @@ export const ReportView: React.FC<ReportViewProps> = ({
           </div>
 
           {/* Period Selector Tabs */}
-          <div className="flex items-center gap-1 overflow-x-auto pb-0.5 sm:pb-0 bg-[#edeef3] dark:bg-[#1e202b] p-1 rounded-[12px] border border-[#dedee5] dark:border-[#282937] shrink-0 self-start xl:self-auto max-w-full scrollbar-none">
-            <button
-              onClick={() => setPeriod('this_month')}
-              className={`px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap ${
-                period === 'this_month'
-                  ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-micro'
-                  : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
-              }`}
-            >
-              Bulan Ini
-            </button>
-            <button
-              onClick={() => setPeriod('last_month')}
-              className={`px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap ${
-                period === 'last_month'
-                  ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-micro'
-                  : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
-              }`}
-            >
-              Bulan Lalu
-            </button>
-            <button
-              onClick={() => setPeriod('last_3_months')}
-              className={`px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap ${
-                period === 'last_3_months'
-                  ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-micro'
-                  : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
-              }`}
-            >
-              3 Bulan
-            </button>
-            <button
-              onClick={() => setPeriod('last_6_months')}
-              className={`px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap ${
-                period === 'last_6_months'
-                  ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-micro'
-                  : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
-              }`}
-            >
-              6 Bulan
-            </button>
-            <button
-              onClick={() => setPeriod('this_year')}
-              className={`px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap ${
-                period === 'this_year'
-                  ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-micro'
-                  : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
-              }`}
-            >
-              Tahun Ini
-            </button>
-            <button
-              onClick={() => setPeriod('all')}
-              className={`px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap ${
-                period === 'all'
-                  ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-micro'
-                  : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
-              }`}
-            >
-              Semua
-            </button>
+          <div className="flex items-center gap-1 overflow-x-auto p-1 rounded-[12px] bg-[#f0f1f5] dark:bg-[#1e202b] border border-[#dedee5]/80 dark:border-[#282937] shrink-0 self-start xl:self-auto max-w-full scrollbar-none shadow-xs">
+            {(
+              [
+                { id: 'this_month', label: 'Bulan Ini' },
+                { id: 'last_month', label: 'Bulan Lalu' },
+                { id: 'last_3_months', label: '3 Bulan' },
+                { id: 'last_6_months', label: '6 Bulan' },
+                { id: 'this_year', label: 'Tahun Ini' },
+                { id: 'all', label: 'Semua' },
+              ] as const
+            ).map((item) => {
+              const isActive = period === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setPeriod(item.id)}
+                  className={`px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                    isActive
+                      ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-sm border border-black/5 dark:border-white/5'
+                      : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8] hover:bg-white/50 dark:hover:bg-[#282937]/50'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
             <button
               onClick={() => setPeriod('custom')}
-              className={`px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
                 period === 'custom'
-                  ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-micro'
-                  : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
+                  ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-sm border border-black/5 dark:border-white/5'
+                  : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8] hover:bg-white/50 dark:hover:bg-[#282937]/50'
               }`}
             >
               <Calendar className="w-3.5 h-3.5 shrink-0" />
@@ -498,7 +486,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                     setCustomStartDate(start.toISOString().slice(0, 10));
                     setCustomEndDate(end.toISOString().slice(0, 10));
                   }}
-                  className="px-2.5 py-1 rounded-[8px] bg-white dark:bg-[#282937] hover:bg-[#edeef3] dark:hover:bg-[#343647] border border-[#dedee5] dark:border-[#282937] text-[11px] font-semibold text-[#686b82] dark:text-[#9ca0ba] transition-all shadow-micro"
+                  className="px-2.5 py-1 rounded-[8px] bg-white dark:bg-[#282937] hover:bg-[#edeef3] dark:hover:bg-[#343647] border border-[#dedee5] dark:border-[#282937] text-[11px] font-semibold text-[#686b82] dark:text-[#9ca0ba] transition-all shadow-micro cursor-pointer"
                 >
                   7 Hari
                 </button>
@@ -511,7 +499,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                     setCustomStartDate(start.toISOString().slice(0, 10));
                     setCustomEndDate(end.toISOString().slice(0, 10));
                   }}
-                  className="px-2.5 py-1 rounded-[8px] bg-white dark:bg-[#282937] hover:bg-[#edeef3] dark:hover:bg-[#343647] border border-[#dedee5] dark:border-[#282937] text-[11px] font-semibold text-[#686b82] dark:text-[#9ca0ba] transition-all shadow-micro"
+                  className="px-2.5 py-1 rounded-[8px] bg-white dark:bg-[#282937] hover:bg-[#edeef3] dark:hover:bg-[#343647] border border-[#dedee5] dark:border-[#282937] text-[11px] font-semibold text-[#686b82] dark:text-[#9ca0ba] transition-all shadow-micro cursor-pointer"
                 >
                   30 Hari
                 </button>
@@ -521,96 +509,43 @@ export const ReportView: React.FC<ReportViewProps> = ({
         )}
       </div>
 
-      {/* 4 Executive KPI Cards - Compact 2x2 grid on mobile so charts fit without scrolling */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+      {/* 2 Clean Executive KPI Cards: Pemasukan & Pengeluaran */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         {/* Total Pemasukan */}
-        <div className="bg-white dark:bg-[#16171f] rounded-[12px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-2.5 sm:p-5 relative overflow-hidden group flex flex-col justify-between">
+        <div className="bg-white dark:bg-[#16171f] rounded-[14px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] truncate">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba]">
               Pemasukan
             </span>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-[6px] sm:rounded-[8px] bg-[#149e61]/12 text-[#149e61] dark:text-[#34d399] flex items-center justify-center shrink-0">
-              <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.2]" />
+            <div className="w-8 h-8 rounded-[8px] bg-[#149e61]/12 text-[#149e61] dark:text-[#34d399] flex items-center justify-center shrink-0">
+              <TrendingUp className="w-4 h-4 stroke-[2.2]" />
             </div>
           </div>
-          <div className="text-sm sm:text-xl lg:text-lg xl:text-2xl font-bold tracking-tight text-[#026b3f] dark:text-[#34d399] mt-1 sm:mt-2 tabular-nums truncate">
+          <div className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-[#026b3f] dark:text-[#34d399] mt-2 tabular-nums">
             +{formatCurrency(totalIncome)}
           </div>
-          <div className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] mt-1 hidden sm:flex items-center gap-1">
+          <div className="text-[11px] sm:text-xs text-[#686b82] dark:text-[#9ca0ba] mt-1.5 flex items-center gap-1.5">
             <ArrowUpRight className="w-3.5 h-3.5 text-[#149e61] dark:text-[#34d399]" />
-            <span>Arus masuk tanpa transfer</span>
+            <span>{incomeByCategory.length} kategori pemasukan aktif</span>
           </div>
         </div>
 
         {/* Total Pengeluaran */}
-        <div className="bg-white dark:bg-[#16171f] rounded-[12px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-2.5 sm:p-5 relative overflow-hidden group flex flex-col justify-between">
+        <div className="bg-white dark:bg-[#16171f] rounded-[14px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] truncate">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba]">
               Pengeluaran
             </span>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-[6px] sm:rounded-[8px] bg-[#e53e3e]/12 text-[#e53e3e] dark:text-[#f87171] flex items-center justify-center shrink-0">
-              <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.2]" />
+            <div className="w-8 h-8 rounded-[8px] bg-[#e53e3e]/12 text-[#e53e3e] dark:text-[#f87171] flex items-center justify-center shrink-0">
+              <TrendingDown className="w-4 h-4 stroke-[2.2]" />
             </div>
           </div>
-          <div className="text-sm sm:text-xl lg:text-lg xl:text-2xl font-bold tracking-tight text-[#e53e3e] dark:text-[#f87171] mt-1 sm:mt-2 tabular-nums truncate">
+          <div className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-[#e53e3e] dark:text-[#f87171] mt-2 tabular-nums">
             -{formatCurrency(totalExpense)}
           </div>
-          <div className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] mt-1 hidden sm:flex items-center gap-1">
+          <div className="text-[11px] sm:text-xs text-[#686b82] dark:text-[#9ca0ba] mt-1.5 flex items-center gap-1.5">
             <ArrowDownRight className="w-3.5 h-3.5 text-[#e53e3e] dark:text-[#f87171]" />
-            <span>Beban belanja & operasional</span>
-          </div>
-        </div>
-
-        {/* Cashflow Bersih */}
-        <div className="bg-white dark:bg-[#16171f] rounded-[12px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-2.5 sm:p-5 relative overflow-hidden group flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] truncate">
-              Cashflow
-            </span>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-[6px] sm:rounded-[8px] bg-[#855bfb]/12 text-[#7132f5] dark:text-[#a78bfa] flex items-center justify-center shrink-0">
-              <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.2]" />
-            </div>
-          </div>
-          <div
-            className={`text-sm sm:text-xl lg:text-lg xl:text-2xl font-bold tracking-tight mt-1 sm:mt-2 tabular-nums truncate ${
-              netCashflow >= 0
-                ? 'text-[#026b3f] dark:text-[#34d399]'
-                : 'text-[#e53e3e] dark:text-[#f87171]'
-            }`}
-          >
-            {netCashflow >= 0 ? '+' : ''}
-            {formatCurrency(netCashflow)}
-          </div>
-          <div className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] mt-1 hidden sm:block">
-            {netCashflow >= 0 ? (
-              <span className="text-[#026b3f] dark:text-[#34d399] font-medium">Surplus keuangan</span>
-            ) : (
-              <span className="text-[#e53e3e] dark:text-[#f87171] font-medium">Defisit periode ini</span>
-            )}
-          </div>
-        </div>
-
-        {/* Rasio Tabungan */}
-        <div className="bg-white dark:bg-[#16171f] rounded-[12px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-2.5 sm:p-5 relative overflow-hidden group flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] truncate">
-              Tabungan
-            </span>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-[6px] sm:rounded-[8px] bg-[#3b82f6]/12 text-[#3b82f6] flex items-center justify-center shrink-0">
-              <Percent className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.2]" />
-            </div>
-          </div>
-          <div className="text-sm sm:text-xl lg:text-lg xl:text-2xl font-bold tracking-tight text-[#101114] dark:text-[#f3f4f8] mt-1 sm:mt-2 tabular-nums truncate">
-            {savingsRate.toFixed(1)}%
-          </div>
-          <div className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] mt-1 hidden sm:block">
-            {savingsRate >= 20 ? (
-              <span className="text-[#026b3f] dark:text-[#34d399] font-medium">Kondisi Sangat Sehat (&ge;20%)</span>
-            ) : savingsRate > 0 ? (
-              <span className="text-[#f59e0b] font-medium">Cukup Sehat (&gt;0%)</span>
-            ) : (
-              <span className="text-[#e53e3e] dark:text-[#f87171] font-medium">Pengeluaran &gt; Pemasukan</span>
-            )}
+            <span>{expenseByCategory.length} kategori pengeluaran aktif</span>
           </div>
         </div>
       </div>
@@ -689,10 +624,6 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 <div className="h-64 sm:h-72 lg:h-[350px] xl:h-[400px] w-full relative flex items-center justify-center">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Tooltip
-                        contentStyle={tooltipStyle}
-                        formatter={(val: any) => [formatCurrency(Number(val) || 0), 'Pengeluaran']}
-                      />
                       <Pie
                         data={expenseByCategory}
                         dataKey="amount"
@@ -702,19 +633,63 @@ export const ReportView: React.FC<ReportViewProps> = ({
                         innerRadius={chartRadius.inner}
                         outerRadius={chartRadius.outer}
                         paddingAngle={3}
+                        onMouseEnter={(_, index) => setActiveExpenseIndex(index)}
+                        onMouseLeave={() => setActiveExpenseIndex(null)}
+                        onClick={(_, index) => {
+                          setExpandedExpenseIndex((prev) => (prev === index ? null : index));
+                          setActiveExpenseIndex(index);
+                        }}
                       >
                         {expenseByCategory.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={entry.color}
+                            stroke={selectedExpenseIdx === index ? (isDark ? '#ffffff' : '#101114') : 'transparent'}
+                            strokeWidth={selectedExpenseIdx === index ? 2.5 : 0}
+                            opacity={selectedExpenseIdx === null || selectedExpenseIdx === index ? 1 : 0.4}
+                            style={{ cursor: 'pointer' }}
+                            className="transition-all duration-200 outline-none"
+                          />
                         ))}
                       </Pie>
                     </PieChart>
                   </ResponsiveContainer>
-                  {/* Center Label in Donut */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <span className="text-[10px] sm:text-xs uppercase font-bold text-[#9497a9] tracking-wider">Total</span>
-                    <span className="text-sm sm:text-lg lg:text-2xl font-bold text-[#101114] dark:text-[#f3f4f8] tabular-nums tracking-tight mt-0.5">
-                      {formatCurrency(totalExpense)}
-                    </span>
+                  {/* Center Dynamic Label in Donut */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-4 text-center select-none">
+                    {selectedExpenseIdx !== null && expenseByCategory[selectedExpenseIdx] ? (
+                      <div className="flex flex-col items-center justify-center transition-all duration-200">
+                        <div className="flex items-center gap-1.5 max-w-[150px] sm:max-w-[190px] mb-0.5">
+                          <span
+                            className="w-2 h-2 rounded-full shrink-0 shadow-xs"
+                            style={{ backgroundColor: expenseByCategory[selectedExpenseIdx].color }}
+                          />
+                          <span
+                            className="text-[11px] sm:text-xs font-bold uppercase tracking-wider truncate"
+                            style={{ color: expenseByCategory[selectedExpenseIdx].color }}
+                          >
+                            {expenseByCategory[selectedExpenseIdx].name}
+                          </span>
+                        </div>
+                        <span className="text-sm sm:text-lg lg:text-2xl font-bold text-[#101114] dark:text-[#f3f4f8] tabular-nums tracking-tight">
+                          {formatCurrency(expenseByCategory[selectedExpenseIdx].amount)}
+                        </span>
+                        <span className="text-[10px] sm:text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mt-0.5">
+                          {expenseByCategory[selectedExpenseIdx].percentage.toFixed(1)}% dari total
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center transition-all duration-200">
+                        <span className="text-[10px] sm:text-xs uppercase font-bold text-[#9497a9] tracking-wider">
+                          Total
+                        </span>
+                        <span className="text-sm sm:text-lg lg:text-2xl font-bold text-[#101114] dark:text-[#f3f4f8] tabular-nums tracking-tight mt-0.5">
+                          {formatCurrency(totalExpense)}
+                        </span>
+                        <span className="text-[10px] text-[#9497a9] mt-0.5">
+                          {expenseByCategory.length} Kategori
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -725,7 +700,17 @@ export const ReportView: React.FC<ReportViewProps> = ({
                       {expenseByCategory.slice(0, 4).map((cat, i) => (
                         <div
                           key={i}
-                          className="flex items-center gap-2 p-2 rounded-[10px] bg-[#fafbfe] dark:bg-[#1e202b] border border-[#dedee5]/70 dark:border-[#282937]"
+                          onMouseEnter={() => setActiveExpenseIndex(i)}
+                          onMouseLeave={() => setActiveExpenseIndex(null)}
+                          onClick={() => {
+                            setExpandedExpenseIndex((prev) => (prev === i ? null : i));
+                            setActiveExpenseIndex(i);
+                          }}
+                          className={`flex items-center gap-2 p-2 rounded-[10px] border cursor-pointer transition-all ${
+                            selectedExpenseIdx === i
+                              ? 'bg-[#edeef3] dark:bg-[#282937] border-[#7132f5] dark:border-[#a78bfa] ring-1 ring-[#7132f5]/40 shadow-xs'
+                              : 'bg-[#fafbfe] dark:bg-[#1e202b] border-[#dedee5]/70 dark:border-[#282937] hover:border-[#7132f5]/30'
+                          }`}
                         >
                           <span
                             className="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs"
@@ -759,7 +744,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 Peringkat Kategori Terbesar
               </h3>
               <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
-                Urutan pos belanja dari nilai tertinggi ke terendah
+                Klik kategori untuk melihat rincian transaksi
               </p>
             </div>
 
@@ -768,52 +753,144 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 Tidak ada data pengeluaran
               </div>
             ) : (
-              <div className="space-y-3 pt-1 max-h-[580px] overflow-y-auto pr-1.5">
-                {expenseByCategory.map((cat, idx) => (
-                  <div
-                    key={idx}
-                    className="p-3.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#1e202b] border border-[#dedee5] dark:border-[#282937]/80 hover:border-[#7132f5]/40 transition-all space-y-2.5"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      {/* Left: Standard CategoryIcon + Name + Percentage subtitle */}
-                      <div className="flex items-center gap-3 min-w-0">
-                        <CategoryIcon
-                          name={cat.name}
-                          type="pengeluaran"
-                          icon={cat.icon}
-                          emoji={cat.emoji}
-                          size="md"
-                        />
-                        <div className="min-w-0">
-                          <span className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8] block tracking-tight truncate">
-                            {cat.name}
-                          </span>
-                          <span className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] block">
-                            {cat.percentage.toFixed(1)}% dari total pengeluaran
-                          </span>
+              <div className="space-y-3 p-1 max-h-[580px] overflow-y-auto">
+                {expenseByCategory.map((cat, idx) => {
+                  const isExpanded = expandedExpenseIndex === idx;
+                  const isSelected = selectedExpenseIdx === idx;
+                  return (
+                    <div
+                      key={idx}
+                      onMouseEnter={() => setActiveExpenseIndex(idx)}
+                      onMouseLeave={() => setActiveExpenseIndex(null)}
+                      onClick={() => {
+                        setExpandedExpenseIndex((prev) => (prev === idx ? null : idx));
+                        setActiveExpenseIndex(idx);
+                      }}
+                      className={`p-3.5 rounded-[12px] border transition-all space-y-2.5 cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#f4f5f8] dark:bg-[#232534] border-[#7132f5] dark:border-[#a78bfa] ring-1 ring-[#7132f5] dark:ring-[#a78bfa] shadow-sm'
+                          : 'bg-[#fafbfe] dark:bg-[#1e202b] border-[#dedee5] dark:border-[#282937]/80 hover:border-[#7132f5]/40'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        {/* Left: Standard CategoryIcon + Name + Percentage subtitle */}
+                        <div className="flex items-center gap-3 min-w-0">
+                          <CategoryIcon
+                            name={cat.name}
+                            type="pengeluaran"
+                            icon={cat.icon}
+                            emoji={cat.emoji}
+                            size="md"
+                          />
+                          <div className="min-w-0">
+                            <span className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8] block tracking-tight truncate">
+                              {cat.name}
+                            </span>
+                            <span className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] block">
+                              {cat.percentage.toFixed(1)}% dari total pengeluaran • {cat.transactions.length} transaksi
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Right: Nominal, Percentage Badge, & Chevron */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          <div className="text-right">
+                            <span className="font-bold text-sm sm:text-base text-[#e53e3e] dark:text-[#f87171] tabular-nums block">
+                              -{formatCurrency(cat.amount)}
+                            </span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-[6px] bg-[#edeef3] dark:bg-[#282937] font-bold text-[#7132f5] dark:text-[#a78bfa] inline-block mt-0.5">
+                              {cat.percentage.toFixed(1)}%
+                            </span>
+                          </div>
+                          <div
+                            className={`w-7 h-7 rounded-[8px] flex items-center justify-center text-[#686b82] dark:text-[#9ca0ba] transition-transform duration-200 ${
+                              isExpanded ? 'rotate-180 text-[#7132f5] dark:text-[#a78bfa]' : ''
+                            }`}
+                          >
+                            <ChevronDown className="w-4 h-4" />
+                          </div>
                         </div>
                       </div>
 
-                      {/* Right: Nominal & Percentage Badge */}
-                      <div className="text-right shrink-0">
-                        <span className="font-bold text-sm sm:text-base text-[#e53e3e] dark:text-[#f87171] tabular-nums block">
-                          -{formatCurrency(cat.amount)}
-                        </span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-[6px] bg-[#edeef3] dark:bg-[#282937] font-bold text-[#7132f5] dark:text-[#a78bfa] inline-block mt-0.5">
-                          {cat.percentage.toFixed(1)}%
-                        </span>
+                      {/* Progress Bar Share */}
+                      <div className="w-full bg-[#edeef3] dark:bg-[#282937] rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{ width: `${cat.percentage}%`, backgroundColor: cat.color }}
+                        />
                       </div>
-                    </div>
 
-                    {/* Progress Bar Share */}
-                    <div className="w-full bg-[#edeef3] dark:bg-[#282937] rounded-full h-1.5 overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${cat.percentage}%`, backgroundColor: cat.color }}
-                      />
+                      {/* Expanded Transaction Details */}
+                      {isExpanded && (
+                        <div
+                          className="pt-3 border-t border-[#dedee5]/70 dark:border-[#282937] space-y-2 animate-in fade-in duration-200"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center justify-between text-[11px] font-semibold text-[#686b82] dark:text-[#9ca0ba] px-0.5">
+                            <span>Rincian Transaksi ({cat.transactions.length})</span>
+                            {onEditTransaction && (
+                              <span className="text-[10px] text-[#7132f5] dark:text-[#a78bfa]">
+                                Klik transaksi untuk ubah
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="space-y-1.5 max-h-56 overflow-y-auto pr-0.5">
+                            {cat.transactions.map((t) => {
+                              const acc = accountMap.get(t.sourceAccountId);
+                              return (
+                                <div
+                                  key={t.id}
+                                  onClick={() => onEditTransaction?.(t)}
+                                  className={`flex items-center justify-between gap-2.5 p-2.5 rounded-[9px] bg-white dark:bg-[#16171f] border border-[#dedee5]/70 dark:border-[#282937] transition-all group ${
+                                    onEditTransaction
+                                      ? 'hover:border-[#7132f5] dark:hover:border-[#a78bfa] hover:bg-[#fafbfe] dark:hover:bg-[#1e202b] cursor-pointer'
+                                      : ''
+                                  }`}
+                                >
+                                  {/* Left: Date + Note + Account Tag */}
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="text-[11px] font-bold text-[#686b82] dark:text-[#9ca0ba] shrink-0 font-mono">
+                                        {formatShortDate(t.date)}
+                                      </span>
+                                      <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] bg-[#edeef3] dark:bg-[#282937] text-[#484b5e] dark:text-[#c4c7d4] font-medium shrink-0">
+                                        {acc?.name || 'Akun'}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] truncate mt-0.5 group-hover:text-[#7132f5] dark:group-hover:text-[#a78bfa] transition-colors">
+                                      {t.notes?.trim() || 'Tanpa catatan'}
+                                    </p>
+                                  </div>
+
+                                  {/* Right: Nominal & Edit Action */}
+                                  <div className="flex items-center gap-1.5 shrink-0">
+                                    <span className="font-bold text-xs sm:text-sm text-[#e53e3e] dark:text-[#f87171] tabular-nums">
+                                      -{formatCurrency(t.amount)}
+                                    </span>
+                                    {onEditTransaction && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          onEditTransaction(t);
+                                        }}
+                                        className="w-6 h-6 rounded-[6px] flex items-center justify-center text-[#9497a9] group-hover:text-[#7132f5] dark:group-hover:text-[#a78bfa] hover:bg-[#855bfb]/15 transition-all cursor-pointer"
+                                        title="Ubah transaksi"
+                                      >
+                                        <Edit2 className="w-3 h-3" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -996,10 +1073,6 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 <div className="h-64 sm:h-72 lg:h-[350px] xl:h-[400px] w-full relative flex items-center justify-center">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Tooltip
-                        contentStyle={tooltipStyle}
-                        formatter={(val: any) => [formatCurrency(Number(val) || 0), 'Pemasukan']}
-                      />
                       <Pie
                         data={incomeByCategory}
                         dataKey="amount"
@@ -1009,19 +1082,63 @@ export const ReportView: React.FC<ReportViewProps> = ({
                         innerRadius={chartRadius.inner}
                         outerRadius={chartRadius.outer}
                         paddingAngle={3}
+                        onMouseEnter={(_, index) => setActiveIncomeIndex(index)}
+                        onMouseLeave={() => setActiveIncomeIndex(null)}
+                        onClick={(_, index) => {
+                          setExpandedIncomeIndex((prev) => (prev === index ? null : index));
+                          setActiveIncomeIndex(index);
+                        }}
                       >
                         {incomeByCategory.map((entry, index) => (
-                          <Cell key={`cell-income-${index}`} fill={entry.color} />
+                          <Cell
+                            key={`cell-income-${index}`}
+                            fill={entry.color}
+                            stroke={selectedIncomeIdx === index ? (isDark ? '#ffffff' : '#101114') : 'transparent'}
+                            strokeWidth={selectedIncomeIdx === index ? 2.5 : 0}
+                            opacity={selectedIncomeIdx === null || selectedIncomeIdx === index ? 1 : 0.4}
+                            style={{ cursor: 'pointer' }}
+                            className="transition-all duration-200 outline-none"
+                          />
                         ))}
                       </Pie>
                     </PieChart>
                   </ResponsiveContainer>
-                  {/* Center Label in Donut */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <span className="text-[10px] sm:text-xs uppercase font-bold text-[#9497a9] tracking-wider">Total</span>
-                    <span className="text-sm sm:text-lg lg:text-2xl font-bold text-[#026b3f] dark:text-[#34d399] tabular-nums tracking-tight mt-0.5">
-                      +{formatCurrency(totalIncome)}
-                    </span>
+                  {/* Center Dynamic Label in Donut */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-4 text-center select-none">
+                    {selectedIncomeIdx !== null && incomeByCategory[selectedIncomeIdx] ? (
+                      <div className="flex flex-col items-center justify-center transition-all duration-200">
+                        <div className="flex items-center gap-1.5 max-w-[150px] sm:max-w-[190px] mb-0.5">
+                          <span
+                            className="w-2 h-2 rounded-full shrink-0 shadow-xs"
+                            style={{ backgroundColor: incomeByCategory[selectedIncomeIdx].color }}
+                          />
+                          <span
+                            className="text-[11px] sm:text-xs font-bold uppercase tracking-wider truncate"
+                            style={{ color: incomeByCategory[selectedIncomeIdx].color }}
+                          >
+                            {incomeByCategory[selectedIncomeIdx].name}
+                          </span>
+                        </div>
+                        <span className="text-sm sm:text-lg lg:text-2xl font-bold text-[#026b3f] dark:text-[#34d399] tabular-nums tracking-tight">
+                          +{formatCurrency(incomeByCategory[selectedIncomeIdx].amount)}
+                        </span>
+                        <span className="text-[10px] sm:text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mt-0.5">
+                          {incomeByCategory[selectedIncomeIdx].percentage.toFixed(1)}% dari total
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center transition-all duration-200">
+                        <span className="text-[10px] sm:text-xs uppercase font-bold text-[#9497a9] tracking-wider">
+                          Total
+                        </span>
+                        <span className="text-sm sm:text-lg lg:text-2xl font-bold text-[#026b3f] dark:text-[#34d399] tabular-nums tracking-tight mt-0.5">
+                          +{formatCurrency(totalIncome)}
+                        </span>
+                        <span className="text-[10px] text-[#9497a9] mt-0.5">
+                          {incomeByCategory.length} Kategori
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -1032,7 +1149,17 @@ export const ReportView: React.FC<ReportViewProps> = ({
                       {incomeByCategory.slice(0, 4).map((cat, i) => (
                         <div
                           key={i}
-                          className="flex items-center gap-2 p-2 rounded-[10px] bg-[#fafbfe] dark:bg-[#1e202b] border border-[#dedee5]/70 dark:border-[#282937]"
+                          onMouseEnter={() => setActiveIncomeIndex(i)}
+                          onMouseLeave={() => setActiveIncomeIndex(null)}
+                          onClick={() => {
+                            setExpandedIncomeIndex((prev) => (prev === i ? null : i));
+                            setActiveIncomeIndex(i);
+                          }}
+                          className={`flex items-center gap-2 p-2 rounded-[10px] border cursor-pointer transition-all ${
+                            selectedIncomeIdx === i
+                              ? 'bg-[#edeef3] dark:bg-[#282937] border-[#10b981] dark:border-[#34d399] ring-1 ring-[#10b981]/40 shadow-xs'
+                              : 'bg-[#fafbfe] dark:bg-[#1e202b] border-[#dedee5]/70 dark:border-[#282937] hover:border-[#10b981]/30'
+                          }`}
                         >
                           <span
                             className="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs"
@@ -1066,7 +1193,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 Rincian Sumber Pendapatan
               </h3>
               <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
-                Aliran dana masuk ke rekening Anda
+                Klik kategori untuk melihat rincian transaksi
               </p>
             </div>
 
@@ -1076,50 +1203,140 @@ export const ReportView: React.FC<ReportViewProps> = ({
               </div>
             ) : (
               <div className="space-y-3 pt-1">
-                {incomeByCategory.map((cat, idx) => (
-                  <div
-                    key={idx}
-                    className="p-3.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#1e202b] border border-[#dedee5] dark:border-[#282937]/80 hover:border-[#10b981]/40 transition-all space-y-2.5"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      {/* Left: Standard CategoryIcon + Name + Subtitle */}
-                      <div className="flex items-center gap-3 min-w-0">
-                        <CategoryIcon
-                          name={cat.name}
-                          type="pemasukan"
-                          icon={cat.icon}
-                          emoji={cat.emoji}
-                          size="md"
-                        />
-                        <div className="min-w-0">
-                          <span className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8] block tracking-tight truncate">
-                            {cat.name}
-                          </span>
-                          <span className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] block">
-                            {cat.percentage.toFixed(1)}% dari total pendapatan
-                          </span>
+                {incomeByCategory.map((cat, idx) => {
+                  const isExpanded = expandedIncomeIndex === idx;
+                  return (
+                    <div
+                      key={idx}
+                      onClick={() => {
+                        setExpandedIncomeIndex((prev) => (prev === idx ? null : idx));
+                        setActiveIncomeIndex(idx);
+                      }}
+                      className={`p-3.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#1e202b] border transition-all space-y-2.5 cursor-pointer ${
+                        selectedIncomeIdx === idx
+                          ? 'border-[#10b981] dark:border-[#34d399] ring-1 ring-[#10b981]/30 shadow-xs'
+                          : 'border-[#dedee5] dark:border-[#282937]/80 hover:border-[#10b981]/40'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        {/* Left: Standard CategoryIcon + Name + Subtitle */}
+                        <div className="flex items-center gap-3 min-w-0">
+                          <CategoryIcon
+                            name={cat.name}
+                            type="pemasukan"
+                            icon={cat.icon}
+                            emoji={cat.emoji}
+                            size="md"
+                          />
+                          <div className="min-w-0">
+                            <span className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8] block tracking-tight truncate">
+                              {cat.name}
+                            </span>
+                            <span className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] block">
+                              {cat.percentage.toFixed(1)}% dari total pendapatan • {cat.transactions.length} transaksi
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Right: Nominal, Percentage Badge, & Chevron */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          <div className="text-right">
+                            <span className="font-bold text-sm sm:text-base text-[#026b3f] dark:text-[#34d399] tabular-nums block">
+                              +{formatCurrency(cat.amount)}
+                            </span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-[6px] bg-[#edeef3] dark:bg-[#282937] font-bold text-[#10b981] dark:text-[#34d399] inline-block mt-0.5">
+                              {cat.percentage.toFixed(1)}%
+                            </span>
+                          </div>
+                          <div
+                            className={`w-7 h-7 rounded-[8px] flex items-center justify-center text-[#686b82] dark:text-[#9ca0ba] transition-transform duration-200 ${
+                              isExpanded ? 'rotate-180 text-[#10b981] dark:text-[#34d399]' : ''
+                            }`}
+                          >
+                            <ChevronDown className="w-4 h-4" />
+                          </div>
                         </div>
                       </div>
 
-                      {/* Right: Nominal & Percentage Badge */}
-                      <div className="text-right shrink-0">
-                        <span className="font-bold text-sm sm:text-base text-[#026b3f] dark:text-[#34d399] tabular-nums block">
-                          +{formatCurrency(cat.amount)}
-                        </span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-[6px] bg-[#edeef3] dark:bg-[#282937] font-bold text-[#10b981] dark:text-[#34d399] inline-block mt-0.5">
-                          {cat.percentage.toFixed(1)}%
-                        </span>
+                      {/* Progress Bar Share */}
+                      <div className="w-full bg-[#edeef3] dark:bg-[#282937] rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{ width: `${cat.percentage}%`, backgroundColor: cat.color }}
+                        />
                       </div>
-                    </div>
 
-                    <div className="w-full bg-[#edeef3] dark:bg-[#282937] rounded-full h-1.5 overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${cat.percentage}%`, backgroundColor: cat.color }}
-                      />
+                      {/* Expanded Transaction Details */}
+                      {isExpanded && (
+                        <div
+                          className="pt-3 border-t border-[#dedee5]/70 dark:border-[#282937] space-y-2 animate-in fade-in duration-200"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center justify-between text-[11px] font-semibold text-[#686b82] dark:text-[#9ca0ba] px-0.5">
+                            <span>Rincian Transaksi ({cat.transactions.length})</span>
+                            {onEditTransaction && (
+                              <span className="text-[10px] text-[#10b981] dark:text-[#34d399]">
+                                Klik transaksi untuk ubah
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="space-y-1.5 max-h-56 overflow-y-auto pr-0.5">
+                            {cat.transactions.map((t) => {
+                              const acc = accountMap.get(t.sourceAccountId);
+                              return (
+                                <div
+                                  key={t.id}
+                                  onClick={() => onEditTransaction?.(t)}
+                                  className={`flex items-center justify-between gap-2.5 p-2.5 rounded-[9px] bg-white dark:bg-[#16171f] border border-[#dedee5]/70 dark:border-[#282937] transition-all group ${
+                                    onEditTransaction
+                                      ? 'hover:border-[#10b981] dark:hover:border-[#34d399] hover:bg-[#fafbfe] dark:hover:bg-[#1e202b] cursor-pointer'
+                                      : ''
+                                  }`}
+                                >
+                                  {/* Left: Date + Note + Account Tag */}
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="text-[11px] font-bold text-[#686b82] dark:text-[#9ca0ba] shrink-0 font-mono">
+                                        {formatShortDate(t.date)}
+                                      </span>
+                                      <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] bg-[#edeef3] dark:bg-[#282937] text-[#484b5e] dark:text-[#c4c7d4] font-medium shrink-0">
+                                        {acc?.name || 'Akun'}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] truncate mt-0.5 group-hover:text-[#10b981] dark:group-hover:text-[#34d399] transition-colors">
+                                      {t.notes?.trim() || 'Tanpa catatan'}
+                                    </p>
+                                  </div>
+
+                                  {/* Right: Nominal & Edit Action */}
+                                  <div className="flex items-center gap-1.5 shrink-0">
+                                    <span className="font-bold text-xs sm:text-sm text-[#026b3f] dark:text-[#34d399] tabular-nums">
+                                      +{formatCurrency(t.amount)}
+                                    </span>
+                                    {onEditTransaction && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          onEditTransaction(t);
+                                        }}
+                                        className="w-6 h-6 rounded-[6px] flex items-center justify-center text-[#9497a9] group-hover:text-[#10b981] dark:group-hover:text-[#34d399] hover:bg-[#10b981]/15 transition-all cursor-pointer"
+                                        title="Ubah transaksi"
+                                      >
+                                        <Edit2 className="w-3 h-3" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -1193,45 +1410,6 @@ export const ReportView: React.FC<ReportViewProps> = ({
           )}
         </div>
       )}
-
-      {/* Financial Insights Footer Bar */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
-        {/* Rata-rata Harian */}
-        <div className="p-4 rounded-[14px] bg-[#fafbfe] dark:bg-[#16171f] border border-[#dedee5] dark:border-[#282937] flex items-center justify-between">
-          <div>
-            <span className="text-[10px] uppercase font-bold text-[#686b82] dark:text-[#9ca0ba] tracking-wider block">
-              Rata-rata Pengeluaran Harian
-            </span>
-            <span className="text-base font-bold text-[#101114] dark:text-[#f3f4f8] mt-0.5 block tabular-nums">
-              {formatCurrency(insights.avgDailyExpense)} / hari
-            </span>
-            <span className="text-[10px] text-[#9497a9]">
-              Dihitung dari {insights.activeDays} hari transaksi aktif
-            </span>
-          </div>
-          <div className="w-9 h-9 rounded-[10px] bg-[#edeef3] dark:bg-[#282937] flex items-center justify-center text-[#686b82] dark:text-[#9ca0ba]">
-            <Calendar className="w-4 h-4" />
-          </div>
-        </div>
-
-        {/* Pengeluaran Terbesar */}
-        <div className="p-4 rounded-[14px] bg-[#fafbfe] dark:bg-[#16171f] border border-[#dedee5] dark:border-[#282937] flex items-center justify-between">
-          <div>
-            <span className="text-[10px] uppercase font-bold text-[#686b82] dark:text-[#9ca0ba] tracking-wider block">
-              Pengeluaran Terbesar Periode Ini
-            </span>
-            <span className="text-base font-bold text-[#e53e3e] dark:text-[#f87171] mt-0.5 block tabular-nums">
-              {insights.topExpense ? formatCurrency(insights.topExpense.amount) : 'Rp 0'}
-            </span>
-            <span className="text-[10px] text-[#9497a9] truncate max-w-[200px] block">
-              {insights.topExpense?.notes || insights.topExpense?.date || 'Belum ada transaksi'}
-            </span>
-          </div>
-          <div className="w-9 h-9 rounded-[10px] bg-[#e53e3e]/10 text-[#e53e3e] dark:text-[#f87171] flex items-center justify-center">
-            <TrendingDown className="w-4 h-4" />
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

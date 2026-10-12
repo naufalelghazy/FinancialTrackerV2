@@ -538,6 +538,10 @@ export function App() {
                   transactions={transactions}
                   accounts={accounts}
                   categories={categories}
+                  onEditTransaction={(t) => {
+                    setSelectedTransaction(t);
+                    setIsTxModalOpen(true);
+                  }}
                 />
               </div>
             )}
