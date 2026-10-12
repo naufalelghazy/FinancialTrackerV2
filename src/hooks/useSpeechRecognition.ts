@@ -58,6 +58,7 @@ export function useSpeechRecognition({
   const recognitionRef = useRef<ISpeechRecognition | null>(null);
   const finalResultCallbackRef = useRef(onFinalResult);
   finalResultCallbackRef.current = onFinalResult;
+  const lastTextRef = useRef('');
 
   useEffect(() => {
     const SpeechRecognitionClass =
@@ -80,25 +81,28 @@ export function useSpeechRecognition({
           let currentFinal = '';
           let currentInterim = '';
 
-          for (let i = event.resultIndex; i < event.results.length; i++) {
+          // Loop seluruh item hasil terkini
+          for (let i = 0; i < event.results.length; i++) {
             const item = event.results[i];
             const text = item[0]?.transcript || '';
             if (item.isFinal) {
               currentFinal += text + ' ';
             } else {
-              currentInterim += text;
+              currentInterim += text + ' ';
             }
           }
 
-          if (currentFinal) {
-            setTranscript((prev) => {
-              const updated = (prev + ' ' + currentFinal).replace(/\s+/g, ' ').trim();
-              finalResultCallbackRef.current?.(updated);
-              return updated;
-            });
+          const cleanedFinal = currentFinal.replace(/\s+/g, ' ').trim();
+          const cleanedInterim = currentInterim.replace(/\s+/g, ' ').trim();
+
+          // Hindari menumpuk ke prev state agar tidak menduplikasi kata di Android
+          if (cleanedFinal) {
+            setTranscript(cleanedFinal);
+            finalResultCallbackRef.current?.(cleanedFinal);
           }
 
-          setInterimTranscript(currentInterim.trim());
+          setInterimTranscript(cleanedInterim);
+          lastTextRef.current = (cleanedFinal + ' ' + cleanedInterim).trim();
         };
 
         recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
@@ -119,6 +123,10 @@ export function useSpeechRecognition({
         recognition.onend = () => {
           setIsListening(false);
           setInterimTranscript('');
+          // Amankan ucapan terakhir jika item tidak berstatus isFinal sebelum onend
+          if (lastTextRef.current) {
+            setTranscript((prev) => prev || lastTextRef.current);
+          }
         };
 
         recognitionRef.current = recognition;
@@ -145,6 +153,7 @@ export function useSpeechRecognition({
     setError(null);
     setTranscript('');
     setInterimTranscript('');
+    lastTextRef.current = '';
 
     try {
       recognitionRef.current.start();
@@ -172,6 +181,7 @@ export function useSpeechRecognition({
   const resetTranscript = useCallback(() => {
     setTranscript('');
     setInterimTranscript('');
+    lastTextRef.current = '';
     setError(null);
   }, []);
 

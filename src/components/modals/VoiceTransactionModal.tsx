@@ -134,10 +134,11 @@ export const VoiceTransactionModal: React.FC<VoiceTransactionModalProps> = ({
   const destinationAccount = accounts.find((a) => a.id === parsed?.destinationAccountId);
   const matchedCategory = categories.find((c) => c.id === parsed?.categoryId);
 
-  const canSave = parsed && parsed.amount && parsed.amount > 0 && parsed.sourceAccountId;
+  const canDirectSave = Boolean(parsed && parsed.amount && parsed.amount > 0 && parsed.sourceAccountId);
+  const canApplyToForm = Boolean(parsed && parsed.sourceAccountId);
 
   const handleSaveDirectly = () => {
-    if (!canSave || !parsed || !parsed.amount || !parsed.sourceAccountId) return;
+    if (!canDirectSave || !parsed || !parsed.amount || !parsed.sourceAccountId) return;
 
     const payload = {
       type: parsed.type,
@@ -166,11 +167,11 @@ export const VoiceTransactionModal: React.FC<VoiceTransactionModalProps> = ({
   };
 
   const handleApplyToForm = () => {
-    if (!canSave || !parsed || !parsed.amount || !parsed.sourceAccountId) return;
+    if (!canApplyToForm || !parsed || !parsed.sourceAccountId) return;
 
     onApplyToForm({
       type: parsed.type,
-      amount: parsed.amount,
+      amount: parsed.amount || 0,
       sourceAccountId: parsed.sourceAccountId,
       destinationAccountId: parsed.type === 'transfer' ? parsed.destinationAccountId : undefined,
       categoryId: parsed.type !== 'transfer' ? parsed.categoryId : undefined,
@@ -346,6 +347,15 @@ export const VoiceTransactionModal: React.FC<VoiceTransactionModalProps> = ({
               </span>
             </div>
 
+            {!parsed.amount && (
+              <div className="p-2.5 rounded-[10px] bg-[#f59e0b]/10 border border-[#f59e0b]/30 text-[#b45309] dark:text-[#fbbf24] text-[11px] flex items-start gap-1.5 leading-relaxed">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                <span>
+                  Sebutkan harga (misal: <i>"25 ribu"</i>), atau klik <b>"Tinjau di Form"</b> di bawah untuk melengkapi nominal di form.
+                </span>
+              </div>
+            )}
+
             {/* Account & Category Row */}
             <div className="grid grid-cols-2 gap-2 text-xs">
               {/* Account */}
@@ -444,7 +454,7 @@ export const VoiceTransactionModal: React.FC<VoiceTransactionModalProps> = ({
             <>
               <button
                 type="button"
-                disabled={!canSave}
+                disabled={!canDirectSave}
                 onClick={handleSaveDirectly}
                 className="w-full sm:flex-1 py-2.5 px-4 rounded-[12px] btn-kraken-primary font-bold text-xs flex items-center justify-center gap-2 shadow-whisper disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
@@ -454,7 +464,7 @@ export const VoiceTransactionModal: React.FC<VoiceTransactionModalProps> = ({
 
               <button
                 type="button"
-                disabled={!canSave}
+                disabled={!canApplyToForm}
                 onClick={handleApplyToForm}
                 className="w-full sm:w-auto py-2.5 px-4 rounded-[12px] bg-[#edeef3] dark:bg-[#1e202b] hover:bg-[#dedee5] dark:hover:bg-[#282937] text-[#101114] dark:text-[#f3f4f8] font-bold text-xs flex items-center justify-center gap-1.5 border border-[#dedee5] dark:border-[#282937] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
               >
