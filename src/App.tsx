@@ -33,6 +33,7 @@ import {
   getAccountIcon,
 } from './services/financialService';
 import {
+  loadCachedQuickTemplates,
   loadQuickTemplates,
   addQuickTemplate,
   updateQuickTemplate,
@@ -85,7 +86,7 @@ export function App() {
   }, []);
 
   // Quick Templates state
-  const [templates, setTemplates] = useState<QuickTemplate[]>(() => loadQuickTemplates());
+  const [templates, setTemplates] = useState<QuickTemplate[]>(() => loadCachedQuickTemplates());
 
   // Accounts state
   const [accounts, setAccounts] = useState<Account[]>(() => {
@@ -122,10 +123,14 @@ export function App() {
     async function init() {
       setIsLoading(true);
       try {
-        const data = await loadFinancialData();
+        const [data, tpls] = await Promise.all([
+          loadFinancialData(),
+          loadQuickTemplates(),
+        ]);
         setAccounts(data.accounts);
         setCategories(data.categories);
         setTransactions(data.transactions);
+        setTemplates(tpls);
       } catch (err) {
         console.error('Failed to initialize data:', err);
       } finally {
@@ -140,10 +145,14 @@ export function App() {
     if (isRefreshing) return;
     setIsRefreshing(true);
     try {
-      const data = await loadFinancialData();
+      const [data, tpls] = await Promise.all([
+        loadFinancialData(),
+        loadQuickTemplates(),
+      ]);
       setAccounts(data.accounts);
       setCategories(data.categories);
       setTransactions(data.transactions);
+      setTemplates(tpls);
     } catch (err) {
       console.error('Refresh failed:', err);
     } finally {
@@ -299,25 +308,25 @@ export function App() {
   };
 
   // Handle save template
-  const handleSaveTemplate = (data: Omit<QuickTemplate, 'id'> & { id?: string }) => {
+  const handleSaveTemplate = async (data: Omit<QuickTemplate, 'id'> & { id?: string }) => {
     if (data.id) {
-      const updated = updateQuickTemplate(data as QuickTemplate, templates);
+      const updated = await updateQuickTemplate(data as QuickTemplate, templates);
       setTemplates(updated);
     } else {
-      const { updatedList } = addQuickTemplate(data, templates);
+      const { updatedList } = await addQuickTemplate(data, templates);
       setTemplates(updatedList);
     }
   };
 
   // Handle delete template
-  const handleDeleteTemplate = (id: string) => {
-    const updated = deleteQuickTemplate(id, templates);
+  const handleDeleteTemplate = async (id: string) => {
+    const updated = await deleteQuickTemplate(id, templates);
     setTemplates(updated);
   };
 
   // Handle save current transaction as template from form
-  const handleSaveAsTemplate = (data: Omit<QuickTemplate, 'id'>) => {
-    const { newTemplate, updatedList } = addQuickTemplate(data, templates);
+  const handleSaveAsTemplate = async (data: Omit<QuickTemplate, 'id'>) => {
+    const { newTemplate, updatedList } = await addQuickTemplate(data, templates);
     setTemplates(updatedList);
     setActiveToast({
       id: String(Date.now()),
