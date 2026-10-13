@@ -1,4 +1,4 @@
-import type { Account, Category, TransactionType } from '../types';
+import type { Account, Category, QuickTemplate, Transaction, TransactionType } from '../types';
 
 export interface ParsedVoiceTransaction {
   rawTranscript: string;
@@ -9,12 +9,63 @@ export interface ParsedVoiceTransaction {
   categoryId?: string;
   date: string;
   notes: string;
+  matchedTemplate?: {
+    id: string;
+    name: string;
+    emoji?: string;
+  };
+  predictedFromHistory?: {
+    account?: boolean;
+    category?: boolean;
+    reason?: string;
+  };
   confidence: {
     amount: boolean;
     account: boolean;
     category: boolean;
     type: boolean;
   };
+}
+
+/**
+ * Algoritma Levenshtein Distance untuk menghitung jarak perbedaan dua string
+ */
+export function levenshteinDistance(a: string, b: string): number {
+  const m = a.length;
+  const n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+
+  const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1, // deletion
+        dp[i][j - 1] + 1, // insertion
+        dp[i - 1][j - 1] + cost // substitution
+      );
+    }
+  }
+
+  return dp[m][n];
+}
+
+/**
+ * Menghitung tingkat kemiripan (0.0 sampai 1.0) antara dua string
+ */
+export function stringSimilarity(a: string, b: string): number {
+  const s1 = a.toLowerCase().trim();
+  const s2 = b.toLowerCase().trim();
+  if (s1 === s2) return 1;
+  if (!s1 || !s2) return 0;
+  const maxLen = Math.max(s1.length, s2.length);
+  const distance = levenshteinDistance(s1, s2);
+  return 1 - distance / maxLen;
 }
 
 /**
@@ -40,12 +91,6 @@ const INDO_NUMBER_WORDS: Record<string, number> = {
   sejuta: 1000000,
 };
 
-/**
- * Mengonversi teks deretan kata bilangan Indonesia menjadi angka
- * Contoh: "tiga puluh lima ribu" -> 35000
- * Contoh: "seratus dua puluh ribu" -> 120000
- * Contoh: "satu juta lima ratus ribu" -> 1500000
- */
 function parseSpokenIndoWords(words: string[]): number | null {
   if (words.length === 0) return null;
 
@@ -76,7 +121,7 @@ function parseSpokenIndoWords(words: string[]): number | null {
     } else if (INDO_NUMBER_WORDS[w] !== undefined) {
       current += INDO_NUMBER_WORDS[w];
     } else {
-      return null; // Ada kata yang bukan angka
+      return null;
     }
   }
 
@@ -193,7 +238,7 @@ export function extractAmountFromVoiceText(text: string): { amount: number; matc
     }
   }
 
-  // 6. Pola kata-kata bilangan ejaan (contoh: "tiga puluh lima ribu", "seratus ribu")
+  // 7. Pola kata-kata bilangan ejaan (contoh: "tiga puluh lima ribu", "seratus ribu")
   const wordTokens = clean.split(/\s+/);
   const numberWordKeys = new Set([
     'nol', 'kosong', 'se', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh',
@@ -201,7 +246,6 @@ export function extractAmountFromVoiceText(text: string): { amount: number; matc
     'seribu', 'ribu', 'rebu', 'sejuta', 'juta', 'miliar', 'milyar',
   ]);
 
-  // Cari substring terpanjang yang berisi kata-kata angka
   for (let start = 0; start < wordTokens.length; start++) {
     if (numberWordKeys.has(wordTokens[start])) {
       let end = start;
@@ -219,7 +263,7 @@ export function extractAmountFromVoiceText(text: string): { amount: number; matc
     }
   }
 
-  // 7. Pola angka polos lebih dari 3 digit (contoh: "50000", "15000")
+  // 8. Pola angka polos lebih dari 3 digit (contoh: "50000", "15000")
   const plainNumberRegex = /\b(\d{4,})\b/;
   const plainMatch = clean.match(plainNumberRegex);
   if (plainMatch) {
@@ -236,9 +280,9 @@ export function extractAmountFromVoiceText(text: string): { amount: number; matc
  * Sinonim cerdas kategori pengeluaran dan pemasukan untuk Bahasa Indonesia
  */
 const CATEGORY_SYNONYMS: Record<string, string[]> = {
-  makan: ['makan', 'minum', 'sarapan', 'lunch', 'dinner', 'soto', 'bakso', 'kopi', 'mie', 'nasi', 'ayam', 'snack', 'jajan', 'cemilan', 'resto', 'kafe', 'kfc', 'mcd', 'gofood', 'grabfood', 'shopeefood'],
+  makan: ['makan', 'minum', 'sarapan', 'lunch', 'dinner', 'soto', 'bakso', 'kopi', 'coffee', 'mie', 'nasi', 'ayam', 'snack', 'jajan', 'cemilan', 'resto', 'kafe', 'kfc', 'mcd', 'gofood', 'grabfood', 'shopeefood', 'es teh', 'boba'],
   transport: ['transport', 'bensin', 'pertalite', 'pertamax', 'solar', 'spbu', 'parkir', 'ojol', 'grab', 'gojek', 'maxim', 'angkot', 'bus', 'busway', 'krl', 'mrt', 'kereta', 'tol', 'tiket', 'kendaraan', 'motor', 'mobil', 'tambal ban', 'cuci motor', 'cuci mobil'],
-  belanja: ['belanja', 'alfa', 'alfamart', 'indomaret', 'supermarket', 'pasar', 'mall', 'shopee', 'tokopedia', 'lazada', 'baju', 'kaos', 'sepatu', 'celana', 'tas'],
+  belanja: ['belanja', 'alfa', 'alfamart', 'indomaret', 'supermarket', 'pasar', 'mall', 'shopee', 'tokopedia', 'lazada', 'baju', 'kaos', 'sepatu', 'celana', 'tas', 'skincare'],
   tagihan: ['tagihan', 'listrik', 'pln', 'air', 'pdam', 'wifi', 'indihome', 'biznet', 'pulsa', 'kuota', 'telkomsel', 'indosat', 'xl', 'iuran', 'bpjs', 'sewa', 'kontrakan', 'kos'],
   kesehatan: ['kesehatan', 'obat', 'dokter', 'apotek', 'klinik', 'rs', 'rumah sakit', 'vitamin', 'masker', 'medis'],
   hiburan: ['hiburan', 'nonton', 'bioskop', 'cinema', 'game', 'steam', 'topup game', 'spotify', 'netflix', 'youtube', 'jalan-jalan', 'liburan', 'wisata'],
@@ -249,54 +293,88 @@ const CATEGORY_SYNONYMS: Record<string, string[]> = {
 };
 
 /**
- * Mencocokkan nama akun dengan daftar akun pengguna
+ * Alias pengucapan populer bank / e-wallet di Indonesia
+ */
+const ACCOUNT_PHONETIC_ALIASES: Record<string, string[]> = {
+  bca: ['bca', 'beca', 'bece a', 'b c a', 'blu', 'mybca'],
+  mandiri: ['mandiri', 'mandri', 'mandili', 'manderi', 'livin', 'bank mandiri'],
+  bri: ['bri', 'beri', 'be er i', 'brimo', 'bank bri'],
+  bni: ['bni', 'beni', 'be en i', 'wondr', 'bank bni'],
+  jago: ['jago', 'bank jago', 'jako'],
+  seabank: ['seabank', 'sea bank', 'sibank', 'shopee bank'],
+  gopay: ['gopay', 'go pay', 'go-pay', 'kopay'],
+  ovo: ['ovo', 'o vo', 'ofoo', 'ovoo'],
+  dana: ['dana', 'da na'],
+  shopeepay: ['shopeepay', 'shopee pay', 'spay', 'shope pay'],
+  cash: ['cash', 'kesh', 'tunai', 'kontan', 'uang fisik', 'dompet', 'kas'],
+};
+
+/**
+ * Mencocokkan nama akun dengan daftar akun pengguna menggunakan exact, alias, dan fuzzy matching
  */
 function findMatchingAccount(
   text: string,
   accounts: Account[],
   excludeId?: string
-): { account: Account; matchedKeyword: string } | null {
+): { account: Account; matchedKeyword: string; isFuzzy?: boolean } | null {
   const clean = text.toLowerCase();
-
-  // Prioritaskan akun berdasarkan panjang nama (terpanjang dulu) agar "BCA Digital" cocok sebelum "BCA"
   const sortedAccounts = [...accounts].filter((a) => a.id !== excludeId).sort((a, b) => b.name.length - a.name.length);
 
+  // 1. Exact match atau Substring match nama akun
   for (const acc of sortedAccounts) {
     const accName = acc.name.toLowerCase();
-
-    // 1. Cek nama akun langsung
     if (clean.includes(accName)) {
       return { account: acc, matchedKeyword: accName };
     }
+  }
 
-    // 2. Cek alias cash/tunai
-    if ((acc.type === 'cash' || accName.includes('cash') || accName.includes('tunai')) && (clean.includes('cash') || clean.includes('tunai') || clean.includes('kontan'))) {
-      const match = clean.includes('cash') ? 'cash' : clean.includes('tunai') ? 'tunai' : 'kontan';
-      return { account: acc, matchedKeyword: match };
+  // 2. Pencocokan via Phonetic / Slang Alias
+  for (const acc of sortedAccounts) {
+    const accName = acc.name.toLowerCase();
+    for (const [key, aliases] of Object.entries(ACCOUNT_PHONETIC_ALIASES)) {
+      if (accName.includes(key)) {
+        for (const alias of aliases) {
+          if (clean.includes(alias) || new RegExp(`\\b${alias}\\b`, 'i').test(clean)) {
+            return { account: acc, matchedKeyword: alias };
+          }
+        }
+      }
     }
+  }
 
-    // 3. Cek nama bank umum (misal: "bca", "mandiri", "bri", "bni", "jago", "dana", "gopay", "shopeepay", "ovo")
-    const cleanWord = accName.replace(/[^a-z0-9]/g, '');
-    if (cleanWord.length >= 3 && clean.includes(cleanWord)) {
-      return { account: acc, matchedKeyword: cleanWord };
+  // 3. Fuzzy matching per kata (toleransi salah dengar/typo artikulasi mikrofon)
+  const words = clean.split(/\s+/).filter((w) => w.length >= 3);
+  let bestMatch: { account: Account; score: number; word: string } | null = null;
+
+  for (const acc of sortedAccounts) {
+    const accName = acc.name.toLowerCase();
+    for (const word of words) {
+      const score = stringSimilarity(word, accName);
+      if (score >= 0.72 && (!bestMatch || score > bestMatch.score)) {
+        bestMatch = { account: acc, score, word };
+      }
     }
+  }
+
+  if (bestMatch) {
+    return { account: bestMatch.account, matchedKeyword: bestMatch.word, isFuzzy: true };
   }
 
   return null;
 }
 
 /**
- * Mencocokkan kategori dengan teks ucapan
+ * Mencocokkan kategori dengan teks ucapan menggunakan sinonim dan fuzzy matching
  */
 function findMatchingCategory(
   text: string,
   categories: Category[],
   type: TransactionType
-): { category: Category; matchedKeyword: string } | null {
+): { category: Category; matchedKeyword: string; isFuzzy?: boolean } | null {
   const clean = text.toLowerCase();
   const filteredCategories = categories.filter((c) => c.type === (type === 'pemasukan' ? 'pemasukan' : 'pengeluaran'));
 
-  // 1. Cek pencocokan nama kategori langsung (misal "Bensin", "Kuliah", "Makanan")
+  // 1. Cek nama kategori langsung
   for (const cat of filteredCategories) {
     const catName = cat.name.toLowerCase();
     if (clean.includes(catName)) {
@@ -308,7 +386,6 @@ function findMatchingCategory(
   for (const [key, synonyms] of Object.entries(CATEGORY_SYNONYMS)) {
     for (const syn of synonyms) {
       if (clean.includes(syn)) {
-        // Cari kategori pengguna yang namanya mengandung kata kunci atau sinonim ini
         const matched = filteredCategories.find((c) => {
           const name = c.name.toLowerCase();
           return name.includes(key) || name.includes(syn) || synonyms.some((s) => name.includes(s));
@@ -321,22 +398,136 @@ function findMatchingCategory(
     }
   }
 
+  // 3. Fuzzy matching jika ada kata dengan kemiripan > 0.75
+  const words = clean.split(/\s+/).filter((w) => w.length >= 3);
+  for (const cat of filteredCategories) {
+    const catName = cat.name.toLowerCase();
+    for (const word of words) {
+      if (stringSimilarity(word, catName) >= 0.75) {
+        return { category: cat, matchedKeyword: word, isFuzzy: true };
+      }
+    }
+  }
+
   return null;
 }
 
 /**
+ * Mencocokkan teks ucapan dengan Template Transaksi yang sudah tersimpan
+ */
+function findMatchingTemplate(
+  text: string,
+  templates: QuickTemplate[]
+): { template: QuickTemplate; matchedKeyword: string } | null {
+  if (!templates || templates.length === 0) return null;
+  const clean = text.toLowerCase();
+
+  // 1. Exact match / substring nama template (contoh: "Kopi Kenangan", "Bensin")
+  for (const tpl of templates) {
+    const tplName = tpl.name.toLowerCase().trim();
+    if (tplName.length >= 3 && clean.includes(tplName)) {
+      return { template: tpl, matchedKeyword: tplName };
+    }
+  }
+
+  // 2. Fuzzy match nama template
+  const words = clean.split(/\s+/).filter((w) => w.length >= 3);
+  for (const tpl of templates) {
+    const tplName = tpl.name.toLowerCase().trim();
+    for (const word of words) {
+      if (stringSimilarity(word, tplName) >= 0.8) {
+        return { template: tpl, matchedKeyword: word };
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Memprediksi Akun atau Kategori dari riwayat transaksi pengguna berdasarkan kata kunci di ucapan
+ */
+function predictFromHistory(
+  transcript: string,
+  history: Transaction[],
+  accounts: Account[]
+): { sourceAccountId?: string; categoryId?: string; reason?: string } {
+  if (!history || history.length === 0) return {};
+
+  const clean = transcript.toLowerCase();
+  const words = clean.split(/\s+/).filter((w) => w.length >= 3);
+
+  // Ambil hingga 100 transaksi terakhir untuk analisa kebiasaan
+  const recentTxs = history.slice(0, 100);
+  const accountFrequency: Record<string, number> = {};
+  const categoryFrequency: Record<string, number> = {};
+  let matchedKeyword = '';
+
+  for (const tx of recentTxs) {
+    const txNotes = (tx.notes || '').toLowerCase();
+    for (const word of words) {
+      // Abaikan kata umum non-spesifik
+      if (['beli', 'bayar', 'pakai', 'buat', 'untuk', 'ribu', 'rupiah'].includes(word)) continue;
+
+      if (txNotes.includes(word)) {
+        matchedKeyword = word;
+        accountFrequency[tx.sourceAccountId] = (accountFrequency[tx.sourceAccountId] || 0) + 1;
+        if (tx.categoryId) {
+          categoryFrequency[tx.categoryId] = (categoryFrequency[tx.categoryId] || 0) + 1;
+        }
+      }
+    }
+  }
+
+  let predictedAccountId: string | undefined;
+  let maxAccCount = 0;
+  for (const [accId, count] of Object.entries(accountFrequency)) {
+    if (count > maxAccCount && accounts.some((a) => a.id === accId)) {
+      maxAccCount = count;
+      predictedAccountId = accId;
+    }
+  }
+
+  let predictedCategoryId: string | undefined;
+  let maxCatCount = 0;
+  for (const [catId, count] of Object.entries(categoryFrequency)) {
+    if (count > maxCatCount) {
+      maxCatCount = count;
+      predictedCategoryId = catId;
+    }
+  }
+
+  if (predictedAccountId || predictedCategoryId) {
+    return {
+      sourceAccountId: predictedAccountId,
+      categoryId: predictedCategoryId,
+      reason: matchedKeyword ? `Sering digunakan saat "${matchedKeyword}" di riwayat Anda` : undefined,
+    };
+  }
+
+  return {};
+}
+
+/**
  * Parser utama ucapan suara menjadi objek transaksi
+ * Mendukung template transaksi dan riwayat kebiasaan pengguna
  */
 export function parseVoiceTransaction(
   transcript: string,
   accounts: Account[],
-  categories: Category[]
+  categories: Category[],
+  templates?: QuickTemplate[],
+  history?: Transaction[]
 ): ParsedVoiceTransaction {
   const dedupedTranscript = deduplicateRepeatingPhrases(transcript);
   const clean = dedupedTranscript.toLowerCase().trim();
 
+  // A. Cek kecocokan dengan Template Transaksi terlebih dahulu
+  const templateMatch = templates ? findMatchingTemplate(clean, templates) : null;
+  const matchedTemplate = templateMatch?.template;
+
   // 1. Deteksi Tipe Transaksi
-  let type: TransactionType = 'pengeluaran';
+  let type: TransactionType = matchedTemplate ? matchedTemplate.type : 'pengeluaran';
   const transferKeywords = ['transfer', 'kirim', 'pindah', 'oper', 'tf', 'top up', 'topup', 'isi saldo'];
   const incomeKeywords = ['gaji', 'masuk', 'terima', 'dapat', 'cair', 'bonus', 'thr', 'pemasukan', 'dikasih', 'diberi', 'jual'];
 
@@ -347,20 +538,20 @@ export function parseVoiceTransaction(
     type = 'transfer';
   } else if (hasIncomeKeyword) {
     type = 'pemasukan';
-  } else {
+  } else if (!matchedTemplate) {
     type = 'pengeluaran';
   }
 
-  // 2. Ekstraksi Nominal
+  // 2. Ekstraksi Nominal (Gunakan ucapan eksplisit, fallback ke nominal template jika ada)
   const amountResult = extractAmountFromVoiceText(clean);
-  const amount = amountResult ? amountResult.amount : null;
+  const amount = amountResult ? amountResult.amount : matchedTemplate ? matchedTemplate.amount : null;
 
   // 3. Ekstraksi Akun
   let sourceAccountId: string | undefined;
   let destinationAccountId: string | undefined;
+  let isPredictedAccount = false;
 
   if (type === 'transfer') {
-    // Cari akun asal ("dari [Akun]") dan akun tujuan ("ke [Akun]")
     const dariMatch = clean.match(/dari\s+([a-z0-9\s]+?)(?=\s+ke|\s+sebesar|\s+\d|$)/i);
     const keMatch = clean.match(/ke\s+([a-z0-9\s]+?)(?=\s+sebesar|\s+dari|\s+\d|$)/i);
 
@@ -374,7 +565,6 @@ export function parseVoiceTransaction(
       if (dst) destinationAccountId = dst.account.id;
     }
 
-    // Fallback jika tidak memakai kata "dari/ke": cari 2 akun pertama yang cocok dalam kalimat
     if (!sourceAccountId || !destinationAccountId) {
       const firstAcc = findMatchingAccount(clean, accounts);
       if (firstAcc) {
@@ -385,28 +575,50 @@ export function parseVoiceTransaction(
         }
       }
     }
+
+    if (matchedTemplate) {
+      if (!sourceAccountId) sourceAccountId = matchedTemplate.sourceAccountId;
+      if (!destinationAccountId) destinationAccountId = matchedTemplate.destinationAccountId;
+    }
   } else {
     // Pengeluaran / Pemasukan: Cari satu akun
     const matched = findMatchingAccount(clean, accounts);
     if (matched) {
       sourceAccountId = matched.account.id;
+    } else if (matchedTemplate?.sourceAccountId) {
+      sourceAccountId = matchedTemplate.sourceAccountId;
     } else {
-      // Default ke akun Cash / akun pertama jika ada
-      const defaultCash = accounts.find((a) => a.type === 'cash' || a.name.toLowerCase().includes('cash'));
-      sourceAccountId = defaultCash ? defaultCash.id : accounts[0]?.id;
+      // B. Pembelajaran cerdas: Prediksi akun dari riwayat transaksi
+      const historyPrediction = history ? predictFromHistory(clean, history, accounts) : {};
+      if (historyPrediction.sourceAccountId) {
+        sourceAccountId = historyPrediction.sourceAccountId;
+        isPredictedAccount = true;
+      } else {
+        const defaultCash = accounts.find((a) => a.type === 'cash' || a.name.toLowerCase().includes('cash'));
+        sourceAccountId = defaultCash ? defaultCash.id : accounts[0]?.id;
+      }
     }
   }
 
   // 4. Ekstraksi Kategori
   let categoryId: string | undefined;
+  let isPredictedCategory = false;
   if (type !== 'transfer') {
     const catMatch = findMatchingCategory(clean, categories, type);
     if (catMatch) {
       categoryId = catMatch.category.id;
+    } else if (matchedTemplate?.categoryId) {
+      categoryId = matchedTemplate.categoryId;
     } else {
-      // Default kategori pertama yang sesuai tipe jika ada
-      const defaultCat = categories.find((c) => c.type === (type === 'pemasukan' ? 'pemasukan' : 'pengeluaran'));
-      categoryId = defaultCat?.id;
+      // B. Pembelajaran cerdas: Prediksi kategori dari riwayat
+      const historyPrediction = history ? predictFromHistory(clean, history, accounts) : {};
+      if (historyPrediction.categoryId) {
+        categoryId = historyPrediction.categoryId;
+        isPredictedCategory = true;
+      } else {
+        const defaultCat = categories.find((c) => c.type === (type === 'pemasukan' ? 'pemasukan' : 'pengeluaran'));
+        categoryId = defaultCat?.id;
+      }
     }
   }
 
@@ -425,23 +637,23 @@ export function parseVoiceTransaction(
     notes = notes.replace(new RegExp(escaped, 'gi'), '');
   }
 
-  // Hapus kata-kata keterangan akun ("pakai bca", "lewat mandiri", dll)
   const accountWordsToRemove = accounts.map((a) => a.name.toLowerCase());
   accountWordsToRemove.push('pakai', 'pake', 'dengan', 'lewat', 'dari', 'ke', 'cash', 'tunai', 'rupiah', 'sebesar', 'seharga');
   for (const w of accountWordsToRemove) {
     notes = notes.replace(new RegExp(`\\b${w}\\b`, 'gi'), '');
   }
 
-  // Bersihkan spasi berlebih dan sisa frasa berulang
   notes = deduplicateRepeatingPhrases(notes);
   notes = notes.replace(/\s+/g, ' ').replace(/^[\s,.-]+|[\s,.-]+$/g, '').trim();
 
-  // Jika setelah dibersihkan catatan kosong, gunakan deskripsi dari kategori
   if (!notes) {
-    const catObj = categories.find((c) => c.id === categoryId);
-    notes = catObj ? catObj.name : type === 'transfer' ? 'Transfer Saldo' : 'Transaksi Suara';
+    if (matchedTemplate?.notes) {
+      notes = matchedTemplate.notes;
+    } else {
+      const catObj = categories.find((c) => c.id === categoryId);
+      notes = catObj ? catObj.name : type === 'transfer' ? 'Transfer Saldo' : 'Transaksi Suara';
+    }
   } else {
-    // Huruf kapital awal
     notes = notes.charAt(0).toUpperCase() + notes.slice(1);
   }
 
@@ -454,6 +666,20 @@ export function parseVoiceTransaction(
     categoryId,
     date,
     notes,
+    matchedTemplate: matchedTemplate
+      ? {
+          id: matchedTemplate.id,
+          name: matchedTemplate.name,
+          emoji: matchedTemplate.emoji,
+        }
+      : undefined,
+    predictedFromHistory: (isPredictedAccount || isPredictedCategory)
+      ? {
+          account: isPredictedAccount,
+          category: isPredictedCategory,
+          reason: 'Diprediksi dari kebiasaan transaksi Anda',
+        }
+      : undefined,
     confidence: {
       amount: amount !== null && amount > 0,
       account: !!sourceAccountId,

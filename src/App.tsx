@@ -659,6 +659,8 @@ export function App() {
         onClose={() => setIsVoiceModalOpen(false)}
         accounts={accounts}
         categories={categories}
+        templates={templates}
+        history={transactions}
         onApplyToForm={(data) => {
           setPrefilledVoiceData(data);
           setActiveTab('input');

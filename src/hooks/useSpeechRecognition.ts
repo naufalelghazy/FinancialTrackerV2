@@ -36,6 +36,8 @@ interface ISpeechRecognition extends EventTarget {
 
 interface UseSpeechRecognitionOptions {
   lang?: string;
+  autoStopOnSilence?: boolean;
+  silenceTimeoutMs?: number;
   onFinalResult?: (transcript: string) => void;
 }
 
@@ -63,6 +65,8 @@ function deduplicateRepeatingPhrases(text: string): string {
 
 export function useSpeechRecognition({
   lang = 'id-ID',
+  autoStopOnSilence = true,
+  silenceTimeoutMs = 1700,
   onFinalResult,
 }: UseSpeechRecognitionOptions = {}) {
   const [isListening, setIsListening] = useState(false);
@@ -81,6 +85,14 @@ export function useSpeechRecognition({
   const finalResultCallbackRef = useRef(onFinalResult);
   finalResultCallbackRef.current = onFinalResult;
   const lastTextRef = useRef('');
+  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearSilenceTimer = () => {
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+  };
 
   useEffect(() => {
     const SpeechRecognitionClass =
@@ -142,10 +154,24 @@ export function useSpeechRecognition({
           }
 
           setInterimTranscript(cleanedInterim);
-          lastTextRef.current = (cleanedFinal + ' ' + cleanedInterim).trim();
+          const fullSoFar = (cleanedFinal + ' ' + cleanedInterim).trim();
+          lastTextRef.current = fullSoFar;
+
+          // Single-shot auto-stop saat hening setelah ada ucapan
+          if (autoStopOnSilence && fullSoFar) {
+            clearSilenceTimer();
+            silenceTimerRef.current = setTimeout(() => {
+              if (recognitionRef.current) {
+                try {
+                  recognitionRef.current.stop();
+                } catch {}
+              }
+            }, silenceTimeoutMs);
+          }
         };
 
         recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+          clearSilenceTimer();
           if (event.error === 'no-speech') {
             // Pengguna diam / tidak ada suara, jangan error fatal
             return;
@@ -161,6 +187,7 @@ export function useSpeechRecognition({
         };
 
         recognition.onend = () => {
+          clearSilenceTimer();
           setIsListening(false);
           setInterimTranscript('');
           // Amankan ucapan terakhir jika item tidak berstatus isFinal sebelum onend
@@ -180,15 +207,20 @@ export function useSpeechRecognition({
     }
 
     return () => {
+      clearSilenceTimer();
       if (recognitionRef.current) {
         try {
           recognitionRef.current.abort();
         } catch {}
       }
     };
-  }, [lang]);
+  }, [lang, autoStopOnSilence, silenceTimeoutMs]);
 
   const startListening = useCallback(() => {
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
     if (!recognitionRef.current) return;
     setError(null);
     setTranscript('');
@@ -211,6 +243,10 @@ export function useSpeechRecognition({
   }, []);
 
   const stopListening = useCallback(() => {
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
     if (!recognitionRef.current) return;
     try {
       recognitionRef.current.stop();
@@ -219,6 +255,10 @@ export function useSpeechRecognition({
   }, []);
 
   const resetTranscript = useCallback(() => {
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
     setTranscript('');
     setInterimTranscript('');
     lastTextRef.current = '';

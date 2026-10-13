@@ -13,8 +13,10 @@ import {
   AlertCircle,
   HelpCircle,
   CheckCircle2,
+  Pencil,
+  ChevronDown,
 } from 'lucide-react';
-import type { Account, Category, TransactionType } from '../../types';
+import type { Account, Category, QuickTemplate, Transaction, TransactionType } from '../../types';
 import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
 import { parseVoiceTransaction } from '../../services/voiceTransactionParser';
 import { formatCurrency } from '../../lib/formatters';
@@ -25,6 +27,8 @@ interface VoiceTransactionModalProps {
   onClose: () => void;
   accounts: Account[];
   categories: Category[];
+  templates?: QuickTemplate[];
+  history?: Transaction[];
   onApplyToForm: (data: {
     type: TransactionType;
     amount: number;
@@ -51,6 +55,7 @@ const EXAMPLE_PHRASES = [
   'Transfer dari BCA ke Gopay 100 ribu',
   'Gaji bulanan 5 juta masuk ke Mandiri',
   'Kopi kenangan 18.000 dana',
+  'Indomaret 50rb',
 ];
 
 export const VoiceTransactionModal: React.FC<VoiceTransactionModalProps> = ({
@@ -58,12 +63,22 @@ export const VoiceTransactionModal: React.FC<VoiceTransactionModalProps> = ({
   onClose,
   accounts,
   categories,
+  templates = [],
+  history = [],
   onApplyToForm,
   onDirectSave,
 }) => {
   const [manualText, setManualText] = useState('');
   const [showExamples, setShowExamples] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // 1-Tap Quick Correction Overrides
+  const [overrideAccountId, setOverrideAccountId] = useState<string | null>(null);
+  const [overrideCategoryId, setOverrideCategoryId] = useState<string | null>(null);
+  const [overrideAmount, setOverrideAmount] = useState<number | null>(null);
+  const [isEditingTranscript, setIsEditingTranscript] = useState(false);
+  const [isChangingAccount, setIsChangingAccount] = useState(false);
+  const [isChangingCategory, setIsChangingCategory] = useState(false);
 
   const {
     isListening,
@@ -76,9 +91,10 @@ export const VoiceTransactionModal: React.FC<VoiceTransactionModalProps> = ({
     setTranscript,
   } = useSpeechRecognition({
     lang: 'id-ID',
+    autoStopOnSilence: true,
+    silenceTimeoutMs: 1800,
   });
 
-  // Gabungan antara suara dan teks manual jika ada
   const activeText = manualText || fullText;
 
   // Auto-start listening saat modal dibuka
@@ -86,6 +102,12 @@ export const VoiceTransactionModal: React.FC<VoiceTransactionModalProps> = ({
     if (isOpen) {
       setManualText('');
       setSaveSuccess(false);
+      setOverrideAccountId(null);
+      setOverrideCategoryId(null);
+      setOverrideAmount(null);
+      setIsEditingTranscript(false);
+      setIsChangingAccount(false);
+      setIsChangingCategory(false);
       resetTranscript();
       if (isSupported) {
         startListening();
@@ -95,11 +117,22 @@ export const VoiceTransactionModal: React.FC<VoiceTransactionModalProps> = ({
     }
   }, [isOpen, isSupported, startListening, stopListening, resetTranscript]);
 
-  // Parsing teks suara secara reaktif
-  const parsed = useMemo(() => {
+  // Parsing teks suara dengan integrasi template dan riwayat
+  const parsedBase = useMemo(() => {
     if (!activeText.trim()) return null;
-    return parseVoiceTransaction(activeText, accounts, categories);
-  }, [activeText, accounts, categories]);
+    return parseVoiceTransaction(activeText, accounts, categories, templates, history);
+  }, [activeText, accounts, categories, templates, history]);
+
+  // Terapkan override manual 1-tap pengguna jika ada
+  const parsed = useMemo(() => {
+    if (!parsedBase) return null;
+    return {
+      ...parsedBase,
+      amount: overrideAmount !== null ? overrideAmount : parsedBase.amount,
+      sourceAccountId: overrideAccountId !== null ? overrideAccountId : parsedBase.sourceAccountId,
+      categoryId: overrideCategoryId !== null ? overrideCategoryId : parsedBase.categoryId,
+    };
+  }, [parsedBase, overrideAmount, overrideAccountId, overrideCategoryId]);
 
   if (!isOpen) return null;
 
@@ -108,6 +141,9 @@ export const VoiceTransactionModal: React.FC<VoiceTransactionModalProps> = ({
       stopListening();
     } else {
       setManualText('');
+      setOverrideAccountId(null);
+      setOverrideCategoryId(null);
+      setOverrideAmount(null);
       startListening();
     }
     if (navigator.vibrate) {
@@ -118,6 +154,10 @@ export const VoiceTransactionModal: React.FC<VoiceTransactionModalProps> = ({
   const handleReset = () => {
     resetTranscript();
     setManualText('');
+    setOverrideAccountId(null);
+    setOverrideCategoryId(null);
+    setOverrideAmount(null);
+    setIsEditingTranscript(false);
     startListening();
   };
 
@@ -125,6 +165,10 @@ export const VoiceTransactionModal: React.FC<VoiceTransactionModalProps> = ({
     stopListening();
     setManualText(phrase);
     setTranscript(phrase);
+    setOverrideAccountId(null);
+    setOverrideCategoryId(null);
+    setOverrideAmount(null);
+    setIsEditingTranscript(false);
     if (navigator.vibrate) {
       navigator.vibrate(25);
     }
@@ -201,7 +245,7 @@ export const VoiceTransactionModal: React.FC<VoiceTransactionModalProps> = ({
                 Catat Transaksi dengan Suara
               </h3>
               <p className="text-[11px] text-[#686b82] dark:text-[#9ca0ba]">
-                Ucapkan transaksi Anda dalam Bahasa Indonesia
+                Parser Cerdas Lokal (Template, Riwayat, & Toleransi Typo)
               </p>
             </div>
           </div>
@@ -226,7 +270,7 @@ export const VoiceTransactionModal: React.FC<VoiceTransactionModalProps> = ({
         )}
 
         {/* Microphone Interactive Button & Waves */}
-        <div className="flex flex-col items-center justify-center py-4 space-y-3">
+        <div className="flex flex-col items-center justify-center py-3 space-y-2.5">
           <div className="relative flex items-center justify-center">
             {/* Pulsing Ripple Rings when listening */}
             {isListening && (
@@ -254,6 +298,17 @@ export const VoiceTransactionModal: React.FC<VoiceTransactionModalProps> = ({
             </button>
           </div>
 
+          {/* Equalizer Visualizer Waves */}
+          {isListening && (
+            <div className="flex items-center gap-1 h-4">
+              <span className="w-1 h-2 bg-[#7132f5] dark:bg-[#3cffd0] rounded-full animate-pulse [animation-delay:0ms]" />
+              <span className="w-1 h-3.5 bg-[#7132f5] dark:bg-[#3cffd0] rounded-full animate-pulse [animation-delay:150ms]" />
+              <span className="w-1 h-2 bg-[#7132f5] dark:bg-[#3cffd0] rounded-full animate-pulse [animation-delay:300ms]" />
+              <span className="w-1 h-4 bg-[#7132f5] dark:bg-[#3cffd0] rounded-full animate-pulse [animation-delay:75ms]" />
+              <span className="w-1 h-2.5 bg-[#7132f5] dark:bg-[#3cffd0] rounded-full animate-pulse [animation-delay:225ms]" />
+            </div>
+          )}
+
           <div className="text-center">
             <span
               className={`text-xs font-bold transition-colors ${
@@ -263,39 +318,75 @@ export const VoiceTransactionModal: React.FC<VoiceTransactionModalProps> = ({
               }`}
             >
               {isListening
-                ? 'Sedang mendengarkan ucapan Anda...'
+                ? 'Sedang mendengarkan... (Otomatis berhenti saat Anda jeda bicara)'
                 : activeText
-                ? 'Rekaman selesai. Klik mic untuk mengulang'
+                ? 'Rekaman selesai. Klik mic untuk mengulang atau koreksi di bawah'
                 : 'Klik tombol mikrofon di atas lalu mulai bicara'}
             </span>
           </div>
         </div>
 
-        {/* Transcript Box */}
+        {/* Transcript Box with 1-Tap Edit */}
         <div className="p-3.5 rounded-[16px] bg-[#fafbfe] dark:bg-[#12131a] border border-[#dedee5] dark:border-[#282937] space-y-2">
           <div className="flex items-center justify-between text-[11px] font-semibold text-[#686b82] dark:text-[#9ca0ba]">
             <span>Teks Hasil Ucapan:</span>
-            {activeText && (
+            <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={handleReset}
-                className="inline-flex items-center gap-1 text-[10px] text-[#7132f5] dark:text-[#a78bfa] hover:underline"
+                onClick={() => setIsEditingTranscript(!isEditingTranscript)}
+                className="inline-flex items-center gap-1 text-[10px] text-[#686b82] dark:text-[#9ca0ba] hover:text-[#7132f5] dark:hover:text-[#3cffd0] transition-colors"
               >
-                <RotateCcw className="w-3 h-3" />
-                Ulangi
+                <Pencil className="w-3 h-3" />
+                <span>{isEditingTranscript ? 'Tutup Edit' : 'Edit Teks'}</span>
               </button>
-            )}
+              {activeText && (
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="inline-flex items-center gap-1 text-[10px] text-[#7132f5] dark:text-[#a78bfa] hover:underline"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  Ulangi
+                </button>
+              )}
+            </div>
           </div>
 
-          <p
-            className={`text-xs sm:text-sm font-medium min-h-[38px] leading-relaxed break-words ${
-              activeText
-                ? 'text-[#101114] dark:text-[#f3f4f8]'
-                : 'text-[#9497a9] dark:text-[#65697e] italic'
-            }`}
-          >
-            {activeText || 'Contoh: "Makan siang 35 ribu pakai BCA"'}
-          </p>
+          {isEditingTranscript ? (
+            <div className="space-y-1.5 animate-in fade-in duration-150">
+              <textarea
+                value={activeText}
+                onChange={(e) => {
+                  setManualText(e.target.value);
+                  setTranscript(e.target.value);
+                }}
+                placeholder="Ketik atau edit ucapan di sini..."
+                rows={2}
+                className="w-full text-xs sm:text-sm p-2 rounded-[10px] bg-white dark:bg-[#181a24] border border-[#dedee5] dark:border-[#282937] text-[#101114] dark:text-[#f3f4f8] focus:outline-none focus:ring-1 focus:ring-[#7132f5]"
+              />
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setIsEditingTranscript(false)}
+                  className="text-[10px] font-bold text-[#7132f5] dark:text-[#3cffd0] hover:underline"
+                >
+                  Selesai Mengedit
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p
+              onClick={() => setIsEditingTranscript(true)}
+              title="Klik untuk mengedit teks"
+              className={`text-xs sm:text-sm font-medium min-h-[38px] leading-relaxed break-words cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 p-1 rounded transition-colors ${
+                activeText
+                  ? 'text-[#101114] dark:text-[#f3f4f8]'
+                  : 'text-[#9497a9] dark:text-[#65697e] italic'
+              }`}
+            >
+              {activeText || 'Contoh: "Makan siang 35 ribu pakai BCA"'}
+            </p>
+          )}
 
           {error && (
             <p className="text-[11px] text-[#e53e3e] dark:text-[#f87171] font-medium pt-1">
@@ -304,12 +395,13 @@ export const VoiceTransactionModal: React.FC<VoiceTransactionModalProps> = ({
           )}
         </div>
 
-        {/* Parsed Result Card */}
+        {/* Parsed Result Card with 1-Tap Quick Correction */}
         {parsed && (
           <div className="p-4 rounded-[16px] bg-white dark:bg-[#181a24] border-2 border-[#7132f5]/30 dark:border-[#3cffd0]/30 space-y-3 shadow-micro animate-in fade-in duration-150">
-            <div className="flex items-center justify-between">
+            {/* Header Result + Badges */}
+            <div className="flex items-center justify-between flex-wrap gap-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#9497a9] dark:text-[#767993]">
-                Hasil Deteksi AI Parser:
+                Hasil Deteksi Cerdas:
               </span>
               <span
                 className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
@@ -326,6 +418,24 @@ export const VoiceTransactionModal: React.FC<VoiceTransactionModalProps> = ({
                 {parsed.type}
               </span>
             </div>
+
+            {/* Template Match Badge */}
+            {parsed.matchedTemplate && (
+              <div className="flex items-center gap-1.5 p-2 rounded-[10px] bg-[#3cffd0]/10 border border-[#3cffd0]/30 text-[#026b3f] dark:text-[#3cffd0] text-xs font-bold animate-in fade-in">
+                <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                <span>
+                  ⚡ Otomatis cocok dengan Template: <b>{parsed.matchedTemplate.emoji || '📌'} {parsed.matchedTemplate.name}</b>
+                </span>
+              </div>
+            )}
+
+            {/* History Prediction Badge */}
+            {parsed.predictedFromHistory && !parsed.matchedTemplate && (
+              <div className="flex items-center gap-1.5 p-2 rounded-[10px] bg-[#7132f5]/10 border border-[#7132f5]/20 text-[#7132f5] dark:text-[#a78bfa] text-xs font-medium animate-in fade-in">
+                <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                <span>💡 {parsed.predictedFromHistory.reason}</span>
+              </div>
+            )}
 
             {/* Nominal Big Display */}
             <div className="flex items-baseline justify-between border-b border-[#dedee5]/70 dark:border-[#282937] pb-2.5">
@@ -347,30 +457,84 @@ export const VoiceTransactionModal: React.FC<VoiceTransactionModalProps> = ({
               </span>
             </div>
 
-            {!parsed.amount && (
-              <div className="p-2.5 rounded-[10px] bg-[#f59e0b]/10 border border-[#f59e0b]/30 text-[#b45309] dark:text-[#fbbf24] text-[11px] flex items-start gap-1.5 leading-relaxed">
-                <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                <span>
-                  Sebutkan harga (misal: <i>"25 ribu"</i>), atau klik <b>"Tinjau di Form"</b> di bawah untuk melengkapi nominal di form.
-                </span>
-              </div>
-            )}
+            {/* Quick Nominal Shortcut Chips */}
+            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+              <span className="text-[10px] text-[#686b82] dark:text-[#9ca0ba] font-semibold mr-1">
+                {parsed.amount ? 'Pilihan angka cepat:' : 'Pilih nominal langsung:'}
+              </span>
+              {[10000, 20000, 35000, 50000, 100000].map((quickVal) => (
+                <button
+                  key={quickVal}
+                  type="button"
+                  onClick={() => setOverrideAmount(quickVal)}
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition-all ${
+                    parsed.amount === quickVal
+                      ? 'bg-[#7132f5] text-white shadow-sm'
+                      : 'bg-[#edeef3] dark:bg-[#1e202b] text-[#101114] dark:text-[#f3f4f8] hover:bg-[#dedee5] dark:hover:bg-[#282937]'
+                  }`}
+                >
+                  {quickVal >= 1000000 ? `${quickVal / 1000000}jt` : `${quickVal / 1000}rb`}
+                </button>
+              ))}
+              {overrideAmount !== null && (
+                <button
+                  type="button"
+                  onClick={() => setOverrideAmount(null)}
+                  className="text-[10px] text-[#e53e3e] hover:underline ml-auto"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
 
-            {/* Account & Category Row */}
+            {/* Account & Category Row with 1-Tap Quick Correction Dropdown */}
             <div className="grid grid-cols-2 gap-2 text-xs">
-              {/* Account */}
-              <div className="p-2 rounded-[10px] bg-[#fafbfe] dark:bg-[#12131a] border border-[#dedee5]/70 dark:border-[#282937]">
-                <span className="text-[10px] font-semibold text-[#686b82] dark:text-[#9ca0ba] block">
-                  {parsed.type === 'transfer' ? 'Dari Akun' : 'Akun Rekening'}
-                </span>
+              {/* Account Card */}
+              <div className="p-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#12131a] border border-[#dedee5]/70 dark:border-[#282937]">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-semibold text-[#686b82] dark:text-[#9ca0ba]">
+                    {parsed.type === 'transfer' ? 'Dari Akun' : 'Akun Rekening'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsChangingAccount(!isChangingAccount)}
+                    className="text-[10px] font-bold text-[#7132f5] dark:text-[#3cffd0] hover:underline flex items-center gap-0.5"
+                  >
+                    <span>Ganti</span>
+                    <ChevronDown className="w-2.5 h-2.5" />
+                  </button>
+                </div>
                 <span className="font-bold text-[#101114] dark:text-[#f3f4f8] truncate block mt-0.5">
-                  {sourceAccount ? `${sourceAccount.name}` : 'Default (Cash)'}
+                  {sourceAccount ? sourceAccount.name : 'Default (Cash)'}
                 </span>
+
+                {/* 1-Tap Account Selector */}
+                {isChangingAccount && (
+                  <div className="mt-2 pt-2 border-t border-[#dedee5]/70 dark:border-[#282937] flex flex-wrap gap-1 max-h-32 overflow-y-auto animate-in fade-in">
+                    {accounts.map((acc) => (
+                      <button
+                        key={acc.id}
+                        type="button"
+                        onClick={() => {
+                          setOverrideAccountId(acc.id);
+                          setIsChangingAccount(false);
+                        }}
+                        className={`px-2 py-1 rounded-[6px] text-[10px] font-semibold transition-all ${
+                          parsed.sourceAccountId === acc.id
+                            ? 'bg-[#7132f5] text-white'
+                            : 'bg-[#edeef3] dark:bg-[#1e202b] text-[#101114] dark:text-[#f3f4f8] hover:bg-[#dedee5] dark:hover:bg-[#282937]'
+                        }`}
+                      >
+                        {acc.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Destination or Category */}
               {parsed.type === 'transfer' ? (
-                <div className="p-2 rounded-[10px] bg-[#fafbfe] dark:bg-[#12131a] border border-[#dedee5]/70 dark:border-[#282937]">
+                <div className="p-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#12131a] border border-[#dedee5]/70 dark:border-[#282937]">
                   <span className="text-[10px] font-semibold text-[#686b82] dark:text-[#9ca0ba] block">
                     Ke Akun
                   </span>
@@ -379,23 +543,59 @@ export const VoiceTransactionModal: React.FC<VoiceTransactionModalProps> = ({
                   </span>
                 </div>
               ) : (
-                <div className="p-2 rounded-[10px] bg-[#fafbfe] dark:bg-[#12131a] border border-[#dedee5]/70 dark:border-[#282937] flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] font-semibold text-[#686b82] dark:text-[#9ca0ba] block">
+                <div className="p-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#12131a] border border-[#dedee5]/70 dark:border-[#282937]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-semibold text-[#686b82] dark:text-[#9ca0ba]">
                       Kategori
                     </span>
-                    <span className="font-bold text-[#101114] dark:text-[#f3f4f8] truncate block mt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setIsChangingCategory(!isChangingCategory)}
+                      className="text-[10px] font-bold text-[#7132f5] dark:text-[#3cffd0] hover:underline flex items-center gap-0.5"
+                    >
+                      <span>Ganti</span>
+                      <ChevronDown className="w-2.5 h-2.5" />
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between mt-0.5">
+                    <span className="font-bold text-[#101114] dark:text-[#f3f4f8] truncate">
                       {matchedCategory ? matchedCategory.name : 'Umum'}
                     </span>
+                    {matchedCategory && (
+                      <CategoryIcon
+                        name={matchedCategory.name}
+                        type={matchedCategory.type}
+                        emoji={matchedCategory.emoji}
+                        icon={matchedCategory.icon}
+                        size="sm"
+                      />
+                    )}
                   </div>
-                  {matchedCategory && (
-                    <CategoryIcon
-                      name={matchedCategory.name}
-                      type={matchedCategory.type}
-                      emoji={matchedCategory.emoji}
-                      icon={matchedCategory.icon}
-                      size="sm"
-                    />
+
+                  {/* 1-Tap Category Selector */}
+                  {isChangingCategory && (
+                    <div className="mt-2 pt-2 border-t border-[#dedee5]/70 dark:border-[#282937] flex flex-wrap gap-1 max-h-32 overflow-y-auto animate-in fade-in">
+                      {categories
+                        .filter((c) => c.type === (parsed.type === 'pemasukan' ? 'pemasukan' : 'pengeluaran'))
+                        .map((cat) => (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => {
+                              setOverrideCategoryId(cat.id);
+                              setIsChangingCategory(false);
+                            }}
+                            className={`px-2 py-1 rounded-[6px] text-[10px] font-semibold transition-all flex items-center gap-1 ${
+                              parsed.categoryId === cat.id
+                                ? 'bg-[#7132f5] text-white'
+                                : 'bg-[#edeef3] dark:bg-[#1e202b] text-[#101114] dark:text-[#f3f4f8] hover:bg-[#dedee5] dark:hover:bg-[#282937]'
+                            }`}
+                          >
+                            <span>{cat.emoji || '📁'}</span>
+                            <span>{cat.name}</span>
+                          </button>
+                        ))}
+                    </div>
                   )}
                 </div>
               )}
