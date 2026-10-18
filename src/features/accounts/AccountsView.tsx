@@ -1,11 +1,13 @@
 import React from 'react';
 import type { Account } from '../../types';
 import { formatCurrency } from '../../lib/formatters';
-import { Wallet, Plus, Edit2, ArrowUpRight } from 'lucide-react';
+import { Wallet, Plus, Edit2, ArrowUpRight, Eye, EyeOff } from 'lucide-react';
 import { AccountAvatar } from '../../components/ui/AccountAvatar';
 
 interface AccountsViewProps {
   accounts: Account[];
+  isBalanceHidden?: boolean;
+  onToggleHideBalance?: () => void;
   onEditAccount: (account: Account) => void;
   onAddAccount: () => void;
   onSelectAccountHistory?: (account: Account) => void;
@@ -13,24 +15,42 @@ interface AccountsViewProps {
 
 export const AccountsView: React.FC<AccountsViewProps> = ({
   accounts,
+  isBalanceHidden = false,
+  onToggleHideBalance,
   onEditAccount,
   onAddAccount,
   onSelectAccountHistory,
 }) => {
   const bankAccounts = accounts.filter((a) => a.type !== 'credit');
   const totalBalance = bankAccounts.reduce((sum, a) => sum + a.balance, 0);
+  const maskAmount = (amount: number) => (isBalanceHidden ? 'Rp •••••••' : formatCurrency(amount));
 
   return (
     <div className="space-y-6 pb-24">
       {/* Total Saldo Card - Kraken Purple Commanding Hero */}
-      <div className="hero-balance-card bg-[#7132f5] text-white rounded-[16px] p-6 shadow-whisper relative overflow-hidden border border-[#5741d8] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="hero-balance-card bg-[#7132f5] text-white rounded-[16px] p-5 sm:p-6 shadow-whisper relative overflow-hidden border border-[#5741d8] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-white/80 text-[11px] font-semibold uppercase tracking-wider">
             <Wallet className="w-3.5 h-3.5" />
-            Total Saldo Tersedia
+            <span>Total Saldo Tersedia</span>
+            {onToggleHideBalance && (
+              <button
+                type="button"
+                onClick={onToggleHideBalance}
+                title={isBalanceHidden ? 'Tampilkan saldo' : 'Sembunyikan saldo'}
+                aria-label={isBalanceHidden ? 'Tampilkan saldo' : 'Sembunyikan saldo'}
+                className="w-6 h-6 rounded-[6px] bg-white/15 hover:bg-white/25 text-white flex items-center justify-center transition-all cursor-pointer active:scale-95 ml-1"
+              >
+                {isBalanceHidden ? (
+                  <EyeOff className="w-3.5 h-3.5" />
+                ) : (
+                  <Eye className="w-3.5 h-3.5" />
+                )}
+              </button>
+            )}
           </div>
-          <div className="text-3xl sm:text-4xl font-bold mt-2 tracking-[-0.8px]">
-            {formatCurrency(totalBalance)}
+          <div className="balance-card-amount text-2xl sm:text-4xl font-bold mt-2 tracking-[-0.8px] tabular-nums">
+            {maskAmount(totalBalance)}
           </div>
           <div className="text-xs text-white/70 mt-1">
             {bankAccounts.length} Akun (Bank, E-Wallet & Kas Tunai)
@@ -39,7 +59,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
 
         <button
           onClick={onAddAccount}
-          className="self-start sm:self-auto py-2.5 px-4 rounded-[12px] bg-white text-[#7132f5] hover:bg-white/90 text-xs font-bold shadow-whisper flex items-center gap-1.5 transition-all"
+          className="self-start sm:self-auto py-2.5 px-4 rounded-[12px] bg-white text-[#7132f5] hover:bg-white/90 text-xs font-bold shadow-whisper flex items-center gap-1.5 transition-all cursor-pointer"
         >
           <Plus className="w-4 h-4 stroke-[2.5]" />
           <span>Tambah Akun Baru</span>
@@ -101,7 +121,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                     acc.balance >= 0 ? 'text-[#101114] dark:text-[#f3f4f8]' : 'text-[#e53e3e]'
                   }`}
                 >
-                  {formatCurrency(acc.balance)}
+                  {maskAmount(acc.balance)}
                 </span>
                 <button
                   type="button"

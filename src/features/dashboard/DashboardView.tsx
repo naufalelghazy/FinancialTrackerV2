@@ -14,6 +14,8 @@ import {
   Edit2,
   Zap,
   Plus,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 interface DashboardViewProps {
@@ -21,6 +23,8 @@ interface DashboardViewProps {
   transactions: Transaction[];
   categories: Category[];
   templates?: QuickTemplate[];
+  isBalanceHidden?: boolean;
+  onToggleHideBalance?: () => void;
   onNavigateTab: (tab: NavTab) => void;
   onEditTransaction: (transaction: Transaction) => void;
   onAddTransaction?: () => void;
@@ -35,6 +39,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   transactions,
   categories,
   templates = [],
+  isBalanceHidden = false,
+  onToggleHideBalance,
   onNavigateTab,
   onEditTransaction,
   onUseTemplateDirectly,
@@ -42,6 +48,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onAddTemplate,
 }) => {
   const [fallbackDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const maskAmount = (amount: number, prefix = '') =>
+    isBalanceHidden ? `${prefix}Rp •••••••` : `${prefix}${formatCurrency(amount)}`;
 
   const getAccountName = (id?: string) => accounts.find((a) => a.id === id)?.name || id || '-';
   const getCategory = (id?: string) => categories.find((c) => c.id === id);
@@ -157,69 +165,93 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   return (
     <div className="space-y-6 2xl:space-y-8 pb-24">
-      {/* ===================== HERO CARDS GRID ===================== */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 2xl:gap-6">
+      {/* ===================== HERO CARDS GRID (Compact 2-Column on Mobile & Desktop) ===================== */}
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-4 2xl:gap-6">
         {/* Total Saldo Tersedia (Kraken Purple Hero) */}
-        <div className="hero-balance-card bg-[#7132f5] text-white rounded-[16px] p-5 sm:p-6 shadow-whisper relative overflow-hidden border border-[#5741d8] flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-white/80 text-[11px] font-semibold uppercase tracking-wider flex items-center gap-1.5">
-              <Wallet className="w-3.5 h-3.5" />
-              Total Saldo Tersedia
+        <div className="hero-balance-card min-w-0 bg-[#7132f5] text-white rounded-[14px] sm:rounded-[16px] p-3 sm:p-6 shadow-whisper relative overflow-hidden border border-[#5741d8] flex flex-col justify-between">
+          <div className="flex items-center justify-between gap-1.5 min-w-0">
+            <span className="text-white/85 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider flex items-center gap-1 sm:gap-1.5 min-w-0">
+              <Wallet className="w-3.5 h-3.5 shrink-0" />
+              <span className="truncate sm:hidden">Saldo</span>
+              <span className="truncate hidden sm:inline">Total Saldo Tersedia</span>
             </span>
-            <span className="px-2 py-0.5 rounded-[6px] bg-white/15 text-[11px] font-medium text-white/90">
-              {liquidAccounts.length} Rekening & Dompet
-            </span>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="hidden sm:inline-block px-2 py-0.5 rounded-[6px] bg-white/15 text-[11px] font-medium text-white/90">
+                {liquidAccounts.length} Rekening & Dompet
+              </span>
+              {onToggleHideBalance && (
+                <button
+                  type="button"
+                  onClick={onToggleHideBalance}
+                  title={isBalanceHidden ? 'Tampilkan saldo' : 'Sembunyikan saldo'}
+                  aria-label={isBalanceHidden ? 'Tampilkan saldo' : 'Sembunyikan saldo'}
+                  className="w-6 h-6 sm:w-7 sm:h-7 rounded-[6px] sm:rounded-[8px] bg-white/15 hover:bg-white/25 text-white flex items-center justify-center transition-all cursor-pointer active:scale-95"
+                >
+                  {isBalanceHidden ? (
+                    <EyeOff className="w-3.5 h-3.5" />
+                  ) : (
+                    <Eye className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              )}
+            </div>
           </div>
 
-          <div className="my-3">
-            <div className="balance-card-amount text-3xl sm:text-4xl font-bold tracking-tight">
-              {formatCurrency(totalAvailable)}
+          <div className="my-2 sm:my-3 min-w-0">
+            <div className="balance-card-amount text-[22px] leading-tight sm:text-3xl lg:text-4xl 2xl:text-[42px] font-bold tracking-tight tabular-nums truncate">
+              {maskAmount(totalAvailable)}
             </div>
-            <p className="text-xs text-white/80 mt-1">
+            <p className="hidden sm:block text-xs text-white/80 mt-1">
               Bank, E-Wallet, dan Kas Tunai
             </p>
           </div>
 
-          <div className="pt-2 border-t border-white/15 flex items-center justify-between text-xs">
-            <span className="text-white/70">Kekayaan Bersih (Net Worth)</span>
-            <span className="net-worth-amount font-bold text-white tracking-tight">
-              {formatCurrency(netWorth)}
+          <div className="pt-2 border-t border-white/15 flex items-center justify-between gap-1 text-[11px] sm:text-xs min-w-0">
+            <span className="text-white/75 truncate">
+              <span className="sm:hidden">Bersih</span>
+              <span className="hidden sm:inline">Kekayaan Bersih (Net Worth)</span>
+            </span>
+            <span className="net-worth-amount font-bold text-white tracking-tight tabular-nums truncate">
+              {maskAmount(netWorth)}
             </span>
           </div>
         </div>
 
         {/* Total Tagihan & Hutang Card (Red Hero Debt Card) */}
-        <div className="hero-debt-card bg-gradient-to-br from-[#dc2626] to-[#b91c1c] text-white rounded-[16px] p-5 sm:p-6 shadow-whisper border border-[#ef4444]/40 flex flex-col justify-between relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <span className="debt-card-header text-white/90 text-[11px] font-semibold uppercase tracking-wider flex items-center gap-1.5">
-              <CreditCard className="debt-card-icon w-3.5 h-3.5 text-white/90" />
-              Total Tagihan & Hutang
+        <div className="hero-debt-card min-w-0 bg-gradient-to-br from-[#dc2626] to-[#b91c1c] text-white rounded-[14px] sm:rounded-[16px] p-3 sm:p-6 shadow-whisper border border-[#ef4444]/40 flex flex-col justify-between relative overflow-hidden">
+          <div className="flex items-center justify-between gap-1.5 min-w-0">
+            <span className="debt-card-header text-white/90 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider flex items-center gap-1 sm:gap-1.5 min-w-0">
+              <CreditCard className="debt-card-icon w-3.5 h-3.5 text-white/90 shrink-0" />
+              <span className="truncate sm:hidden">Tagihan</span>
+              <span className="truncate hidden sm:inline">Total Tagihan & Hutang</span>
             </span>
-            <span className="debt-card-badge px-2 py-0.5 rounded-[6px] bg-black/25 text-[11px] font-semibold text-white border border-white/20">
-              {creditAccounts.length} Akun Kredit
+            <span className="debt-card-badge px-1.5 sm:px-2 py-0.5 rounded-[5px] sm:rounded-[6px] bg-black/25 text-[10px] sm:text-[11px] font-semibold text-white border border-white/20 shrink-0">
+              {creditAccounts.length} <span className="hidden sm:inline">Akun </span>Kredit
             </span>
           </div>
 
-          <div className="my-3">
-            <div className="debt-card-amount text-3xl sm:text-4xl font-bold tracking-tight text-white">
-              {formatCurrency(totalDebt)}
+          <div className="my-2 sm:my-3 min-w-0">
+            <div className="debt-card-amount text-[22px] leading-tight sm:text-3xl lg:text-4xl 2xl:text-[42px] font-bold tracking-tight text-white tabular-nums truncate">
+              {maskAmount(totalDebt)}
             </div>
-            <p className="debt-card-sub text-xs text-white/80 mt-1">
+            <p className="debt-card-sub hidden sm:block text-xs text-white/80 mt-1">
               Kartu Kredit, Paylater & Cicilan Pinjaman
             </p>
           </div>
 
-          <div className="debt-card-divider pt-2 border-t border-white/20 flex items-center justify-between text-xs">
+          <div className="debt-card-divider pt-2 border-t border-white/20 flex items-center justify-between gap-1 text-[11px] sm:text-xs min-w-0">
             <button
               type="button"
               onClick={() => onNavigateTab('tagihan')}
-              className="debt-card-btn text-white hover:text-white/80 font-bold flex items-center gap-1.5 transition-all group"
+              className="debt-card-btn text-white hover:text-white/80 font-bold flex items-center gap-1 transition-all group min-w-0 cursor-pointer"
             >
-              <span className="underline underline-offset-2">Rincian Tagihan</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+              <span className="underline underline-offset-2 truncate">
+                Rincian<span className="hidden sm:inline"> Tagihan</span>
+              </span>
+              <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 group-hover:translate-x-0.5 transition-transform shrink-0" />
             </button>
-            <span className="debt-card-status text-[11px] text-white/90 font-medium">
-              {totalDebt === 0 ? 'Semua Lunas' : 'Belum Dibayar'}
+            <span className="debt-card-status text-[10px] sm:text-[11px] text-white/90 font-medium shrink-0">
+              {totalDebt === 0 ? 'Lunas' : 'Aktif'}
             </span>
           </div>
         </div>
@@ -556,7 +588,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       acc.balance < 0 ? 'text-[#e53e3e]' : 'text-[#101114] dark:text-[#f3f4f8]'
                     }`}
                   >
-                    {formatCurrency(acc.balance)}
+                    {maskAmount(acc.balance)}
                   </span>
                 </div>
               ))}
@@ -579,8 +611,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   </p>
                 </div>
               </div>
-              <span className="text-xs font-bold text-[#e11d48]">
-                {formatCurrency(totalDebt)}
+              <span className="text-xs font-bold text-[#e11d48] tabular-nums">
+                {maskAmount(totalDebt)}
               </span>
             </div>
 
@@ -608,7 +640,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         debtAmount > 0 ? 'text-[#e53e3e]' : 'text-[#026b3f]'
                       }`}
                     >
-                      {debtAmount > 0 ? `-${formatCurrency(debtAmount)}` : 'Lunas (Rp 0)'}
+                      {debtAmount > 0 ? maskAmount(debtAmount, '-') : 'Lunas (Rp 0)'}
                     </span>
                   </div>
                 );

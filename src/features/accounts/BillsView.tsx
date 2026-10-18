@@ -1,32 +1,56 @@
 import React from 'react';
 import type { Account } from '../../types';
 import { formatCurrency } from '../../lib/formatters';
-import { CreditCard, CheckCircle2, Edit2 } from 'lucide-react';
+import { CreditCard, CheckCircle2, Edit2, Eye, EyeOff } from 'lucide-react';
 import { AccountAvatar } from '../../components/ui/AccountAvatar';
 
 interface BillsViewProps {
   accounts: Account[];
+  isBalanceHidden?: boolean;
+  onToggleHideBalance?: () => void;
   onEditAccount?: (account: Account) => void;
 }
 
-export const BillsView: React.FC<BillsViewProps> = ({ accounts, onEditAccount }) => {
+export const BillsView: React.FC<BillsViewProps> = ({
+  accounts,
+  isBalanceHidden = false,
+  onToggleHideBalance,
+  onEditAccount,
+}) => {
   const creditAccounts = accounts.filter((a) => a.type === 'credit');
   const totalDebt = creditAccounts.reduce(
     (sum, a) => sum + (a.balance < 0 ? Math.abs(a.balance) : 0),
     0
   );
+  const maskAmount = (amount: number, prefix = '') =>
+    isBalanceHidden ? `${prefix}Rp •••••••` : `${prefix}${formatCurrency(amount)}`;
 
   return (
     <div className="space-y-6 pb-24">
       {/* Total Tagihan Card - Red Hero Debt Card */}
-      <div className="hero-debt-card bg-gradient-to-br from-[#dc2626] to-[#b91c1c] text-white rounded-[16px] p-6 shadow-whisper relative overflow-hidden border border-[#ef4444]/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="hero-debt-card bg-gradient-to-br from-[#dc2626] to-[#b91c1c] text-white rounded-[16px] p-5 sm:p-6 shadow-whisper relative overflow-hidden border border-[#ef4444]/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="debt-card-header flex items-center gap-2 text-white/90 text-[11px] font-semibold uppercase tracking-wider">
             <CreditCard className="debt-card-icon w-3.5 h-3.5 text-white/90" />
-            Total Tagihan & Hutang
+            <span>Total Tagihan & Hutang</span>
+            {onToggleHideBalance && (
+              <button
+                type="button"
+                onClick={onToggleHideBalance}
+                title={isBalanceHidden ? 'Tampilkan nominal' : 'Sembunyikan nominal'}
+                aria-label={isBalanceHidden ? 'Tampilkan nominal' : 'Sembunyikan nominal'}
+                className="w-6 h-6 rounded-[6px] bg-white/15 hover:bg-white/25 text-white flex items-center justify-center transition-all cursor-pointer active:scale-95 ml-1"
+              >
+                {isBalanceHidden ? (
+                  <EyeOff className="w-3.5 h-3.5" />
+                ) : (
+                  <Eye className="w-3.5 h-3.5" />
+                )}
+              </button>
+            )}
           </div>
-          <div className="debt-card-amount text-3xl sm:text-4xl font-bold mt-2 tracking-[-0.8px] text-white">
-            {formatCurrency(totalDebt)}
+          <div className="debt-card-amount text-2xl sm:text-4xl font-bold mt-2 tracking-[-0.8px] text-white tabular-nums">
+            {maskAmount(totalDebt)}
           </div>
           <div className="debt-card-sub text-xs text-white/80 mt-1">
             {creditAccounts.length} Akun Kartu Kredit & Pinjaman
@@ -54,7 +78,7 @@ export const BillsView: React.FC<BillsViewProps> = ({ accounts, onEditAccount })
                 key={acc.id}
                 className="group p-4 bg-white dark:bg-[#16171f] rounded-[12px] border border-[#dedee5] dark:border-[#282937] shadow-micro transition-all flex items-center justify-between"
               >
-                  <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-3 min-w-0">
                   <AccountAvatar acc={acc} />
                   <div className="min-w-0">
                     <span className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8] block tracking-tight group-hover:text-[#7132f5] transition-colors truncate">
@@ -79,7 +103,7 @@ export const BillsView: React.FC<BillsViewProps> = ({ accounts, onEditAccount })
                         hasDebt ? 'text-[#e53e3e] dark:text-[#f87171]' : 'text-[#026b3f] dark:text-[#34d399]'
                       }`}
                     >
-                      {hasDebt ? `-${formatCurrency(debtAmount)}` : 'Rp 0'}
+                      {hasDebt ? maskAmount(debtAmount, '-') : 'Rp 0'}
                     </span>
                     <span className="text-[10px] text-[#9497a9] dark:text-[#7d8299] uppercase font-semibold">
                       {hasDebt ? 'Belum Dibayar' : 'Lunas'}

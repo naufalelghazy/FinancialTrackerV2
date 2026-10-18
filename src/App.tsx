@@ -95,6 +95,23 @@ export function App() {
   const [isOnline, setIsOnline] = useState<boolean>(() =>
     typeof navigator !== 'undefined' ? navigator.onLine : true
   );
+  const [isBalanceHidden, setIsBalanceHidden] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('ft_hide_balance') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleToggleHideBalance = useCallback(() => {
+    setIsBalanceHidden((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('ft_hide_balance', String(next));
+      } catch {}
+      return next;
+    });
+  }, []);
 
   const refreshSyncStatus = useCallback(() => {
     setPendingSyncCount(getPendingSyncCount());
@@ -636,6 +653,8 @@ export function App() {
                   transactions={transactions}
                   categories={categories}
                   templates={templates}
+                  isBalanceHidden={isBalanceHidden}
+                  onToggleHideBalance={handleToggleHideBalance}
                   onNavigateTab={setActiveTab}
                   onEditTransaction={(t) => {
                     setSelectedTransaction(t);
@@ -673,6 +692,8 @@ export function App() {
               {activeTab === 'saldo' && (
                 <AccountsView
                   accounts={accounts}
+                  isBalanceHidden={isBalanceHidden}
+                  onToggleHideBalance={handleToggleHideBalance}
                   onEditAccount={(acc) => {
                     setSelectedAccount(acc);
                     setIsAccountModalOpen(true);
@@ -691,6 +712,8 @@ export function App() {
               {activeTab === 'tagihan' && (
                 <BillsView
                   accounts={accounts}
+                  isBalanceHidden={isBalanceHidden}
+                  onToggleHideBalance={handleToggleHideBalance}
                   onEditAccount={(acc) => {
                     setSelectedAccount(acc);
                     setIsAccountModalOpen(true);
