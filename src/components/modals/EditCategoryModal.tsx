@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Trash2, AlertTriangle, Layers, Search, Check } from 'lucide-react';
 import type { Category } from '../../types';
+import { CategoryIcon } from '../ui/CategoryIcon';
 import {
-  CategoryIcon,
   CATEGORY_ICON_LIST,
   CATEGORY_ICON_GROUPS,
   CATEGORY_ICON_REGISTRY,
-} from '../ui/CategoryIcon';
+} from '../../lib/categoryIcons';
 
 interface EditCategoryModalProps {
   isOpen: boolean;
@@ -22,8 +22,23 @@ interface EditCategoryModalProps {
   onDelete?: (id: string) => Promise<void>;
 }
 
-export const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
-  isOpen,
+function resolveInitialCategoryIconId(category: Category | null): string {
+  if (!category) return 'ShoppingBag';
+  if (category.icon && CATEGORY_ICON_REGISTRY[category.icon]) {
+    return category.icon;
+  }
+  if (category.emoji && CATEGORY_ICON_REGISTRY[category.emoji]) {
+    return category.emoji;
+  }
+  const found = CATEGORY_ICON_LIST.find(
+    (item) =>
+      item.id.toLowerCase() === category.name.toLowerCase() ||
+      category.name.toLowerCase().includes(item.id.toLowerCase())
+  );
+  return found ? found.id : 'Tag';
+}
+
+const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>> = ({
   category,
   onClose,
   onSave,
@@ -31,9 +46,13 @@ export const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
 }) => {
   const isEditing = Boolean(category);
 
-  const [name, setName] = useState('');
-  const [type, setType] = useState<'pengeluaran' | 'pemasukan'>('pengeluaran');
-  const [selectedIconId, setSelectedIconId] = useState<string>('Tag');
+  const [name, setName] = useState(() => category?.name || '');
+  const [type, setType] = useState<'pengeluaran' | 'pemasukan'>(
+    () => category?.type || 'pengeluaran'
+  );
+  const [selectedIconId, setSelectedIconId] = useState<string>(() =>
+    resolveInitialCategoryIconId(category)
+  );
   const [selectedGroup, setSelectedGroup] = useState<string>('Semua');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -42,48 +61,16 @@ export const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Synchronize state when modal opens or category changes
-  useEffect(() => {
-    if (category) {
-      setName(category.name);
-      setType(category.type);
-      // Determine initial selected icon
-      if (category.icon && CATEGORY_ICON_REGISTRY[category.icon]) {
-        setSelectedIconId(category.icon);
-      } else if (category.emoji && CATEGORY_ICON_REGISTRY[category.emoji]) {
-        setSelectedIconId(category.emoji);
-      } else {
-        // Try finding matching icon from category name
-        const found = CATEGORY_ICON_LIST.find(
-          (item) =>
-            item.id.toLowerCase() === category.name.toLowerCase() ||
-            category.name.toLowerCase().includes(item.id.toLowerCase())
-        );
-        setSelectedIconId(found ? found.id : 'Tag');
-      }
-    } else {
-      setName('');
-      setType('pengeluaran');
-      setSelectedIconId('ShoppingBag');
-    }
-    setConfirmDelete(false);
-    setErrorMsg('');
-    setSearchQuery('');
-    setSelectedGroup('Semua');
-  }, [category, isOpen]);
-
-  // Handle ESC key to close modal
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === 'Escape') {
         onClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [onClose]);
 
-  // Filtered icon list based on active group & search query
   const filteredIcons = useMemo(() => {
     return CATEGORY_ICON_LIST.filter((item) => {
       const matchGroup = selectedGroup === 'Semua' || item.group === selectedGroup;
@@ -98,8 +85,6 @@ export const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
       );
     });
   }, [selectedGroup, searchQuery]);
-
-  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,8 +105,9 @@ export const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
         icon: selectedIconId,
       });
       onClose();
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Gagal menyimpan kategori.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal menyimpan kategori.';
+      setErrorMsg(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -140,8 +126,9 @@ export const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
     try {
       await onDelete(category.id);
       onClose();
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Gagal menghapus kategori.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal menghapus kategori.';
+      setErrorMsg(msg);
       setConfirmDelete(false);
     } finally {
       setIsDeleting(false);
@@ -219,10 +206,15 @@ export const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
 
           {/* Nama Kategori */}
           <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1.5">
+            <label
+              htmlFor="category-name-input"
+              className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1.5"
+            >
               Nama Kategori <span className="text-[#e53e3e]">*</span>
             </label>
             <input
+              id="category-name-input"
+              name="name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -235,9 +227,9 @@ export const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
 
           {/* Tipe Transaksi: Pengeluaran vs Pemasukan */}
           <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1.5">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1.5">
               Klasifikasi Jenis Transaksi
-            </label>
+            </span>
             <div className="grid grid-cols-2 gap-2 p-1 bg-[#edeef3] dark:bg-[#1e202b] rounded-[12px] border border-[#dedee5] dark:border-[#282937]">
               <button
                 type="button"
@@ -267,7 +259,10 @@ export const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
           {/* Icon Picker Section */}
           <div className="space-y-2 pt-1">
             <div className="flex items-center justify-between">
-              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba]">
+              <label
+                htmlFor="category-icon-search"
+                className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba]"
+              >
                 Pilihan Ikon ({CATEGORY_ICON_LIST.length} Tersedia)
               </label>
               {selectedIconId && (
@@ -281,6 +276,8 @@ export const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
             <div className="relative">
               <Search className="w-3.5 h-3.5 text-[#9497a9] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
+                id="category-icon-search"
+                name="iconSearch"
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -386,5 +383,25 @@ export const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
         </form>
       </div>
     </div>
+  );
+};
+
+export const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
+  isOpen,
+  category,
+  onClose,
+  onSave,
+  onDelete,
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <EditCategoryModalContent
+      key={category?.id || 'new-category'}
+      category={category}
+      onClose={onClose}
+      onSave={onSave}
+      onDelete={onDelete}
+    />
   );
 };

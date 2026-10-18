@@ -2,7 +2,7 @@ import React from 'react';
 import type { Account } from '../../types';
 import { formatCurrency } from '../../lib/formatters';
 import { CreditCard, CheckCircle2, Edit2 } from 'lucide-react';
-import { AccountAvatar } from './AccountsView';
+import { AccountAvatar } from '../../components/ui/AccountAvatar';
 
 interface BillsViewProps {
   accounts: Account[];

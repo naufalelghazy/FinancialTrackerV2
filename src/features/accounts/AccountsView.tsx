@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import type { Account } from '../../types';
 import { formatCurrency } from '../../lib/formatters';
 import { Wallet, Plus, Edit2 } from 'lucide-react';
@@ -9,41 +9,7 @@ interface AccountsViewProps {
   onAddAccount: () => void;
 }
 
-import { getLogoDevUrl, getLocalFallback } from '../../services/logoService';
-
-export const AccountAvatar: React.FC<{ acc: Account }> = ({ acc }) => {
-  const [hasError, setHasError] = useState(false);
-  const logoDevUrl = getLogoDevUrl(acc.name, acc.website);
-  const localFallback = getLocalFallback(acc.name);
-  const candidateUrl = !hasError && (acc.icon || logoDevUrl);
-
-  if (candidateUrl) {
-    return (
-      <img
-        src={candidateUrl}
-        alt={acc.name}
-        onError={() => setHasError(true)}
-        className="w-10 h-10 object-contain rounded-[8px] bg-white dark:bg-[#252836] p-1 border border-[#dedee5] dark:border-[#282937] shadow-sm shrink-0"
-      />
-    );
-  }
-
-  if (localFallback) {
-    return (
-      <img
-        src={localFallback}
-        alt={acc.name}
-        className="w-10 h-10 object-contain rounded-[8px] bg-white dark:bg-[#252836] p-1 border border-[#dedee5] dark:border-[#282937] shadow-sm shrink-0"
-      />
-    );
-  }
-
-  return (
-    <div className="w-10 h-10 rounded-[8px] bg-[#f1edfe] text-[#7132f5] flex items-center justify-center text-xs font-bold border border-[#dedee5] dark:border-[#282937] shrink-0">
-      {acc.name.slice(0, 3).toUpperCase()}
-    </div>
-  );
-};
+import { AccountAvatar } from '../../components/ui/AccountAvatar';
 
 export const AccountsView: React.FC<AccountsViewProps> = ({
   accounts,

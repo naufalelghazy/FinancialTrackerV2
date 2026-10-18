@@ -1,7 +1,7 @@
 import React from 'react';
 import { Wallet, LayoutDashboard, CreditCard, History, Plus, RefreshCw, Sun, Moon, BarChart3, Settings, Mic } from 'lucide-react';
 import type { NavTab } from './BottomNav';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '../../contexts/themeStore';
 
 interface HeaderProps {
   activeTab: NavTab;

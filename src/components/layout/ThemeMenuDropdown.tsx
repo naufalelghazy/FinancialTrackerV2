@@ -9,7 +9,7 @@ import {
   Sparkles,
   SlidersHorizontal,
 } from 'lucide-react';
-import { useTheme, type DesignSystem } from '../../contexts/ThemeContext';
+import { useTheme, type DesignSystem } from '../../contexts/themeStore';
 
 interface ThemeMenuDropdownProps {
   onOpenSettings?: (tab?: 'akun' | 'kategori' | 'tampilan' | 'backend') => void;

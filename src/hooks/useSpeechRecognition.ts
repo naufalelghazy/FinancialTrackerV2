@@ -41,6 +41,15 @@ interface UseSpeechRecognitionOptions {
   onFinalResult?: (transcript: string) => void;
 }
 
+function getSpeechRecognitionClass(): (new () => ISpeechRecognition) | undefined {
+  if (typeof window === 'undefined') return undefined;
+  return (
+    (window as unknown as { SpeechRecognition?: new () => ISpeechRecognition }).SpeechRecognition ||
+    (window as unknown as { webkitSpeechRecognition?: new () => ISpeechRecognition })
+      .webkitSpeechRecognition
+  );
+}
+
 function deduplicateRepeatingPhrases(text: string): string {
   if (!text) return '';
   const words = text.split(/\s+/).filter(Boolean);
@@ -72,20 +81,19 @@ export function useSpeechRecognition({
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [interimTranscript, setInterimTranscript] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [isSupported, setIsSupported] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return Boolean(
-      (window as unknown as { SpeechRecognition?: unknown }).SpeechRecognition ||
-      (window as unknown as { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition
-    );
-  });
+  const [error, setError] = useState<string | null>(() =>
+    getSpeechRecognitionClass() ? null : 'Browser ini belum mendukung Web Speech API bawaan.'
+  );
+  const [isSupported] = useState(() => Boolean(getSpeechRecognitionClass()));
 
   const recognitionRef = useRef<ISpeechRecognition | null>(null);
   const finalResultCallbackRef = useRef(onFinalResult);
-  finalResultCallbackRef.current = onFinalResult;
   const lastTextRef = useRef('');
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    finalResultCallbackRef.current = onFinalResult;
+  }, [onFinalResult]);
 
   const clearSilenceTimer = () => {
     if (silenceTimerRef.current) {
@@ -95,9 +103,7 @@ export function useSpeechRecognition({
   };
 
   useEffect(() => {
-    const SpeechRecognitionClass =
-      (window as unknown as { SpeechRecognition?: new () => ISpeechRecognition }).SpeechRecognition ||
-      (window as unknown as { webkitSpeechRecognition?: new () => ISpeechRecognition }).webkitSpeechRecognition;
+    const SpeechRecognitionClass = getSpeechRecognitionClass();
 
     if (SpeechRecognitionClass) {
       try {
@@ -199,11 +205,7 @@ export function useSpeechRecognition({
         recognitionRef.current = recognition;
       } catch (err) {
         console.error('Failed to initialize SpeechRecognition:', err);
-        setIsSupported(false);
       }
-    } else {
-      setIsSupported(false);
-      setError('Browser ini belum mendukung Web Speech API bawaan.');
     }
 
     return () => {
@@ -250,8 +252,9 @@ export function useSpeechRecognition({
     if (!recognitionRef.current) return;
     try {
       recognitionRef.current.stop();
-    } catch {}
-    setIsListening(false);
+    } catch (err) {
+      console.error('Could not stop recognition:', err);
+    }
   }, []);
 
   const resetTranscript = useCallback(() => {
@@ -265,11 +268,13 @@ export function useSpeechRecognition({
     setError(null);
   }, []);
 
+  const fullText = `${transcript} ${interimTranscript}`.trim();
+
   return {
     isListening,
     transcript,
     interimTranscript,
-    fullText: (transcript + ' ' + interimTranscript).trim(),
+    fullText,
     error,
     isSupported,
     startListening,

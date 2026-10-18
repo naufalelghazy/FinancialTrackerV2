@@ -13,7 +13,7 @@ import {
   Mic,
 } from 'lucide-react';
 import type { NavTab } from './BottomNav';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '../../contexts/themeStore';
 import { ThemeMenuDropdown } from './ThemeMenuDropdown';
 
 interface SidebarProps {

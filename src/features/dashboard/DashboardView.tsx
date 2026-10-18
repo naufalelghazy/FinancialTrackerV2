@@ -1,9 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import type { Account, Category, Transaction, QuickTemplate } from '../../types';
 import type { NavTab } from '../../components/layout/BottomNav';
 import { formatCurrency } from '../../lib/formatters';
 import { CategoryIcon } from '../../components/ui/CategoryIcon';
-import { AccountAvatar } from '../accounts/AccountsView';
+import { AccountAvatar } from '../../components/ui/AccountAvatar';
 import { resolveTemplateAccount, resolveTemplateCategory } from '../../services/templateService';
 import {
   Wallet,
@@ -41,9 +41,23 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onEditTemplate,
   onAddTemplate,
 }) => {
+  const [fallbackDate] = useState(() => new Date().toISOString().slice(0, 10));
+
   const getAccountName = (id?: string) => accounts.find((a) => a.id === id)?.name || id || '-';
-  const getCategoryName = (id?: string) => categories.find((c) => c.id === id)?.name || id || '-';
   const getCategory = (id?: string) => categories.find((c) => c.id === id);
+
+  const categoryNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const c of categories) {
+      map.set(c.id, c.name);
+    }
+    return map;
+  }, [categories]);
+
+  const getCategoryName = useCallback(
+    (id?: string) => (id ? categoryNameMap.get(id) || id : '-'),
+    [categoryNameMap]
+  );
 
   // 1. Account Balances Overview
   const { totalAvailable, totalDebt, netWorth, liquidAccounts, creditAccounts } = useMemo(() => {
@@ -64,80 +78,82 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   }, [accounts]);
 
   // Helper to detect Pindah Akun / Transfer
-  const isPindahAkunOrTransfer = (t: Transaction) => {
-    if (t.type === 'transfer') return true;
-    const catName = getCategoryName(t.categoryId).toLowerCase().trim();
-    if (catName.includes('pindah akun') || catName.includes('transfer')) return true;
-    const catId = (t.categoryId || '').toLowerCase().trim();
-    if (catId.includes('pindah_akun') || catId.includes('transfer')) return true;
-    return false;
-  };
+  const isPindahAkunOrTransfer = useCallback(
+    (t: Transaction) => {
+      if (t.type === 'transfer') return true;
+      const catName = getCategoryName(t.categoryId).toLowerCase().trim();
+      if (catName.includes('pindah akun') || catName.includes('transfer')) return true;
+      const catId = (t.categoryId || '').toLowerCase().trim();
+      if (catId.includes('pindah_akun') || catId.includes('transfer')) return true;
+      return false;
+    },
+    [getCategoryName]
+  );
 
   // 2. Active Month Spending Breakdown (Excluding Pindah Akun / Transfer)
-  const { currentMonthLabel, monthExpense, topCategories } =
-    useMemo(() => {
-      // Find latest date in transactions to dynamically detect active month
-      const latestDate = transactions[0]?.date || new Date().toISOString().slice(0, 10);
-      const activeMonthKey = latestDate.slice(0, 7); // e.g. "2026-10"
+  const { currentMonthLabel, monthExpense, topCategories } = useMemo(() => {
+    // Find latest date in transactions to dynamically detect active month
+    const latestDate = transactions[0]?.date || fallbackDate;
+    const activeMonthKey = latestDate.slice(0, 7); // e.g. "2026-10"
 
-      const [year, month] = activeMonthKey.split('-');
-      const monthNames = [
-        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
-      ];
-      const monthLabel = `${monthNames[parseInt(month, 10) - 1]} ${year}`;
+    const [year, month] = activeMonthKey.split('-');
+    const monthNames = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+    ];
+    const monthLabel = `${monthNames[parseInt(month, 10) - 1]} ${year}`;
 
-      const monthlyTx = transactions.filter((t) => t.date.startsWith(activeMonthKey));
-      let expense = 0;
-      let income = 0;
-      const catExpenseMap: Record<string, number> = {};
+    const monthlyTx = transactions.filter((t) => t.date.startsWith(activeMonthKey));
+    let expense = 0;
+    let income = 0;
+    const catExpenseMap: Record<string, number> = {};
 
-      for (const t of monthlyTx) {
-        // Abaikan kategori pindah akun dan transaksi transfer dari arus kas
-        if (isPindahAkunOrTransfer(t)) {
-          continue;
-        }
-
-        if (t.type === 'pengeluaran') {
-          expense += t.amount;
-          if (t.categoryId) {
-            catExpenseMap[t.categoryId] = (catExpenseMap[t.categoryId] || 0) + t.amount;
-          }
-        } else if (t.type === 'pemasukan') {
-          income += t.amount;
-        }
+    for (const t of monthlyTx) {
+      // Abaikan kategori pindah akun dan transaksi transfer dari arus kas
+      if (isPindahAkunOrTransfer(t)) {
+        continue;
       }
 
-      // Top categories calculation (exclude pindah akun)
-      const sortedCats = Object.entries(catExpenseMap)
-        .filter(([catId]) => {
-          const name = getCategoryName(catId).toLowerCase().trim();
-          return !name.includes('pindah akun') && !name.includes('transfer') && !catId.includes('pindah');
-        })
-        .map(([catId, amount]) => ({
-          catId,
-          name: getCategoryName(catId),
-          amount,
-          percentage: expense > 0 ? Math.round((amount / expense) * 100) : 0,
-        }))
-        .sort((a, b) => b.amount - a.amount)
-        .slice(0, 5);
+      if (t.type === 'pengeluaran') {
+        expense += t.amount;
+        if (t.categoryId) {
+          catExpenseMap[t.categoryId] = (catExpenseMap[t.categoryId] || 0) + t.amount;
+        }
+      } else if (t.type === 'pemasukan') {
+        income += t.amount;
+      }
+    }
 
-      return {
-        currentMonthLabel: monthLabel,
-        monthExpense: expense,
-        monthIncome: income,
-        netCashflow: income - expense,
-        topCategories: sortedCats,
-      };
-    }, [transactions, categories]);
+    // Top categories calculation (exclude pindah akun)
+    const sortedCats = Object.entries(catExpenseMap)
+      .filter(([catId]) => {
+        const name = getCategoryName(catId).toLowerCase().trim();
+        return !name.includes('pindah akun') && !name.includes('transfer') && !catId.includes('pindah');
+      })
+      .map(([catId, amount]) => ({
+        catId,
+        name: getCategoryName(catId),
+        amount,
+        percentage: expense > 0 ? Math.round((amount / expense) * 100) : 0,
+      }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 5);
+
+    return {
+      currentMonthLabel: monthLabel,
+      monthExpense: expense,
+      monthIncome: income,
+      netCashflow: income - expense,
+      topCategories: sortedCats,
+    };
+  }, [transactions, fallbackDate, getCategoryName, isPindahAkunOrTransfer]);
 
   // 3. Recent 5 Transactions (Excluding Pindah Akun / Transfer)
   const recentTransactions = useMemo(() => {
     return transactions
       .filter((t) => !isPindahAkunOrTransfer(t))
       .slice(0, 5);
-  }, [transactions, categories]);
+  }, [transactions, isPindahAkunOrTransfer]);
 
   return (
     <div className="space-y-6 2xl:space-y-8 pb-24">

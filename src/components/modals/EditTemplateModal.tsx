@@ -1,7 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { X, Trash2, ArrowUpRight, ArrowDownLeft, ArrowLeftRight, Check, Zap } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  X,
+  Trash2,
+  ArrowUpRight,
+  ArrowDownLeft,
+  ArrowLeftRight,
+  Check,
+  Zap,
+  ChevronDown,
+} from 'lucide-react';
 import type { Account, Category, QuickTemplate, TransactionType } from '../../types';
-import { formatNumberWithDots, parseRawAmount } from '../../lib/formatters';
+import { formatCurrency, formatNumberWithDots, parseRawAmount } from '../../lib/formatters';
+import { CategoryIcon } from '../ui/CategoryIcon';
+import { AccountAvatar } from '../ui/AccountAvatar';
 
 interface EditTemplateModalProps {
   isOpen: boolean;
@@ -18,8 +29,14 @@ const PRESET_EMOJIS = [
   '💡', '📶', '📱', '👕', '🎮', '📺', '🏥', '💳', '🎁', '💰',
 ];
 
-export const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
-  isOpen,
+const ACCOUNT_TYPE_LABELS: Record<string, string> = {
+  bank: 'Bank',
+  ewallet: 'E-Wallet',
+  cash: 'Tunai',
+  credit: 'Kredit',
+};
+
+const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>> = ({
   template,
   accounts,
   categories,
@@ -28,48 +45,67 @@ export const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
   onDelete,
 }) => {
   const isEditing = Boolean(template);
+  const firstExpenseCat = categories.find((c) => c.type === 'pengeluaran');
 
-  const [name, setName] = useState('');
-  const [type, setType] = useState<TransactionType>('pengeluaran');
-  const [amountDisplay, setAmountDisplay] = useState('');
-  const [sourceAccountId, setSourceAccountId] = useState('');
-  const [destinationAccountId, setDestinationAccountId] = useState('');
-  const [categoryId, setCategoryId] = useState('');
-  const [notes, setNotes] = useState('');
-  const [selectedEmoji, setSelectedEmoji] = useState('⚡');
+  const [name, setName] = useState(() => template?.name || '');
+  const [type, setType] = useState<TransactionType>(() => template?.type || 'pengeluaran');
+  const [amountDisplay, setAmountDisplay] = useState(() =>
+    template ? formatNumberWithDots(String(template.amount)) : ''
+  );
+  const [sourceAccountId, setSourceAccountId] = useState(
+    () => template?.sourceAccountId || accounts[0]?.id || ''
+  );
+  const [destinationAccountId, setDestinationAccountId] = useState(
+    () => template?.destinationAccountId || accounts[1]?.id || ''
+  );
+  const [categoryId, setCategoryId] = useState(
+    () => template?.categoryId || firstExpenseCat?.id || ''
+  );
+  const [notes, setNotes] = useState(() => template?.notes || '');
+  const [selectedEmoji, setSelectedEmoji] = useState(() => template?.emoji || '⚡');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [activeDropdown, setActiveDropdown] = useState<
+    'source' | 'destination' | 'category' | null
+  >(null);
+
+  const dropdownAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (template) {
-      setName(template.name);
-      setType(template.type);
-      setAmountDisplay(formatNumberWithDots(String(template.amount)));
-      setSourceAccountId(template.sourceAccountId || (accounts[0]?.id || ''));
-      setDestinationAccountId(template.destinationAccountId || '');
-      setCategoryId(template.categoryId || '');
-      setNotes(template.notes || '');
-      setSelectedEmoji(template.emoji || '⚡');
-      setConfirmDelete(false);
-      setErrorMsg('');
-    } else {
-      setName('');
-      setType('pengeluaran');
-      setAmountDisplay('');
-      setSourceAccountId(accounts[0]?.id || '');
-      setDestinationAccountId(accounts[1]?.id || '');
-      const firstExpenseCat = categories.find((c) => c.type === 'pengeluaran');
-      setCategoryId(firstExpenseCat?.id || '');
-      setNotes('');
-      setSelectedEmoji('⚡');
-      setConfirmDelete(false);
-      setErrorMsg('');
-    }
-  }, [template, isOpen, accounts, categories]);
+    if (!activeDropdown) return;
 
-  if (!isOpen) return null;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownAreaRef.current &&
+        !dropdownAreaRef.current.contains(event.target as Node)
+      ) {
+        setActiveDropdown(null);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setActiveDropdown(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeDropdown]);
 
   const filteredCategories = categories.filter((c) => c.type === type);
+  const selectedCategory = categories.find((c) => c.id === categoryId);
+  const selectedSourceAccount = accounts.find((a) => a.id === sourceAccountId);
+  const selectedDestinationAccount = accounts.find((a) => a.id === destinationAccountId);
+  const availableDestinationAccounts = accounts.filter((a) => a.id !== sourceAccountId);
+
+  const toggleDropdown = (menu: 'source' | 'destination' | 'category') => {
+    setActiveDropdown((prev) => (prev === menu ? null : menu));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,14 +120,17 @@ export const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
     }
     if (!sourceAccountId) {
       setErrorMsg('Pilih akun sumber');
+      setActiveDropdown('source');
       return;
     }
     if (type === 'transfer' && !destinationAccountId) {
       setErrorMsg('Pilih akun tujuan untuk transfer');
+      setActiveDropdown('destination');
       return;
     }
     if (type !== 'transfer' && !categoryId) {
       setErrorMsg('Pilih kategori');
+      setActiveDropdown('category');
       return;
     }
 
@@ -130,6 +169,7 @@ export const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
           <button
             type="button"
             onClick={onClose}
+            aria-label="Tutup modal template"
             className="p-1.5 rounded-full hover:bg-[#edeef3] dark:hover:bg-[#232534] text-[#686b82] dark:text-[#9ca0ba] transition-colors"
           >
             <X className="w-5 h-5" />
@@ -145,9 +185,9 @@ export const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           {/* Tipe Transaksi */}
           <div>
-            <label className="block text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mb-1.5">
+            <span className="block text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mb-1.5">
               Tipe Transaksi
-            </label>
+            </span>
             <div className="grid grid-cols-3 p-1 bg-[#edeef3] dark:bg-[#232534] rounded-[12px] gap-1 border border-[#dedee5] dark:border-[#282937]">
               <button
                 type="button"
@@ -155,6 +195,7 @@ export const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
                   setType('pengeluaran');
                   const first = categories.find((c) => c.type === 'pengeluaran');
                   setCategoryId(first?.id || '');
+                  setActiveDropdown(null);
                 }}
                 className={`flex items-center justify-center gap-1.5 py-2 rounded-[10px] font-semibold text-xs transition-colors ${
                   type === 'pengeluaran'
@@ -170,6 +211,7 @@ export const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
                 onClick={() => {
                   setType('transfer');
                   setCategoryId('');
+                  setActiveDropdown(null);
                 }}
                 className={`flex items-center justify-center gap-1.5 py-2 rounded-[10px] font-semibold text-xs transition-colors ${
                   type === 'transfer'
@@ -186,6 +228,7 @@ export const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
                   setType('pemasukan');
                   const first = categories.find((c) => c.type === 'pemasukan');
                   setCategoryId(first?.id || '');
+                  setActiveDropdown(null);
                 }}
                 className={`flex items-center justify-center gap-1.5 py-2 rounded-[10px] font-semibold text-xs transition-colors ${
                   type === 'pemasukan'
@@ -202,10 +245,15 @@ export const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
           {/* Nama Template & Emoji */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <div className="sm:col-span-3">
-              <label className="block text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mb-1">
+              <label
+                htmlFor="tpl-name-input"
+                className="block text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mb-1"
+              >
                 Nama Template
               </label>
               <input
+                id="tpl-name-input"
+                name="name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -214,10 +262,15 @@ export const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mb-1">
+              <label
+                htmlFor="tpl-emoji-input"
+                className="block text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mb-1"
+              >
                 Ikon Emoji
               </label>
               <input
+                id="tpl-emoji-input"
+                name="emoji"
                 type="text"
                 value={selectedEmoji}
                 onChange={(e) => setSelectedEmoji(e.target.value)}
@@ -248,7 +301,10 @@ export const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
 
           {/* Nominal */}
           <div>
-            <label className="block text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mb-1">
+            <label
+              htmlFor="tpl-amount-input"
+              className="block text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mb-1"
+            >
               Nominal Default (Rp)
             </label>
             <div className="relative">
@@ -256,6 +312,8 @@ export const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
                 Rp
               </span>
               <input
+                id="tpl-amount-input"
+                name="amount"
                 type="text"
                 inputMode="numeric"
                 value={amountDisplay}
@@ -266,72 +324,288 @@ export const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
             </div>
           </div>
 
-          {/* Akun Sumber & Tujuan/Kategori */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mb-1">
-                Akun Sumber
-              </label>
-              <select
-                value={sourceAccountId}
-                onChange={(e) => setSourceAccountId(e.target.value)}
-                className="w-full px-3 py-2 rounded-[10px] bg-[#fafbfe] dark:bg-[#12141a] border border-[#dedee5] dark:border-[#282937] text-xs font-semibold focus:outline-none focus:border-[#7132f5]"
+          {/* Akun Sumber & Tujuan/Kategori Popup Dropdowns */}
+          <div ref={dropdownAreaRef} className="relative grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Source Account Dropdown */}
+            <div className="relative">
+              <span
+                id="tpl-source-label"
+                className="block text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mb-1"
               >
-                {accounts.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name}
-                  </option>
-                ))}
-              </select>
+                Akun Sumber
+              </span>
+              <button
+                type="button"
+                aria-labelledby="tpl-source-label"
+                aria-expanded={activeDropdown === 'source'}
+                aria-haspopup="listbox"
+                onClick={() => toggleDropdown('source')}
+                className={`w-full min-h-[42px] px-3 py-2 rounded-[10px] bg-[#fafbfe] dark:bg-[#12141a] border text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] flex items-center justify-between gap-2 transition-all focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
+                  activeDropdown === 'source'
+                    ? 'border-[#7132f5] ring-2 ring-[#7132f5]/15'
+                    : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/60'
+                }`}
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  {selectedSourceAccount ? (
+                    <>
+                      <AccountAvatar acc={selectedSourceAccount} size="sm" />
+                      <span className="truncate">{selectedSourceAccount.name}</span>
+                    </>
+                  ) : (
+                    <span className="truncate">Pilih Akun Sumber</span>
+                  )}
+                </div>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-[#686b82] dark:text-[#9ca0ba] shrink-0 transition-transform duration-150 ${
+                    activeDropdown === 'source' ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
+
+              {activeDropdown === 'source' && (
+                <div
+                  role="listbox"
+                  aria-label="Pilih Akun Sumber"
+                  className="absolute left-0 right-0 bottom-full mb-1.5 z-30 rounded-[12px] bg-white dark:bg-[#16171f] border border-[#dedee5] dark:border-[#282937] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                >
+                  <div className="p-1.5 max-h-48 overflow-y-auto divide-y divide-[#dedee5]/40 dark:divide-[#282937]/50">
+                    {accounts.map((acc) => {
+                      const isSelected = sourceAccountId === acc.id;
+                      return (
+                        <button
+                          key={acc.id}
+                          type="button"
+                          role="option"
+                          aria-selected={isSelected}
+                          onClick={() => {
+                            setSourceAccountId(acc.id);
+                            if (destinationAccountId === acc.id) {
+                              setDestinationAccountId('');
+                            }
+                            setActiveDropdown(null);
+                          }}
+                          className={`w-full min-h-[40px] px-2.5 py-1.5 rounded-[8px] text-left flex items-center justify-between gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
+                            isSelected
+                              ? 'bg-[#7132f5] text-white font-bold'
+                              : 'text-[#101114] dark:text-[#f3f4f8] hover:bg-[#edeef3] dark:hover:bg-[#1e202b] font-semibold'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <AccountAvatar acc={acc} size="sm" />
+                            <span className="truncate text-xs">{acc.name}</span>
+                            <span
+                              className={`text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0 ${
+                                isSelected
+                                  ? 'bg-black/15 text-current'
+                                  : 'bg-[#edeef3] dark:bg-[#232534] text-[#686b82] dark:text-[#9ca0ba]'
+                              }`}
+                            >
+                              {ACCOUNT_TYPE_LABELS[acc.type] || acc.type}
+                            </span>
+                          </div>
+                          {isSelected && <Check className="w-3.5 h-3.5 shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
+            {/* Destination Account OR Category Dropdown */}
             {type === 'transfer' ? (
-              <div>
-                <label className="block text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mb-1">
-                  Akun Tujuan
-                </label>
-                <select
-                  value={destinationAccountId}
-                  onChange={(e) => setDestinationAccountId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-[10px] bg-[#fafbfe] dark:bg-[#12141a] border border-[#dedee5] dark:border-[#282937] text-xs font-semibold focus:outline-none focus:border-[#7132f5]"
+              <div className="relative">
+                <span
+                  id="tpl-dest-label"
+                  className="block text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mb-1"
                 >
-                  <option value="">-- Pilih Akun Tujuan --</option>
-                  {accounts
-                    .filter((a) => a.id !== sourceAccountId)
-                    .map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.name}
-                      </option>
-                    ))}
-                </select>
+                  Akun Tujuan
+                </span>
+                <button
+                  type="button"
+                  aria-labelledby="tpl-dest-label"
+                  aria-expanded={activeDropdown === 'destination'}
+                  aria-haspopup="listbox"
+                  onClick={() => toggleDropdown('destination')}
+                  className={`w-full min-h-[42px] px-3 py-2 rounded-[10px] bg-[#fafbfe] dark:bg-[#12141a] border text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] flex items-center justify-between gap-2 transition-all focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
+                    activeDropdown === 'destination'
+                      ? 'border-[#7132f5] ring-2 ring-[#7132f5]/15'
+                      : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/60'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    {selectedDestinationAccount ? (
+                      <>
+                        <AccountAvatar acc={selectedDestinationAccount} size="sm" />
+                        <span className="truncate">{selectedDestinationAccount.name}</span>
+                      </>
+                    ) : (
+                      <span className="truncate">Pilih Akun Tujuan</span>
+                    )}
+                  </div>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 text-[#686b82] dark:text-[#9ca0ba] shrink-0 transition-transform duration-150 ${
+                      activeDropdown === 'destination' ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+
+                {activeDropdown === 'destination' && (
+                  <div
+                    role="listbox"
+                    aria-label="Pilih Akun Tujuan"
+                    className="absolute left-0 right-0 bottom-full mb-1.5 z-30 rounded-[12px] bg-white dark:bg-[#16171f] border border-[#dedee5] dark:border-[#282937] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                  >
+                    <div className="p-1.5 max-h-48 overflow-y-auto divide-y divide-[#dedee5]/40 dark:divide-[#282937]/50">
+                      {availableDestinationAccounts.map((acc) => {
+                        const isSelected = destinationAccountId === acc.id;
+                        return (
+                          <button
+                            key={acc.id}
+                            type="button"
+                            role="option"
+                            aria-selected={isSelected}
+                            onClick={() => {
+                              setDestinationAccountId(acc.id);
+                              setActiveDropdown(null);
+                            }}
+                            className={`w-full min-h-[40px] px-2.5 py-1.5 rounded-[8px] text-left flex items-center justify-between gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
+                              isSelected
+                                ? 'bg-[#7132f5] text-white font-bold'
+                                : 'text-[#101114] dark:text-[#f3f4f8] hover:bg-[#edeef3] dark:hover:bg-[#1e202b] font-semibold'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <AccountAvatar acc={acc} size="sm" />
+                              <span className="truncate text-xs">{acc.name}</span>
+                              <span
+                                className={`text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0 ${
+                                  isSelected
+                                    ? 'bg-black/15 text-current'
+                                    : 'bg-[#edeef3] dark:bg-[#232534] text-[#686b82] dark:text-[#9ca0ba]'
+                                }`}
+                              >
+                                {formatCurrency(acc.balance)}
+                              </span>
+                            </div>
+                            {isSelected && <Check className="w-3.5 h-3.5 shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
-              <div>
-                <label className="block text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mb-1">
-                  Kategori
-                </label>
-                <select
-                  value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-[10px] bg-[#fafbfe] dark:bg-[#12141a] border border-[#dedee5] dark:border-[#282937] text-xs font-semibold focus:outline-none focus:border-[#7132f5]"
+              <div className="relative">
+                <span
+                  id="tpl-category-label"
+                  className="block text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mb-1"
                 >
-                  <option value="">-- Pilih Kategori --</option>
-                  {filteredCategories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.emoji} {c.name}
-                    </option>
-                  ))}
-                </select>
+                  Kategori
+                </span>
+                <button
+                  type="button"
+                  aria-labelledby="tpl-category-label"
+                  aria-expanded={activeDropdown === 'category'}
+                  aria-haspopup="listbox"
+                  onClick={() => toggleDropdown('category')}
+                  className={`w-full min-h-[42px] px-3 py-2 rounded-[10px] bg-[#fafbfe] dark:bg-[#12141a] border text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] flex items-center justify-between gap-2 transition-all focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
+                    activeDropdown === 'category'
+                      ? 'border-[#7132f5] ring-2 ring-[#7132f5]/15'
+                      : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/60'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    {selectedCategory ? (
+                      <>
+                        <CategoryIcon
+                          name={selectedCategory.name}
+                          type={type}
+                          icon={selectedCategory.icon}
+                          emoji={selectedCategory.emoji}
+                          size="sm"
+                        />
+                        <span className="truncate">{selectedCategory.name}</span>
+                      </>
+                    ) : (
+                      <span className="truncate">Pilih Kategori</span>
+                    )}
+                  </div>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 text-[#686b82] dark:text-[#9ca0ba] shrink-0 transition-transform duration-150 ${
+                      activeDropdown === 'category' ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+
+                {activeDropdown === 'category' && (
+                  <div
+                    role="listbox"
+                    aria-label="Pilih Kategori"
+                    className="absolute left-0 right-0 bottom-full mb-1.5 z-30 rounded-[12px] bg-white dark:bg-[#16171f] border border-[#dedee5] dark:border-[#282937] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                  >
+                    <div className="p-1.5 max-h-48 overflow-y-auto divide-y divide-[#dedee5]/40 dark:divide-[#282937]/50">
+                      {filteredCategories.map((cat) => {
+                        const isSelected = categoryId === cat.id;
+                        return (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            role="option"
+                            aria-selected={isSelected}
+                            onClick={() => {
+                              setCategoryId(cat.id);
+                              setActiveDropdown(null);
+                            }}
+                            className={`w-full min-h-[40px] px-2.5 py-1.5 rounded-[8px] text-left flex items-center justify-between gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
+                              isSelected
+                                ? 'bg-[#7132f5] text-white font-bold'
+                                : 'text-[#101114] dark:text-[#f3f4f8] hover:bg-[#edeef3] dark:hover:bg-[#1e202b] font-semibold'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span
+                                className={`w-6 h-6 rounded-[6px] flex items-center justify-center shrink-0 ${
+                                  isSelected
+                                    ? 'bg-black/15 text-current'
+                                    : 'bg-[#edeef3] dark:bg-[#232534]'
+                                }`}
+                              >
+                                <CategoryIcon
+                                  name={cat.name}
+                                  type={type}
+                                  icon={cat.icon}
+                                  emoji={cat.emoji}
+                                  size="sm"
+                                  className={isSelected ? '!text-current' : ''}
+                                />
+                              </span>
+                              <span className="truncate text-xs">{cat.name}</span>
+                            </div>
+                            {isSelected && <Check className="w-3.5 h-3.5 shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
 
           {/* Catatan Opsional */}
           <div>
-            <label className="block text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mb-1">
+            <label
+              htmlFor="tpl-notes-input"
+              className="block text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mb-1"
+            >
               Catatan (Opsional)
             </label>
             <input
+              id="tpl-notes-input"
+              name="notes"
               type="text"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -400,5 +674,29 @@ export const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
         </form>
       </div>
     </div>
+  );
+};
+
+export const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
+  isOpen,
+  template,
+  accounts,
+  categories,
+  onClose,
+  onSave,
+  onDelete,
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <EditTemplateModalContent
+      key={template?.id || 'new-template'}
+      template={template}
+      accounts={accounts}
+      categories={categories}
+      onClose={onClose}
+      onSave={onSave}
+      onDelete={onDelete}
+    />
   );
 };

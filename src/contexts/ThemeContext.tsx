@@ -1,110 +1,15 @@
-import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
+import {
+  DESIGN_SYSTEMS,
+  ThemeContext,
+  type DesignSystem,
+  type ThemeMode,
+  type ThemeConfig,
+} from './themeStore';
 
-export type ThemeMode = 'light' | 'dark' | 'system';
-export type DesignSystem = 'coinbase' | 'theverge' | 'kraken' | 'autumn' | 'mongodb';
-
-export interface ThemeConfig {
-  id: DesignSystem;
-  name: string;
-  tagline: string;
-  badge: string;
-  description: string;
-  primaryColor: string;
-  accentColor: string;
-  canvasBg: { light: string; dark: string };
-  pillShape: boolean;
-  fontDisplay: string;
-  fontSans: string;
-  docFile: string;
-}
-
-export const DESIGN_SYSTEMS: Record<DesignSystem, ThemeConfig> = {
-  mongodb: {
-    id: 'mongodb',
-    name: 'MongoDB',
-    tagline: 'Developer Data Platform',
-    badge: 'MongoDB Edition',
-    description: 'Aksen hijau MongoDB, kanvas deep-teal, tombol pill, dan tipografi Euclid Circular',
-    primaryColor: '#00ed64',
-    accentColor: '#00684a',
-    canvasBg: { light: '#ffffff', dark: '#001e2b' },
-    pillShape: true,
-    fontDisplay: 'Euclid Circular A',
-    fontSans: 'Euclid Circular A',
-    docFile: 'DESIGN-mongodb.md',
-  },
-  coinbase: {
-    id: 'coinbase',
-    name: 'Coinbase',
-    tagline: 'Financial Institutional Edition',
-    badge: 'Coinbase Edition',
-    description: 'Aksen Coinbase Blue, tombol pill, dan tipografi Inter & JetBrains Mono.',
-    primaryColor: '#0052ff',
-    accentColor: '#003ecc',
-    canvasBg: { light: '#ffffff', dark: '#0a0b0d' },
-    pillShape: true,
-    fontDisplay: 'Inter',
-    fontSans: 'Inter',
-    docFile: 'DESIGN-coinbase.md',
-  },
-  theverge: {
-    id: 'theverge',
-    name: 'The Verge',
-    tagline: 'Cyber Editorial Edition',
-    badge: 'The Verge Edition',
-    description: 'Aksen neon Jelly Mint & Ultraviolet, kanvas editorial, dan headline Anton.',
-    primaryColor: '#3cffd0',
-    accentColor: '#5200ff',
-    canvasBg: { light: '#f7f7f9', dark: '#131313' },
-    pillShape: true,
-    fontDisplay: 'Anton',
-    fontSans: 'Space Grotesk',
-    docFile: 'DESIGN-theverge.md',
-  },
-  kraken: {
-    id: 'kraken',
-    name: 'Kraken',
-    tagline: 'Crypto Classic Edition',
-    badge: 'Kraken Edition',
-    description: 'Aksen Kraken Purple, font IBM Plex Sans, dan bayangan lembut.',
-    primaryColor: '#7132f5',
-    accentColor: '#5741d8',
-    canvasBg: { light: '#fafbfe', dark: '#0d0e12' },
-    pillShape: false,
-    fontDisplay: 'IBM Plex Sans',
-    fontSans: 'IBM Plex Sans',
-    docFile: 'DESIGN-kraken.md',
-  },
-  autumn: {
-    id: 'autumn',
-    name: 'Autumn',
-    tagline: 'Warm Insight Edition',
-    badge: 'Autumn Edition',
-    description: 'Tampilan hangat dengan nuansa warna oat dan aksen oranye musim gugur yang nyaman.',
-    primaryColor: '#ea580c',
-    accentColor: '#c2410c',
-    canvasBg: { light: '#f4efea', dark: '#1c1917' },
-    pillShape: false,
-    fontDisplay: 'Plus Jakarta Sans',
-    fontSans: 'Plus Jakarta Sans',
-    docFile: 'DESIGN-autumn.md',
-  },
-};
-
-interface ThemeContextType {
-  theme: ThemeMode;
-  setTheme: (theme: ThemeMode) => void;
-  designSystem: DesignSystem;
-  setDesignSystem: (system: DesignSystem) => void;
-  isDark: boolean;
-  toggleTheme: () => void;
-  currentConfig: ThemeConfig;
-}
-
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+export type { DesignSystem, ThemeMode, ThemeConfig };
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Design system state: coinbase | theverge | kraken
   const [designSystem, setDesignSystemState] = useState<DesignSystem>(() => {
     try {
       const saved = localStorage.getItem('ft_design_system') as DesignSystem | null;
@@ -115,7 +20,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return 'coinbase';
   });
 
-  // Theme mode: light | dark | system
   const [theme, setThemeState] = useState<ThemeMode>(() => {
     try {
       const saved = localStorage.getItem('ft_theme') as ThemeMode | null;
@@ -133,7 +37,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return false;
   });
 
-  // Listen to system theme changes
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handler = (e: MediaQueryListEvent) => {
@@ -144,14 +47,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return () => mediaQuery.removeEventListener('change', handler);
   }, []);
 
-  // Determine actual active dark state
   const isDark = useMemo(() => {
     if (theme === 'dark') return true;
     if (theme === 'light') return false;
     return systemIsDark;
   }, [theme, systemIsDark]);
 
-  // Sync data-theme and dark class on <html>
   useEffect(() => {
     const root = document.documentElement;
     root.setAttribute('data-theme', designSystem);
@@ -162,7 +63,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       root.classList.remove('dark');
     }
 
-    // Update browser theme-color meta tag
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
       if (designSystem === 'coinbase') {
@@ -179,51 +79,43 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [designSystem, isDark]);
 
- const setDesignSystem = (newSystem: DesignSystem) => {
- setDesignSystemState(newSystem);
- try {
- localStorage.setItem('ft_design_system', newSystem);
- } catch {}
- };
+  const setDesignSystem = (newSystem: DesignSystem) => {
+    setDesignSystemState(newSystem);
+    try {
+      localStorage.setItem('ft_design_system', newSystem);
+    } catch {}
+  };
 
- const setTheme = (newTheme: ThemeMode) => {
- setThemeState(newTheme);
- try {
- localStorage.setItem('ft_theme', newTheme);
- } catch {}
- };
+  const setTheme = (newTheme: ThemeMode) => {
+    setThemeState(newTheme);
+    try {
+      localStorage.setItem('ft_theme', newTheme);
+    } catch {}
+  };
 
- const toggleTheme = () => {
- if (isDark) {
- setTheme('light');
- } else {
- setTheme('dark');
- }
- };
+  const toggleTheme = () => {
+    if (isDark) {
+      setTheme('light');
+    } else {
+      setTheme('dark');
+    }
+  };
 
- const currentConfig = useMemo(() => DESIGN_SYSTEMS[designSystem], [designSystem]);
+  const currentConfig = useMemo(() => DESIGN_SYSTEMS[designSystem], [designSystem]);
 
- return (
- <ThemeContext.Provider
- value={{
- theme,
- setTheme,
- designSystem,
- setDesignSystem,
- isDark,
- toggleTheme,
- currentConfig,
- }}
- >
- {children}
- </ThemeContext.Provider>
- );
+  return (
+    <ThemeContext.Provider
+      value={{
+        theme,
+        setTheme,
+        designSystem,
+        setDesignSystem,
+        isDark,
+        toggleTheme,
+        currentConfig,
+      }}
+    >
+      {children}
+    </ThemeContext.Provider>
+  );
 };
-
-export function useTheme(): ThemeContextType {
- const context = useContext(ThemeContext);
- if (!context) {
- throw new Error('useTheme must be used within a ThemeProvider');
- }
- return context;
-}

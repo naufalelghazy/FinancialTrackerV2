@@ -1,21 +1,12 @@
 import { ReloadPrompt } from './components/layout/ReloadPrompt';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 import { BottomNav } from './components/layout/BottomNav';
 import type { NavTab } from './components/layout/BottomNav';
 import { DashboardView } from './features/dashboard/DashboardView';
 import { TransactionForm } from './components/forms/TransactionForm';
-import { AccountsView } from './features/accounts/AccountsView';
-import { BillsView } from './features/accounts/BillsView';
-import { ReportView } from './features/report/ReportView';
-import { HistoryView } from './features/history/HistoryView';
-import { SettingsModal, type SettingsTab } from './components/modals/SettingsModal';
-import { EditAccountModal } from './components/modals/EditAccountModal';
-import { EditTransactionModal } from './components/modals/EditTransactionModal';
-import { EditCategoryModal } from './components/modals/EditCategoryModal';
-import { EditTemplateModal } from './components/modals/EditTemplateModal';
-import { VoiceTransactionModal } from './components/modals/VoiceTransactionModal';
+import type { SettingsTab } from './components/modals/SettingsModal';
 import { Toast, type ToastItem } from './components/ui/Toast';
 import { INITIAL_ACCOUNTS, INITIAL_CATEGORIES } from './lib/constants';
 import {
@@ -31,6 +22,8 @@ import {
   deleteCategoryFromDatabase,
   calculateAccountBalances,
   getAccountIcon,
+  flushOfflineSyncQueue,
+  getPendingSyncCount,
 } from './services/financialService';
 import {
   loadCachedQuickTemplates,
@@ -43,6 +36,46 @@ import {
 } from './services/templateService';
 import type { Account, AccountType, Category, Transaction, TransactionType, QuickTemplate } from './types';
 import { formatCurrency } from './lib/formatters';
+
+const AccountsView = lazy(() =>
+  import('./features/accounts/AccountsView').then((m) => ({ default: m.AccountsView }))
+);
+const BillsView = lazy(() =>
+  import('./features/accounts/BillsView').then((m) => ({ default: m.BillsView }))
+);
+const ReportView = lazy(() =>
+  import('./features/report/ReportView').then((m) => ({ default: m.ReportView }))
+);
+const HistoryView = lazy(() =>
+  import('./features/history/HistoryView').then((m) => ({ default: m.HistoryView }))
+);
+const SettingsModal = lazy(() =>
+  import('./components/modals/SettingsModal').then((m) => ({ default: m.SettingsModal }))
+);
+const EditAccountModal = lazy(() =>
+  import('./components/modals/EditAccountModal').then((m) => ({ default: m.EditAccountModal }))
+);
+const EditTransactionModal = lazy(() =>
+  import('./components/modals/EditTransactionModal').then((m) => ({ default: m.EditTransactionModal }))
+);
+const EditCategoryModal = lazy(() =>
+  import('./components/modals/EditCategoryModal').then((m) => ({ default: m.EditCategoryModal }))
+);
+const EditTemplateModal = lazy(() =>
+  import('./components/modals/EditTemplateModal').then((m) => ({ default: m.EditTemplateModal }))
+);
+const VoiceTransactionModal = lazy(() =>
+  import('./components/modals/VoiceTransactionModal').then((m) => ({ default: m.VoiceTransactionModal }))
+);
+
+function ViewFallback() {
+  return (
+    <div className="py-20 flex flex-col items-center justify-center text-center space-y-2.5">
+      <div className="w-8 h-8 border-2 border-[#7132f5]/20 border-t-[#7132f5] rounded-full animate-spin" />
+      <p className="text-xs font-medium text-[#686b82] dark:text-[#9ea2b8]">Memuat tampilan...</p>
+    </div>
+  );
+}
 
 export function App() {
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
@@ -66,6 +99,7 @@ export function App() {
   const [selectedTemplate, setSelectedTemplate] = useState<QuickTemplate | null>(null);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
+  const [prefilledVoiceKey, setPrefilledVoiceKey] = useState(0);
   const [prefilledVoiceData, setPrefilledVoiceData] = useState<{
     type: TransactionType;
     amount: number;
@@ -145,6 +179,7 @@ export function App() {
     if (isRefreshing) return;
     setIsRefreshing(true);
     try {
+      const pendingBefore = getPendingSyncCount();
       const [data, tpls] = await Promise.all([
         loadFinancialData(),
         loadQuickTemplates(),
@@ -153,12 +188,40 @@ export function App() {
       setCategories(data.categories);
       setTransactions(data.transactions);
       setTemplates(tpls);
+      const pendingAfter = getPendingSyncCount();
+      if (pendingBefore > 0 && pendingAfter < pendingBefore) {
+        const synced = pendingBefore - pendingAfter;
+        showToast(
+          `${synced} perubahan offline berhasil disinkronkan!`,
+          'Data telah diperbarui ke penyimpanan awan'
+        );
+      }
     } catch (err) {
       console.error('Refresh failed:', err);
     } finally {
       setIsRefreshing(false);
     }
-  }, [isRefreshing]);
+  }, [isRefreshing, showToast]);
+
+  // Automatically flush offline outbox when network connection returns
+  useEffect(() => {
+    const handleOnline = async () => {
+      const pending = getPendingSyncCount();
+      if (pending > 0) {
+        const synced = await flushOfflineSyncQueue();
+        if (synced > 0) {
+          showToast(
+            `${synced} antrean offline berhasil disinkronkan!`,
+            'Koneksi kembali stabil'
+          );
+          handleRefresh();
+        }
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [handleRefresh, showToast]);
 
   // Handle create transaction
   const handleAddTransaction = async (data: {
@@ -176,6 +239,8 @@ export function App() {
       const nextAccounts = calculateAccountBalances(accounts, nextTransactions);
       setTransactions(nextTransactions);
       setAccounts(nextAccounts);
+      localStorage.setItem('ft_transactions', JSON.stringify(nextTransactions));
+      localStorage.setItem('ft_accounts', JSON.stringify(nextAccounts));
     } catch (err) {
       console.error('Error adding transaction:', err);
       const fallbackTx: Transaction = {
@@ -194,6 +259,7 @@ export function App() {
       setTransactions(nextTransactions);
       setAccounts(nextAccounts);
       localStorage.setItem('ft_transactions', JSON.stringify(nextTransactions));
+      localStorage.setItem('ft_accounts', JSON.stringify(nextAccounts));
     }
   };
 
@@ -226,6 +292,8 @@ export function App() {
     const nextAccounts = calculateAccountBalances(accounts, nextTransactions);
     setTransactions(nextTransactions);
     setAccounts(nextAccounts);
+    localStorage.setItem('ft_transactions', JSON.stringify(nextTransactions));
+    localStorage.setItem('ft_accounts', JSON.stringify(nextAccounts));
 
     await updateTransactionInDatabase(updated.id, updated);
   };
@@ -237,6 +305,8 @@ export function App() {
 
     setTransactions(nextTransactions);
     setAccounts(nextAccounts);
+    localStorage.setItem('ft_transactions', JSON.stringify(nextTransactions));
+    localStorage.setItem('ft_accounts', JSON.stringify(nextAccounts));
 
     await deleteTransactionFromDatabase(id);
   };
@@ -270,6 +340,8 @@ export function App() {
       const nextAccounts = calculateAccountBalances(accounts, nextTransactions);
       setTransactions(nextTransactions);
       setAccounts(nextAccounts);
+      localStorage.setItem('ft_transactions', JSON.stringify(nextTransactions));
+      localStorage.setItem('ft_accounts', JSON.stringify(nextAccounts));
     } catch (err) {
       console.error('Error adding transaction from template:', err);
       const fallbackTx: Transaction = {
@@ -289,6 +361,7 @@ export function App() {
       setTransactions(nextTransactions);
       setAccounts(nextAccounts);
       localStorage.setItem('ft_transactions', JSON.stringify(nextTransactions));
+      localStorage.setItem('ft_accounts', JSON.stringify(nextAccounts));
     }
 
     if (navigator.vibrate) {
@@ -359,6 +432,7 @@ export function App() {
       );
       const recomputed = calculateAccountBalances(nextAccounts, transactions);
       setAccounts(recomputed);
+      localStorage.setItem('ft_accounts', JSON.stringify(recomputed));
 
       await updateAccountInDatabase(data.id, {
         name: data.name,
@@ -378,6 +452,7 @@ export function App() {
       const nextAccounts = [...accounts, created];
       const recomputed = calculateAccountBalances(nextAccounts, transactions);
       setAccounts(recomputed);
+      localStorage.setItem('ft_accounts', JSON.stringify(recomputed));
     }
   };
 
@@ -385,6 +460,7 @@ export function App() {
   const handleDeleteAccount = async (id: string) => {
     const nextAccounts = accounts.filter((a) => a.id !== id);
     setAccounts(nextAccounts);
+    localStorage.setItem('ft_accounts', JSON.stringify(nextAccounts));
     await deleteAccountFromDatabase(id);
   };
 
@@ -476,210 +552,220 @@ export function App() {
 
         {/* Main Content Area - Responsive Container */}
         <main className="w-full max-w-7xl 2xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 py-6 2xl:py-8 flex-1">
-        {isLoading && accounts.length === 0 ? (
-          <div className="py-24 flex flex-col items-center justify-center text-center space-y-3">
-            <div className="w-10 h-10 border-3 border-[#7132f5]/20 border-t-[#7132f5] rounded-full animate-spin" />
-            <p className="text-sm font-semibold text-[#101114]">
-              Menghubungkan ke Supabase...
-            </p>
-            <p className="text-xs text-[#686b82]">
-              Menghitung saldo dari seluruh riwayat transaksi
-            </p>
-          </div>
-        ) : (
-          <>
-            {activeTab === 'dashboard' && (
-              <DashboardView
-                accounts={accounts}
-                transactions={transactions}
-                categories={categories}
-                templates={templates}
-                onNavigateTab={setActiveTab}
-                onEditTransaction={(t) => {
-                  setSelectedTransaction(t);
-                  setIsTxModalOpen(true);
-                }}
-                onAddTransaction={() => setActiveTab('input')}
-                onUseTemplateDirectly={handleUseTemplateDirectly}
-                onEditTemplate={(tpl) => {
-                  setSelectedTemplate(tpl);
-                  setIsTemplateModalOpen(true);
-                }}
-                onAddTemplate={() => {
-                  setSelectedTemplate(null);
-                  setIsTemplateModalOpen(true);
-                }}
-              />
-            )}
-
-            {activeTab === 'input' && (
-              <div className="max-w-xl 2xl:max-w-2xl mx-auto">
-                <TransactionForm
+          {isLoading && accounts.length === 0 ? (
+            <div className="py-24 flex flex-col items-center justify-center text-center space-y-3">
+              <div className="w-10 h-10 border-3 border-[#7132f5]/20 border-t-[#7132f5] rounded-full animate-spin" />
+              <p className="text-sm font-semibold text-[#101114]">
+                Menghubungkan ke Supabase...
+              </p>
+              <p className="text-xs text-[#686b82]">
+                Menghitung saldo dari seluruh riwayat transaksi
+              </p>
+            </div>
+          ) : (
+            <Suspense fallback={<ViewFallback />}>
+              {activeTab === 'dashboard' && (
+                <DashboardView
                   accounts={accounts}
+                  transactions={transactions}
                   categories={categories}
                   templates={templates}
-                  prefilledData={prefilledVoiceData}
-                  onClearPrefilledData={() => setPrefilledVoiceData(null)}
-                  onOpenVoiceModal={() => setIsVoiceModalOpen(true)}
-                  onSubmit={handleAddTransaction}
-                  onSaveAsTemplate={handleSaveAsTemplate}
-                />
-              </div>
-            )}
-
-            {activeTab === 'saldo' && (
-              <AccountsView
-                accounts={accounts}
-                onEditAccount={(acc) => {
-                  setSelectedAccount(acc);
-                  setIsAccountModalOpen(true);
-                }}
-                onAddAccount={() => {
-                  setSelectedAccount(null);
-                  setIsAccountModalOpen(true);
-                }}
-              />
-            )}
-
-            {activeTab === 'tagihan' && (
-              <BillsView
-                accounts={accounts}
-                onEditAccount={(acc) => {
-                  setSelectedAccount(acc);
-                  setIsAccountModalOpen(true);
-                }}
-              />
-            )}
-
-            {activeTab === 'riwayat' && (
-              <div className="max-w-4xl 2xl:max-w-5xl mx-auto">
-                <HistoryView
-                  transactions={transactions}
-                  accounts={accounts}
-                  categories={categories}
+                  onNavigateTab={setActiveTab}
                   onEditTransaction={(t) => {
                     setSelectedTransaction(t);
                     setIsTxModalOpen(true);
                   }}
-                />
-              </div>
-            )}
-
-            {activeTab === 'report' && (
-              <div className="max-w-7xl 2xl:max-w-[1536px] mx-auto">
-                <ReportView
-                  transactions={transactions}
-                  accounts={accounts}
-                  categories={categories}
-                  onEditTransaction={(t) => {
-                    setSelectedTransaction(t);
-                    setIsTxModalOpen(true);
+                  onAddTransaction={() => setActiveTab('input')}
+                  onUseTemplateDirectly={handleUseTemplateDirectly}
+                  onEditTemplate={(tpl) => {
+                    setSelectedTemplate(tpl);
+                    setIsTemplateModalOpen(true);
+                  }}
+                  onAddTemplate={() => {
+                    setSelectedTemplate(null);
+                    setIsTemplateModalOpen(true);
                   }}
                 />
-              </div>
-            )}
-          </>
-        )}
-      </main>
+              )}
 
+              {activeTab === 'input' && (
+                <div className="max-w-xl 2xl:max-w-2xl mx-auto">
+                  <TransactionForm
+                    key={prefilledVoiceKey}
+                    accounts={accounts}
+                    categories={categories}
+                    templates={templates}
+                    prefilledData={prefilledVoiceData}
+                    onClearPrefilledData={() => setPrefilledVoiceData(null)}
+                    onOpenVoiceModal={() => setIsVoiceModalOpen(true)}
+                    onSubmit={handleAddTransaction}
+                    onSaveAsTemplate={handleSaveAsTemplate}
+                  />
+                </div>
+              )}
+
+              {activeTab === 'saldo' && (
+                <AccountsView
+                  accounts={accounts}
+                  onEditAccount={(acc) => {
+                    setSelectedAccount(acc);
+                    setIsAccountModalOpen(true);
+                  }}
+                  onAddAccount={() => {
+                    setSelectedAccount(null);
+                    setIsAccountModalOpen(true);
+                  }}
+                />
+              )}
+
+              {activeTab === 'tagihan' && (
+                <BillsView
+                  accounts={accounts}
+                  onEditAccount={(acc) => {
+                    setSelectedAccount(acc);
+                    setIsAccountModalOpen(true);
+                  }}
+                />
+              )}
+
+              {activeTab === 'riwayat' && (
+                <div className="max-w-4xl 2xl:max-w-5xl mx-auto">
+                  <HistoryView
+                    transactions={transactions}
+                    accounts={accounts}
+                    categories={categories}
+                    onEditTransaction={(t) => {
+                      setSelectedTransaction(t);
+                      setIsTxModalOpen(true);
+                    }}
+                  />
+                </div>
+              )}
+
+              {activeTab === 'report' && (
+                <div className="max-w-7xl 2xl:max-w-[1536px] mx-auto">
+                  <ReportView
+                    transactions={transactions}
+                    accounts={accounts}
+                    categories={categories}
+                    onEditTransaction={(t) => {
+                      setSelectedTransaction(t);
+                      setIsTxModalOpen(true);
+                    }}
+                  />
+                </div>
+              )}
+            </Suspense>
+          )}
+        </main>
       </div>
 
       {/* Mobile Bottom Navigation (Hidden on Desktop) */}
       <BottomNav activeTab={activeTab} onChangeTab={setActiveTab} />
 
-      {/* Settings Modal - Multi-tab application & backend settings */}
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        initialTab={settingsTab}
-        onClose={() => setIsSettingsOpen(false)}
-        accounts={accounts}
-        categories={categories}
-        templates={templates}
-        onEditAccount={(acc) => {
-          setSelectedAccount(acc);
-          setIsAccountModalOpen(true);
-        }}
-        onAddAccount={() => {
-          setSelectedAccount(null);
-          setIsAccountModalOpen(true);
-        }}
-        onEditCategory={(cat) => {
-          setSelectedCategory(cat);
-          setIsCategoryModalOpen(true);
-        }}
-        onAddCategory={() => {
-          setSelectedCategory(null);
-          setIsCategoryModalOpen(true);
-        }}
-        onEditTemplate={(tpl) => {
-          setSelectedTemplate(tpl);
-          setIsTemplateModalOpen(true);
-        }}
-        onAddTemplate={() => {
-          setSelectedTemplate(null);
-          setIsTemplateModalOpen(true);
-        }}
-        onDeleteTemplate={handleDeleteTemplate}
-      />
+      {/* Lazy-loaded Modals */}
+      <Suspense fallback={null}>
+        {isSettingsOpen && (
+          <SettingsModal
+            isOpen={isSettingsOpen}
+            initialTab={settingsTab}
+            onClose={() => setIsSettingsOpen(false)}
+            accounts={accounts}
+            categories={categories}
+            templates={templates}
+            onEditAccount={(acc) => {
+              setSelectedAccount(acc);
+              setIsAccountModalOpen(true);
+            }}
+            onAddAccount={() => {
+              setSelectedAccount(null);
+              setIsAccountModalOpen(true);
+            }}
+            onEditCategory={(cat) => {
+              setSelectedCategory(cat);
+              setIsCategoryModalOpen(true);
+            }}
+            onAddCategory={() => {
+              setSelectedCategory(null);
+              setIsCategoryModalOpen(true);
+            }}
+            onEditTemplate={(tpl) => {
+              setSelectedTemplate(tpl);
+              setIsTemplateModalOpen(true);
+            }}
+            onAddTemplate={() => {
+              setSelectedTemplate(null);
+              setIsTemplateModalOpen(true);
+            }}
+            onDeleteTemplate={handleDeleteTemplate}
+          />
+        )}
 
-      {/* Edit / Add Account Modal */}
-      <EditAccountModal
-        isOpen={isAccountModalOpen}
-        account={selectedAccount}
-        onClose={() => setIsAccountModalOpen(false)}
-        onSave={handleSaveAccount}
-        onDelete={handleDeleteAccount}
-      />
+        {isAccountModalOpen && (
+          <EditAccountModal
+            isOpen={isAccountModalOpen}
+            account={selectedAccount}
+            onClose={() => setIsAccountModalOpen(false)}
+            onSave={handleSaveAccount}
+            onDelete={handleDeleteAccount}
+          />
+        )}
 
-      {/* Edit / Add Category Modal */}
-      <EditCategoryModal
-        isOpen={isCategoryModalOpen}
-        category={selectedCategory}
-        onClose={() => setIsCategoryModalOpen(false)}
-        onSave={handleSaveCategory}
-        onDelete={handleDeleteCategory}
-      />
+        {isCategoryModalOpen && (
+          <EditCategoryModal
+            isOpen={isCategoryModalOpen}
+            category={selectedCategory}
+            onClose={() => setIsCategoryModalOpen(false)}
+            onSave={handleSaveCategory}
+            onDelete={handleDeleteCategory}
+          />
+        )}
 
-      {/* Edit / Add Template Modal */}
-      <EditTemplateModal
-        isOpen={isTemplateModalOpen}
-        template={selectedTemplate}
-        accounts={accounts}
-        categories={categories}
-        onClose={() => setIsTemplateModalOpen(false)}
-        onSave={handleSaveTemplate}
-        onDelete={handleDeleteTemplate}
-      />
+        {isTemplateModalOpen && (
+          <EditTemplateModal
+            isOpen={isTemplateModalOpen}
+            template={selectedTemplate}
+            accounts={accounts}
+            categories={categories}
+            onClose={() => setIsTemplateModalOpen(false)}
+            onSave={handleSaveTemplate}
+            onDelete={handleDeleteTemplate}
+          />
+        )}
 
-      {/* Edit Transaction Modal */}
-      <EditTransactionModal
-        isOpen={isTxModalOpen}
-        transaction={selectedTransaction}
-        accounts={accounts}
-        categories={categories}
-        onClose={() => setIsTxModalOpen(false)}
-        onSave={handleSaveTransaction}
-        onDelete={handleDeleteTransaction}
-      />
+        {isTxModalOpen && (
+          <EditTransactionModal
+            isOpen={isTxModalOpen}
+            transaction={selectedTransaction}
+            accounts={accounts}
+            categories={categories}
+            onClose={() => setIsTxModalOpen(false)}
+            onSave={handleSaveTransaction}
+            onDelete={handleDeleteTransaction}
+          />
+        )}
 
-      {/* Voice Transaction Modal */}
-      <VoiceTransactionModal
-        isOpen={isVoiceModalOpen}
-        onClose={() => setIsVoiceModalOpen(false)}
-        accounts={accounts}
-        categories={categories}
-        templates={templates}
-        history={transactions}
-        onApplyToForm={(data) => {
-          setPrefilledVoiceData(data);
-          setActiveTab('input');
-          showToast('Data ucapan diterapkan ke formulir!', 'Tinjau detail sebelum menyimpan');
-        }}
-        onDirectSave={async (data) => {
-          await handleAddTransaction(data);
-          showToast('Transaksi berhasil disimpan via suara!', data.notes);
-        }}
-      />
+        {isVoiceModalOpen && (
+          <VoiceTransactionModal
+            isOpen={isVoiceModalOpen}
+            onClose={() => setIsVoiceModalOpen(false)}
+            accounts={accounts}
+            categories={categories}
+            templates={templates}
+            history={transactions}
+            onApplyToForm={(data) => {
+              setPrefilledVoiceData(data);
+              setPrefilledVoiceKey((k) => k + 1);
+              setActiveTab('input');
+              showToast('Data ucapan diterapkan ke formulir!', 'Tinjau detail sebelum menyimpan');
+            }}
+            onDirectSave={async (data) => {
+              await handleAddTransaction(data);
+              showToast('Transaksi berhasil disimpan via suara!', data.notes);
+            }}
+          />
+        )}
+      </Suspense>
 
       {/* Global Toast with Undo Action */}
       <Toast toast={activeToast} onClose={() => setActiveToast(null)} />

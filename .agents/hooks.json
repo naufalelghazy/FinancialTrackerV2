@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "py \"./token-saver/antigravity/hook_aftertool.py\"",
+            "command": "py F:/project/FinancialTrackerV2/token-saver/antigravity/hook_aftertool.py",
             "timeout": 10
           }
         ]
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "py \"./token-saver/antigravity/hook_aftertool.py\"",
+            "command": "py F:/project/FinancialTrackerV2/token-saver/antigravity/hook_aftertool.py",
             "timeout": 10
           }
         ]

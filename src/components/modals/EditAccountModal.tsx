@@ -18,8 +18,7 @@ interface EditAccountModalProps {
   onDelete?: (id: string) => Promise<void>;
 }
 
-export const EditAccountModal: React.FC<EditAccountModalProps> = ({
-  isOpen,
+const EditAccountModalContent: React.FC<Omit<EditAccountModalProps, 'isOpen'>> = ({
   account,
   onClose,
   onSave,
@@ -27,11 +26,15 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
 }) => {
   const isEditing = Boolean(account);
 
-  const [name, setName] = useState('');
-  const [type, setType] = useState<AccountType>('bank');
-  const [website, setWebsite] = useState('');
-  const [initialBalanceDisplay, setInitialBalanceDisplay] = useState('0');
-  const [targetBalanceDisplay, setTargetBalanceDisplay] = useState('');
+  const [name, setName] = useState(() => account?.name || '');
+  const [type, setType] = useState<AccountType>(() => account?.type || 'bank');
+  const [website, setWebsite] = useState(() => account?.website || '');
+  const [initialBalanceDisplay, setInitialBalanceDisplay] = useState(() =>
+    account ? formatNumberInput(String(account.initialBalance ?? 0)) : '0'
+  );
+  const [targetBalanceDisplay, setTargetBalanceDisplay] = useState(() =>
+    account ? formatNumberInput(String(account.balance ?? 0)) : '0'
+  );
   const [isAdjustMode, setIsAdjustMode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -40,44 +43,17 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
   const [previewFailed, setPreviewFailed] = useState(false);
 
   useEffect(() => {
-    if (account) {
-      setName(account.name);
-      setType(account.type);
-      setWebsite(account.website || '');
-      setInitialBalanceDisplay(formatNumberInput(String(account.initialBalance ?? 0)));
-      setTargetBalanceDisplay(formatNumberInput(String(account.balance ?? 0)));
-    } else {
-      setName('');
-      setType('bank');
-      setWebsite('');
-      setInitialBalanceDisplay('0');
-      setTargetBalanceDisplay('0');
-    }
-    setIsAdjustMode(false);
-    setConfirmDelete(false);
-    setErrorMsg('');
-    setPreviewFailed(false);
-  }, [account, isOpen]);
-
-  useEffect(() => {
-    setPreviewFailed(false);
-  }, [name, website]);
-
-  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === 'Escape') {
         onClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [onClose]);
 
-  if (!isOpen) return null;
-
-  // Real-time preview logo from img.logo.dev with fallback
   const previewLogoSrc = !previewFailed
-    ? (getLogoDevUrl(name, website) || getLocalFallback(name))
+    ? getLogoDevUrl(name, website) || getLocalFallback(name)
     : getLocalFallback(name);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -107,8 +83,9 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
         initialBalance: finalInitialBalance,
       });
       onClose();
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Gagal menyimpan perubahan akun.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal menyimpan perubahan akun.';
+      setErrorMsg(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -125,8 +102,9 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
     try {
       await onDelete(account.id);
       onClose();
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Gagal menghapus akun.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Gagal menghapus akun.';
+      setErrorMsg(msg);
       setConfirmDelete(false);
     } finally {
       setIsDeleting(false);
@@ -151,7 +129,9 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
                 {isEditing ? 'Kelola Akun & Saldo' : 'Tambah Akun Baru'}
               </h2>
               <p className="text-[11px] text-[#686b82] dark:text-[#9ca0ba]">
-                {isEditing ? 'Perbarui informasi atau koreksi saldo' : 'Daftarkan rekening atau dompet baru'}
+                {isEditing
+                  ? 'Perbarui informasi atau koreksi saldo'
+                  : 'Daftarkan rekening atau dompet baru'}
               </p>
             </div>
           </div>
@@ -197,14 +177,22 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
 
           {/* Name Field */}
           <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1">
+            <label
+              htmlFor="account-name-input"
+              className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1"
+            >
               Nama Akun
             </label>
             <input
+              id="account-name-input"
+              name="name"
               type="text"
               required
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                setPreviewFailed(false);
+              }}
               placeholder="Contoh: BCA Utama, Dompet Saku"
               className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
             />
@@ -213,7 +201,10 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
           {/* Website / Domain URL Input for img.logo.dev */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] flex items-center gap-1.5">
+              <label
+                htmlFor="account-website-input"
+                className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] flex items-center gap-1.5"
+              >
                 <Globe className="w-3.5 h-3.5 text-[#7132f5]" />
                 <span>Website / Domain Akun</span>
               </label>
@@ -221,9 +212,14 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
             </div>
             <div className="relative flex items-center">
               <input
+                id="account-website-input"
+                name="website"
                 type="text"
                 value={website}
-                onChange={(e) => setWebsite(e.target.value)}
+                onChange={(e) => {
+                  setWebsite(e.target.value);
+                  setPreviewFailed(false);
+                }}
                 placeholder="Contoh: doku.com atau bca.co.id"
                 className="w-full pl-3.5 pr-11 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
               />
@@ -245,16 +241,22 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
               </div>
             </div>
             <p className="text-[11px] text-[#686b82] mt-1.5 leading-snug">
-              <code>img.logo.dev</code> akan mencari logo resmi berdasarkan domain ini jika nama akun belum terdeteksi.
+              <code>img.logo.dev</code> akan mencari logo resmi berdasarkan domain ini jika nama
+              akun belum terdeteksi.
             </p>
           </div>
 
           {/* Type Field */}
           <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1">
+            <label
+              htmlFor="account-type-select"
+              className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1"
+            >
               Tipe Akun
             </label>
             <select
+              id="account-type-select"
+              name="type"
               value={type}
               onChange={(e) => setType(e.target.value as AccountType)}
               className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
@@ -270,12 +272,17 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
           {isEditing && isAdjustMode ? (
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-[11px] font-semibold uppercase tracking-wider text-[#7132f5]">
+                <label
+                  htmlFor="account-target-balance"
+                  className="text-[11px] font-semibold uppercase tracking-wider text-[#7132f5]"
+                >
                   Saldo Riil yang Diinginkan (Rp)
                 </label>
                 <span className="text-[10px] text-[#686b82]">Koreksi otomatis</span>
               </div>
               <input
+                id="account-target-balance"
+                name="targetBalance"
                 type="text"
                 value={targetBalanceDisplay}
                 onChange={(e) => setTargetBalanceDisplay(formatNumberInput(e.target.value))}
@@ -283,15 +290,21 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
                 className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fbf9fe] border-2 border-[#7132f5] text-base font-bold text-[#101114] outline-none focus:ring-2 focus:ring-[#855bfb]/25 transition-all"
               />
               <p className="text-[11px] text-[#686b82] mt-1.5 leading-snug">
-                Sistem akan menghitung selisih dan menyesuaikan saldo awal agar saldo akhir sama persis dengan angka di atas.
+                Sistem akan menghitung selisih dan menyesuaikan saldo awal agar saldo akhir sama
+                persis dengan angka di atas.
               </p>
             </div>
           ) : (
             <div>
-              <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1">
+              <label
+                htmlFor="account-initial-balance"
+                className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1"
+              >
                 Saldo Awal Rekening (Rp)
               </label>
               <input
+                id="account-initial-balance"
+                name="initialBalance"
                 type="text"
                 value={initialBalanceDisplay}
                 onChange={(e) => setInitialBalanceDisplay(formatNumberInput(e.target.value))}
@@ -323,16 +336,32 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
                 }`}
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>
-                  {confirmDelete
-                    ? 'Konfirmasi Hapus Akun Ini?'
-                    : 'Hapus Akun Ini'}
-                </span>
+                <span>{confirmDelete ? 'Konfirmasi Hapus Akun Ini?' : 'Hapus Akun Ini'}</span>
               </button>
             )}
           </div>
         </form>
       </div>
     </div>
+  );
+};
+
+export const EditAccountModal: React.FC<EditAccountModalProps> = ({
+  isOpen,
+  account,
+  onClose,
+  onSave,
+  onDelete,
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <EditAccountModalContent
+      key={account?.id || 'new-account'}
+      account={account}
+      onClose={onClose}
+      onSave={onSave}
+      onDelete={onDelete}
+    />
   );
 };

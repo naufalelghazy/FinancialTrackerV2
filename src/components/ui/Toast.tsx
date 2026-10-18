@@ -5,7 +5,7 @@ export interface ToastItem {
   id: string;
   title: string;
   subtitle?: string;
-  duration?: number; // default 4000ms
+  duration?: number; // default 4500ms
   onUndo?: () => void;
 }
 
@@ -14,13 +14,10 @@ interface ToastProps {
   onClose: () => void;
 }
 
-export const Toast: React.FC<ToastProps> = ({ toast, onClose }) => {
+const ToastContent: React.FC<{ toast: ToastItem; onClose: () => void }> = ({ toast, onClose }) => {
   const [progress, setProgress] = useState(100);
 
   useEffect(() => {
-    if (!toast) return;
-
-    setProgress(100);
     const duration = toast.duration || 4500;
     const intervalTime = 50;
     const step = (intervalTime / duration) * 100;
@@ -37,9 +34,7 @@ export const Toast: React.FC<ToastProps> = ({ toast, onClose }) => {
       clearInterval(progressTimer);
       clearTimeout(closeTimer);
     };
-  }, [toast, onClose]);
-
-  if (!toast) return null;
+  }, [toast.duration, onClose]);
 
   return (
     <div
@@ -99,4 +94,9 @@ export const Toast: React.FC<ToastProps> = ({ toast, onClose }) => {
       </div>
     </div>
   );
+};
+
+export const Toast: React.FC<ToastProps> = ({ toast, onClose }) => {
+  if (!toast) return null;
+  return <ToastContent key={toast.id} toast={toast} onClose={onClose} />;
 };

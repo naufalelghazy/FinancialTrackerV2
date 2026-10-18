@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import type { Transaction, Account, Category } from '../../types';
 import { formatCurrency } from '../../lib/formatters';
 import { CategoryIcon } from '../../components/ui/CategoryIcon';
-import { AccountAvatar } from '../accounts/AccountsView';
+import { AccountAvatar } from '../../components/ui/AccountAvatar';
 import {
   TrendingUp,
   TrendingDown,
@@ -29,7 +29,7 @@ import {
   CartesianGrid,
   Tooltip,
 } from 'recharts';
-import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme } from '../../contexts/themeStore';
 
 interface ReportViewProps {
   transactions: Transaction[];
@@ -72,6 +72,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
   onEditTransaction,
 }) => {
   const { isDark } = useTheme();
+  const [mountTimestamp] = useState(() => Date.now());
   const [period, setPeriod] = useState<PeriodType>('this_month');
   const [customStartDate, setCustomStartDate] = useState(() => {
     const d = new Date();
@@ -132,7 +133,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
 
   // Filter transactions by period
   const filteredTransactions = useMemo(() => {
-    const now = new Date();
+    const now = new Date(mountTimestamp);
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth(); // 0-indexed
 
@@ -172,7 +173,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
       }
       return true; // 'all'
     });
-  }, [transactions, period, customStartDate, customEndDate, isTransferTx]);
+  }, [transactions, period, customStartDate, customEndDate, isTransferTx, mountTimestamp]);
 
   // Aggregate Executive KPIs
   const { totalIncome, totalExpense } = useMemo(() => {

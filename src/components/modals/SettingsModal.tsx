@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   X,
   CheckCircle2,
@@ -22,10 +22,10 @@ import {
 import type { Account, Category, QuickTemplate } from '../../types';
 import { formatCurrency } from '../../lib/formatters';
 import { isSupabaseConfigured } from '../../lib/supabase';
-import { AccountAvatar } from '../../features/accounts/AccountsView';
+import { AccountAvatar } from '../ui/AccountAvatar';
 import { CategoryIcon } from '../ui/CategoryIcon';
 import { getLogoDevToken, setLogoDevToken } from '../../services/logoService';
-import { useTheme, type DesignSystem } from '../../contexts/ThemeContext';
+import { useTheme, type DesignSystem } from '../../contexts/themeStore';
 import { resolveTemplateAccount, resolveTemplateCategory } from '../../services/templateService';
 
 interface SettingsModalProps {
@@ -46,8 +46,12 @@ interface SettingsModalProps {
 
 export type SettingsTab = 'akun' | 'kategori' | 'template' | 'tampilan' | 'backend';
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({
-  isOpen,
+export const SettingsModal: React.FC<SettingsModalProps> = (props) => {
+  if (!props.isOpen) return null;
+  return <SettingsModalContent key={props.initialTab || 'akun'} {...props} />;
+};
+
+const SettingsModalContent: React.FC<SettingsModalProps> = ({
   onClose,
   accounts = [],
   categories = [],
@@ -87,12 +91,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     () => categories.filter((c) => c.type === 'pemasukan').length,
     [categories]
   );
-
-  useEffect(() => {
-    if (isOpen && initialTab) {
-      setActiveTab(initialTab);
-    }
-  }, [isOpen, initialTab]);
 
   // Supabase Backend Settings State
   const [supabaseUrl, setSupabaseUrl] = useState(
@@ -191,8 +189,6 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       previewLabel: 'Catat Transaksi',
     },
   ];
-
-  if (!isOpen) return null;
 
   const handleSaveBackend = () => {
     localStorage.setItem('custom_supabase_url', supabaseUrl.trim());

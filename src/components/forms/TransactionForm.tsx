@@ -1,8 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { TransactionType, Account, Category, QuickTemplate } from '../../types';
-import { formatNumberWithDots, parseRawAmount } from '../../lib/formatters';
-import { ArrowUpRight, ArrowDownLeft, ArrowLeftRight, CheckCircle2, Zap, BookmarkPlus, Mic } from 'lucide-react';
+import { formatCurrency, formatNumberWithDots, parseRawAmount } from '../../lib/formatters';
+import {
+  ArrowUpRight,
+  ArrowDownLeft,
+  ArrowLeftRight,
+  CheckCircle2,
+  Zap,
+  BookmarkPlus,
+  Mic,
+  ChevronDown,
+  Check,
+} from 'lucide-react';
 import { CategoryIcon } from '../ui/CategoryIcon';
+import { AccountAvatar } from '../ui/AccountAvatar';
 import { resolveTemplateAccount, resolveTemplateCategory } from '../../services/templateService';
 
 interface TransactionFormProps {
@@ -32,6 +43,13 @@ interface TransactionFormProps {
   onSaveAsTemplate?: (data: Omit<QuickTemplate, 'id'>) => void;
 }
 
+const ACCOUNT_TYPE_LABELS: Record<string, string> = {
+  bank: 'Bank',
+  ewallet: 'E-Wallet',
+  cash: 'Tunai',
+  credit: 'Kredit',
+};
+
 export const TransactionForm: React.FC<TransactionFormProps> = ({
   accounts,
   categories,
@@ -42,31 +60,75 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   onSubmit,
   onSaveAsTemplate,
 }) => {
-  const [type, setType] = useState<TransactionType>('pengeluaran');
-  const [amountDisplay, setAmountDisplay] = useState('');
-  const [sourceAccountId, setSourceAccountId] = useState('');
-  const [destinationAccountId, setDestinationAccountId] = useState('');
-  const [categoryId, setCategoryId] = useState('');
-  const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
-  const [notes, setNotes] = useState('');
+  const [type, setType] = useState<TransactionType>(() => prefilledData?.type || 'pengeluaran');
+  const [amountDisplay, setAmountDisplay] = useState(() =>
+    prefilledData ? formatNumberWithDots(String(prefilledData.amount)) : ''
+  );
+  const [sourceAccountId, setSourceAccountId] = useState(
+    () => prefilledData?.sourceAccountId || ''
+  );
+  const [destinationAccountId, setDestinationAccountId] = useState(
+    () => prefilledData?.destinationAccountId || ''
+  );
+  const [categoryId, setCategoryId] = useState(() => prefilledData?.categoryId || '');
+  const [date, setDate] = useState(
+    () => prefilledData?.date || new Date().toISOString().split('T')[0]
+  );
+  const [notes, setNotes] = useState(() => prefilledData?.notes || '');
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // Efek untuk mengisi data dari hasil input suara jika tersedia
+  const [activeDropdown, setActiveDropdown] = useState<
+    'source' | 'destination' | 'category' | null
+  >(null);
+  const [fieldError, setFieldError] = useState<'source' | 'destination' | 'category' | null>(null);
+
+  const dropdownAreaRef = useRef<HTMLDivElement>(null);
+  const sourceTriggerRef = useRef<HTMLButtonElement>(null);
+  const destinationTriggerRef = useRef<HTMLButtonElement>(null);
+  const categoryTriggerRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
     if (prefilledData) {
-      setType(prefilledData.type);
-      setAmountDisplay(formatNumberWithDots(String(prefilledData.amount)));
-      setSourceAccountId(prefilledData.sourceAccountId);
-      setDestinationAccountId(prefilledData.destinationAccountId || '');
-      setCategoryId(prefilledData.categoryId || '');
-      setDate(prefilledData.date);
-      setNotes(prefilledData.notes);
       onClearPrefilledData?.();
     }
   }, [prefilledData, onClearPrefilledData]);
 
+  // Tutup popup dropdown saat klik di luar atau tekan Escape
+  useEffect(() => {
+    if (!activeDropdown) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownAreaRef.current &&
+        !dropdownAreaRef.current.contains(event.target as Node)
+      ) {
+        setActiveDropdown(null);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setActiveDropdown(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeDropdown]);
+
   const filteredCategories = categories.filter((c) => c.type === type);
   const selectedCategory = categories.find((c) => c.id === categoryId);
+  const selectedSourceAccount = accounts.find((a) => a.id === sourceAccountId);
+  const selectedDestinationAccount = accounts.find((a) => a.id === destinationAccountId);
+  const availableDestinationAccounts = accounts.filter((a) => a.id !== sourceAccountId);
+
+  const toggleDropdown = (menu: 'source' | 'destination' | 'category') => {
+    setActiveDropdown((prev) => (prev === menu ? null : menu));
+  };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAmountDisplay(formatNumberWithDots(e.target.value));
@@ -75,9 +137,28 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const rawAmount = parseRawAmount(amountDisplay);
-    if (!rawAmount || !sourceAccountId) return;
-    if (type === 'transfer' && !destinationAccountId) return;
-    if (type !== 'transfer' && !categoryId) return;
+    if (!rawAmount) return;
+
+    if (!sourceAccountId) {
+      setFieldError('source');
+      setActiveDropdown('source');
+      sourceTriggerRef.current?.focus();
+      return;
+    }
+
+    if (type === 'transfer' && !destinationAccountId) {
+      setFieldError('destination');
+      setActiveDropdown('destination');
+      destinationTriggerRef.current?.focus();
+      return;
+    }
+
+    if (type !== 'transfer' && !categoryId) {
+      setFieldError('category');
+      setActiveDropdown('category');
+      categoryTriggerRef.current?.focus();
+      return;
+    }
 
     onSubmit({
       type,
@@ -92,6 +173,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
     // Reset Form
     setAmountDisplay('');
     setNotes('');
+    setFieldError(null);
+    setActiveDropdown(null);
     setIsSuccess(true);
     setTimeout(() => setIsSuccess(false), 2500);
 
@@ -119,6 +202,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
       setCategoryId(cat?.id || '');
       setDestinationAccountId('');
     }
+    setFieldError(null);
+    setActiveDropdown(null);
     if (tpl.notes) {
       setNotes(tpl.notes);
     }
@@ -134,7 +219,11 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
     if (type !== 'transfer' && !categoryId) return;
 
     onSaveAsTemplate?.({
-      name: notes.trim() || (type === 'transfer' ? 'Transfer Saldo' : selectedCategory?.name || 'Transaksi Favorit'),
+      name:
+        notes.trim() ||
+        (type === 'transfer'
+          ? 'Transfer Saldo'
+          : selectedCategory?.name || 'Transaksi Favorit'),
       type,
       amount: rawAmount,
       sourceAccountId,
@@ -189,6 +278,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
           onClick={() => {
             setType('pengeluaran');
             setCategoryId('');
+            setFieldError(null);
+            setActiveDropdown(null);
           }}
           className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-colors duration-150 ${
             type === 'pengeluaran'
@@ -206,6 +297,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
           onClick={() => {
             setType('transfer');
             setCategoryId('');
+            setFieldError(null);
+            setActiveDropdown(null);
           }}
           className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-colors duration-150 ${
             type === 'transfer'
@@ -223,6 +316,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
           onClick={() => {
             setType('pemasukan');
             setCategoryId('');
+            setFieldError(null);
+            setActiveDropdown(null);
           }}
           className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-colors duration-150 ${
             type === 'pemasukan'
@@ -238,7 +333,10 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
       {/* Amount Card - Clean Display with Voice Input */}
       <div className="bg-white dark:bg-[#16171f] rounded-[16px] p-5 sm:p-6 border border-[#dedee5] dark:border-[#282937] shadow-whisper text-center">
         <div className="flex items-center justify-between min-h-[26px]">
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba]">
+          <label
+            htmlFor="tx-amount-input"
+            className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba]"
+          >
             Nominal Transaksi
           </label>
           {onOpenVoiceModal && (
@@ -256,6 +354,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         <div className="flex items-center justify-center gap-1.5 mt-2">
           <span className="text-2xl font-bold text-[#9497a9]">Rp</span>
           <input
+            id="tx-amount-input"
+            name="amount"
             type="text"
             inputMode="numeric"
             value={amountDisplay}
@@ -269,93 +369,391 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
 
       {/* Form Fields Card */}
       <div className="bg-white dark:bg-[#16171f] rounded-[16px] p-5 border border-[#dedee5] dark:border-[#282937] shadow-whisper space-y-4">
-        {/* Source Account */}
-        <div>
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1.5 h-4 leading-4">
-            {type === 'transfer' ? 'Dari Akun' : 'Akun'}
-          </label>
-          <select
-            value={sourceAccountId}
-            onChange={(e) => setSourceAccountId(e.target.value)}
-            required
-            className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
-          >
-            <option value="">Pilih Akun Rekening / Dompet</option>
-            {accounts.map((acc) => (
-              <option key={acc.id} value={acc.id}>
-                {acc.name} ({acc.type})
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Destination Account for Transfer vs Category for Expense/Income */}
-        <div className="min-h-[66px]">
-          {type === 'transfer' ? (
-            <div>
-              <div className="flex items-center justify-between mb-1.5 h-5">
-                <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] leading-none">
-                  Ke Akun Tujuan
-                </label>
-              </div>
-              <select
-                value={destinationAccountId}
-                onChange={(e) => setDestinationAccountId(e.target.value)}
-                required
-                className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
+        <div ref={dropdownAreaRef} className="space-y-4">
+          {/* Source Account Popup Dropdown */}
+          <div className="relative">
+            <div className="flex items-center justify-between mb-1.5 h-4">
+              <span
+                id="tx-source-account-label"
+                className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] leading-4"
               >
-                <option value="">Pilih Akun Tujuan</option>
-                {accounts
-                  .filter((acc) => acc.id !== sourceAccountId)
-                  .map((acc) => (
-                    <option key={acc.id} value={acc.id}>
-                      {acc.name} ({acc.type})
-                    </option>
-                  ))}
-              </select>
+                {type === 'transfer' ? 'Dari Akun' : 'Akun'}
+              </span>
+              {fieldError === 'source' && !selectedSourceAccount && (
+                <span className="text-[11px] font-semibold text-[#c53030] dark:text-[#f87171] leading-none">
+                  Pilih rekening terlebih dahulu
+                </span>
+              )}
             </div>
-          ) : (
-            <div>
-              <div className="flex items-center justify-between mb-1.5 h-5">
-                <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] leading-none">
-                  Kategori
-                </label>
-                {selectedCategory && (
-                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-[6px] bg-[#edeef3] dark:bg-[#232534] text-[11px] font-semibold text-[#101114] dark:text-[#f3f4f8]">
-                    <CategoryIcon
-                      name={selectedCategory.name}
-                      type={type}
-                      icon={selectedCategory.icon}
-                      emoji={selectedCategory.emoji}
-                      size="sm"
+
+            <button
+              ref={sourceTriggerRef}
+              type="button"
+              aria-labelledby="tx-source-account-label"
+              aria-expanded={activeDropdown === 'source'}
+              aria-haspopup="listbox"
+              onClick={() => toggleDropdown('source')}
+              className={`w-full min-h-[42px] px-3.5 py-2 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border text-sm font-medium text-[#101114] dark:text-[#f3f4f8] flex items-center justify-between gap-2 transition-all outline-none focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
+                activeDropdown === 'source'
+                  ? 'border-[#7132f5] ring-2 ring-[#855bfb]/15'
+                  : fieldError === 'source'
+                  ? 'border-[#e53e3e] ring-2 ring-[#e53e3e]/15'
+                  : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/60'
+              }`}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                {selectedSourceAccount ? (
+                  <>
+                    <AccountAvatar acc={selectedSourceAccount} size="sm" />
+                    <span className="truncate font-semibold">{selectedSourceAccount.name}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#edeef3] dark:bg-[#232534] text-[#686b82] dark:text-[#9ca0ba] font-semibold shrink-0">
+                      {ACCOUNT_TYPE_LABELS[selectedSourceAccount.type] || selectedSourceAccount.type}
+                    </span>
+                  </>
+                ) : (
+                  <span className="truncate text-[#101114] dark:text-[#f3f4f8]">
+                    Pilih Akun Rekening / Dompet
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {selectedSourceAccount && (
+                  <span className="text-xs font-bold tabular-nums text-[#686b82] dark:text-[#9ca0ba]">
+                    {formatCurrency(selectedSourceAccount.balance)}
+                  </span>
+                )}
+                <ChevronDown
+                  className={`w-4 h-4 text-[#686b82] dark:text-[#9ca0ba] shrink-0 transition-transform duration-150 ${
+                    activeDropdown === 'source' ? 'rotate-180' : ''
+                  }`}
+                />
+              </div>
+            </button>
+
+            {activeDropdown === 'source' && (
+              <div
+                role="listbox"
+                aria-label="Pilih Akun Rekening / Dompet"
+                className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-[14px] bg-white dark:bg-[#16171f] border border-[#dedee5] dark:border-[#282937] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+              >
+                <div className="p-1.5 max-h-60 overflow-y-auto divide-y divide-[#dedee5]/40 dark:divide-[#282937]/50">
+                  {accounts.map((acc) => {
+                    const isSelected = sourceAccountId === acc.id;
+                    return (
+                      <button
+                        key={acc.id}
+                        type="button"
+                        role="option"
+                        aria-selected={isSelected}
+                        onClick={() => {
+                          setSourceAccountId(acc.id);
+                          if (destinationAccountId === acc.id) {
+                            setDestinationAccountId('');
+                          }
+                          setFieldError(null);
+                          setActiveDropdown(null);
+                        }}
+                        className={`w-full min-h-[44px] px-3 py-2 rounded-[10px] text-left flex items-center justify-between gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
+                          isSelected
+                            ? 'bg-[#7132f5] text-white font-bold'
+                            : 'text-[#101114] dark:text-[#f3f4f8] hover:bg-[#edeef3] dark:hover:bg-[#1e202b] font-medium'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <AccountAvatar acc={acc} size="sm" />
+                          <span className="truncate text-sm">{acc.name}</span>
+                          <span
+                            className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${
+                              isSelected
+                                ? 'bg-black/15 text-current'
+                                : 'bg-[#edeef3] dark:bg-[#232534] text-[#686b82] dark:text-[#9ca0ba]'
+                            }`}
+                          >
+                            {ACCOUNT_TYPE_LABELS[acc.type] || acc.type}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span
+                            className={`text-xs tabular-nums ${
+                              isSelected
+                                ? 'text-current font-bold'
+                                : acc.balance < 0
+                                ? 'text-[#c53030] dark:text-[#f87171] font-semibold'
+                                : 'text-[#686b82] dark:text-[#9ca0ba] font-semibold'
+                            }`}
+                          >
+                            {formatCurrency(acc.balance)}
+                          </span>
+                          {isSelected && <Check className="w-4 h-4 shrink-0" />}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Destination Account for Transfer vs Category for Expense/Income (Zero Layout Shift min-h-[66px]) */}
+          <div className="min-h-[66px]">
+            {type === 'transfer' ? (
+              <div className="relative">
+                <div className="flex items-center justify-between mb-1.5 h-5">
+                  <span
+                    id="tx-destination-account-label"
+                    className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] leading-none"
+                  >
+                    Ke Akun Tujuan
+                  </span>
+                  {fieldError === 'destination' && !selectedDestinationAccount && (
+                    <span className="text-[11px] font-semibold text-[#c53030] dark:text-[#f87171] leading-none">
+                      Pilih akun tujuan terlebih dahulu
+                    </span>
+                  )}
+                </div>
+
+                <button
+                  ref={destinationTriggerRef}
+                  type="button"
+                  aria-labelledby="tx-destination-account-label"
+                  aria-expanded={activeDropdown === 'destination'}
+                  aria-haspopup="listbox"
+                  onClick={() => toggleDropdown('destination')}
+                  className={`w-full min-h-[42px] px-3.5 py-2 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border text-sm font-medium text-[#101114] dark:text-[#f3f4f8] flex items-center justify-between gap-2 transition-all outline-none focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
+                    activeDropdown === 'destination'
+                      ? 'border-[#7132f5] ring-2 ring-[#855bfb]/15'
+                      : fieldError === 'destination'
+                      ? 'border-[#e53e3e] ring-2 ring-[#e53e3e]/15'
+                      : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/60'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    {selectedDestinationAccount ? (
+                      <>
+                        <AccountAvatar acc={selectedDestinationAccount} size="sm" />
+                        <span className="truncate font-semibold">
+                          {selectedDestinationAccount.name}
+                        </span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#edeef3] dark:bg-[#232534] text-[#686b82] dark:text-[#9ca0ba] font-semibold shrink-0">
+                          {ACCOUNT_TYPE_LABELS[selectedDestinationAccount.type] ||
+                            selectedDestinationAccount.type}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="truncate text-[#101114] dark:text-[#f3f4f8]">
+                        Pilih Akun Tujuan
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {selectedDestinationAccount && (
+                      <span className="text-xs font-bold tabular-nums text-[#686b82] dark:text-[#9ca0ba]">
+                        {formatCurrency(selectedDestinationAccount.balance)}
+                      </span>
+                    )}
+                    <ChevronDown
+                      className={`w-4 h-4 text-[#686b82] dark:text-[#9ca0ba] shrink-0 transition-transform duration-150 ${
+                        activeDropdown === 'destination' ? 'rotate-180' : ''
+                      }`}
                     />
-                    <span>{selectedCategory.name}</span>
+                  </div>
+                </button>
+
+                {activeDropdown === 'destination' && (
+                  <div
+                    role="listbox"
+                    aria-label="Pilih Akun Tujuan"
+                    className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-[14px] bg-white dark:bg-[#16171f] border border-[#dedee5] dark:border-[#282937] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                  >
+                    <div className="p-1.5 max-h-60 overflow-y-auto divide-y divide-[#dedee5]/40 dark:divide-[#282937]/50">
+                      {availableDestinationAccounts.map((acc) => {
+                        const isSelected = destinationAccountId === acc.id;
+                        return (
+                          <button
+                            key={acc.id}
+                            type="button"
+                            role="option"
+                            aria-selected={isSelected}
+                            onClick={() => {
+                              setDestinationAccountId(acc.id);
+                              setFieldError(null);
+                              setActiveDropdown(null);
+                            }}
+                            className={`w-full min-h-[44px] px-3 py-2 rounded-[10px] text-left flex items-center justify-between gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
+                              isSelected
+                                ? 'bg-[#7132f5] text-white font-bold'
+                                : 'text-[#101114] dark:text-[#f3f4f8] hover:bg-[#edeef3] dark:hover:bg-[#1e202b] font-medium'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <AccountAvatar acc={acc} size="sm" />
+                              <span className="truncate text-sm">{acc.name}</span>
+                              <span
+                                className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${
+                                  isSelected
+                                    ? 'bg-black/15 text-current'
+                                    : 'bg-[#edeef3] dark:bg-[#232534] text-[#686b82] dark:text-[#9ca0ba]'
+                                }`}
+                              >
+                                {ACCOUNT_TYPE_LABELS[acc.type] || acc.type}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span
+                                className={`text-xs tabular-nums ${
+                                  isSelected
+                                    ? 'text-current font-bold'
+                                    : acc.balance < 0
+                                    ? 'text-[#c53030] dark:text-[#f87171] font-semibold'
+                                    : 'text-[#686b82] dark:text-[#9ca0ba] font-semibold'
+                                }`}
+                              >
+                                {formatCurrency(acc.balance)}
+                              </span>
+                              {isSelected && <Check className="w-4 h-4 shrink-0" />}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
-              <select
-                value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-                required
-                className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
-              >
-                <option value="">Pilih Kategori Transaksi</option>
-                {filteredCategories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+            ) : (
+              <div className="relative">
+                <div className="flex items-center justify-between mb-1.5 h-5">
+                  <span
+                    id="tx-category-label"
+                    className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] leading-none"
+                  >
+                    Kategori
+                  </span>
+                  {selectedCategory ? (
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-[6px] bg-[#edeef3] dark:bg-[#232534] text-[11px] font-semibold text-[#101114] dark:text-[#f3f4f8]">
+                      <CategoryIcon
+                        name={selectedCategory.name}
+                        type={type}
+                        icon={selectedCategory.icon}
+                        emoji={selectedCategory.emoji}
+                        size="sm"
+                      />
+                      <span>{selectedCategory.name}</span>
+                    </div>
+                  ) : fieldError === 'category' ? (
+                    <span className="text-[11px] font-semibold text-[#c53030] dark:text-[#f87171] leading-none">
+                      Pilih kategori terlebih dahulu
+                    </span>
+                  ) : null}
+                </div>
+
+                <button
+                  ref={categoryTriggerRef}
+                  type="button"
+                  aria-labelledby="tx-category-label"
+                  aria-expanded={activeDropdown === 'category'}
+                  aria-haspopup="listbox"
+                  onClick={() => toggleDropdown('category')}
+                  className={`w-full min-h-[42px] px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border text-sm font-medium text-[#101114] dark:text-[#f3f4f8] flex items-center justify-between gap-2 transition-all outline-none focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
+                    activeDropdown === 'category'
+                      ? 'border-[#7132f5] ring-2 ring-[#855bfb]/15'
+                      : fieldError === 'category'
+                      ? 'border-[#e53e3e] ring-2 ring-[#e53e3e]/15'
+                      : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/60'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    {selectedCategory ? (
+                      <>
+                        <CategoryIcon
+                          name={selectedCategory.name}
+                          type={type}
+                          icon={selectedCategory.icon}
+                          emoji={selectedCategory.emoji}
+                          size="sm"
+                        />
+                        <span className="truncate font-semibold">{selectedCategory.name}</span>
+                      </>
+                    ) : (
+                      <span className="truncate text-[#101114] dark:text-[#f3f4f8]">
+                        Pilih Kategori Transaksi
+                      </span>
+                    )}
+                  </div>
+                  <ChevronDown
+                    className={`w-4 h-4 text-[#686b82] dark:text-[#9ca0ba] shrink-0 transition-transform duration-150 ${
+                      activeDropdown === 'category' ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+
+                {activeDropdown === 'category' && (
+                  <div
+                    role="listbox"
+                    aria-label="Pilih Kategori Transaksi"
+                    className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-[14px] bg-white dark:bg-[#16171f] border border-[#dedee5] dark:border-[#282937] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                  >
+                    <div className="p-1.5 max-h-60 overflow-y-auto divide-y divide-[#dedee5]/40 dark:divide-[#282937]/50">
+                      {filteredCategories.map((cat) => {
+                        const isSelected = categoryId === cat.id;
+                        return (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            role="option"
+                            aria-selected={isSelected}
+                            onClick={() => {
+                              setCategoryId(cat.id);
+                              setFieldError(null);
+                              setActiveDropdown(null);
+                            }}
+                            className={`w-full min-h-[42px] px-3 py-2 rounded-[10px] text-left flex items-center justify-between gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
+                              isSelected
+                                ? 'bg-[#7132f5] text-white font-bold'
+                                : 'text-[#101114] dark:text-[#f3f4f8] hover:bg-[#edeef3] dark:hover:bg-[#1e202b] font-medium'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <span
+                                className={`w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 ${
+                                  isSelected
+                                    ? 'bg-black/15 text-current'
+                                    : 'bg-[#edeef3] dark:bg-[#232534]'
+                                }`}
+                              >
+                                <CategoryIcon
+                                  name={cat.name}
+                                  type={type}
+                                  icon={cat.icon}
+                                  emoji={cat.emoji}
+                                  size="sm"
+                                  className={isSelected ? '!text-current' : ''}
+                                />
+                              </span>
+                              <span className="truncate text-sm">{cat.name}</span>
+                            </div>
+                            {isSelected && <Check className="w-4 h-4 shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Date Input */}
         <div>
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1.5 h-4 leading-4">
+          <label
+            htmlFor="tx-date-input"
+            className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1.5 h-4 leading-4"
+          >
             Tanggal
           </label>
           <input
+            id="tx-date-input"
+            name="date"
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
@@ -366,10 +764,15 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
 
         {/* Notes Input */}
         <div>
-          <label className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1.5 h-4 leading-4">
+          <label
+            htmlFor="tx-notes-input"
+            className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1.5 h-4 leading-4"
+          >
             Catatan <span className="text-[#9497a9] font-normal lowercase">(opsional)</span>
           </label>
           <textarea
+            id="tx-notes-input"
+            name="notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Keterangan transaksi..."
