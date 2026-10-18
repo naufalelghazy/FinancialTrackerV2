@@ -11,6 +11,7 @@ import {
   Moon,
   BarChart3,
   Mic,
+  WifiOff,
 } from 'lucide-react';
 import type { NavTab } from './BottomNav';
 import { useTheme } from '../../contexts/themeStore';
@@ -24,6 +25,8 @@ interface SidebarProps {
   isRefreshing?: boolean;
   isLoading?: boolean;
   onSync?: () => void;
+  pendingSyncCount?: number;
+  isOnline?: boolean;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -34,6 +37,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isRefreshing = false,
   isLoading = false,
   onSync,
+  pendingSyncCount = 0,
+  isOnline = true,
 }) => {
   const { isDark, toggleTheme, currentConfig } = useTheme();
 
@@ -44,6 +49,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'saldo', label: 'Saldo & Rekening', icon: Wallet },
     { id: 'tagihan', label: 'Tagihan & Pinjaman', icon: CreditCard },
   ];
+
+  const syncTitle = !isOnline
+    ? pendingSyncCount > 0
+      ? `Mode Offline (${pendingSyncCount} perubahan dalam antrean lokal)`
+      : 'Mode Offline (Tersimpan di perangkat)'
+    : pendingSyncCount > 0
+    ? `${pendingSyncCount} perubahan offline siap disinkronkan ke Supabase`
+    : 'Sinkronkan dengan Supabase';
 
   return (
     <aside className="hidden md:flex flex-col justify-between w-64 lg:w-72 h-screen sticky top-0 bg-white dark:bg-[#16171f] border-r border-[#dedee5] dark:border-[#282937] p-4 lg:p-5 select-none shrink-0 shadow-[1px_0_12px_rgba(0,0,0,0.02)] dark:shadow-[1px_0_12px_rgba(0,0,0,0.3)] z-30 transition-colors duration-200 overflow-y-auto overflow-x-hidden">
@@ -160,15 +173,41 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <button
               onClick={onSync}
               disabled={isRefreshing || isLoading}
-              className="py-2 px-2.5 rounded-[10px] border border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/40 bg-[#fafbfe] dark:bg-[#1e202b] text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8] text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50"
-              title="Sinkronkan dengan Supabase"
+              title={syncTitle}
+              aria-label={syncTitle}
+              className={`py-2 px-2.5 rounded-[10px] border text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50 ${
+                !isOnline
+                  ? 'border-[#f59e0b]/40 bg-[#f59e0b]/10 text-[#b45309] dark:text-[#fbbf24]'
+                  : pendingSyncCount > 0
+                  ? 'border-[#7132f5]/40 bg-[#7132f5]/10 text-[#7132f5] dark:text-[#a78bfa]'
+                  : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/40 bg-[#fafbfe] dark:bg-[#1e202b] text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
+              }`}
             >
-              <RefreshCw
-                className={`w-3.5 h-3.5 text-[#7132f5] dark:text-[#a78bfa] ${
-                  isRefreshing || isLoading ? 'animate-spin' : ''
-                }`}
-              />
-              <span className="w-1.5 h-1.5 rounded-full bg-[#149e61]" title="Terhubung" />
+              {!isOnline ? (
+                <WifiOff className="w-3.5 h-3.5 text-[#f59e0b] shrink-0" />
+              ) : (
+                <RefreshCw
+                  className={`w-3.5 h-3.5 text-[#7132f5] dark:text-[#a78bfa] shrink-0 ${
+                    isRefreshing || isLoading ? 'animate-spin' : ''
+                  }`}
+                />
+              )}
+
+              {pendingSyncCount > 0 ? (
+                <span
+                  data-testid="sidebar-pending-sync-badge"
+                  className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-[#f59e0b] text-white text-[10px] font-bold leading-none tabular-nums shadow-xs"
+                >
+                  {pendingSyncCount}
+                </span>
+              ) : (
+                <span
+                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                    isOnline ? 'bg-[#149e61]' : 'bg-[#f59e0b]'
+                  }`}
+                  title={isOnline ? 'Terhubung' : 'Offline'}
+                />
+              )}
             </button>
           )}
         </div>

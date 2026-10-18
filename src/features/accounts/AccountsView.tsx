@@ -1,20 +1,21 @@
 import React from 'react';
 import type { Account } from '../../types';
 import { formatCurrency } from '../../lib/formatters';
-import { Wallet, Plus, Edit2 } from 'lucide-react';
+import { Wallet, Plus, Edit2, ArrowUpRight } from 'lucide-react';
+import { AccountAvatar } from '../../components/ui/AccountAvatar';
 
 interface AccountsViewProps {
   accounts: Account[];
   onEditAccount: (account: Account) => void;
   onAddAccount: () => void;
+  onSelectAccountHistory?: (account: Account) => void;
 }
-
-import { AccountAvatar } from '../../components/ui/AccountAvatar';
 
 export const AccountsView: React.FC<AccountsViewProps> = ({
   accounts,
   onEditAccount,
   onAddAccount,
+  onSelectAccountHistory,
 }) => {
   const bankAccounts = accounts.filter((a) => a.type !== 'credit');
   const totalBalance = bankAccounts.reduce((sum, a) => sum + a.balance, 0);
@@ -51,23 +52,46 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
           <h3 className="text-xs font-bold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba]">
             Daftar Rekening & Dompet ({bankAccounts.length})
           </h3>
+          {onSelectAccountHistory && (
+            <span className="text-[11px] font-medium text-[#686b82] dark:text-[#9ca0ba]">
+              Klik kartu untuk melihat mutasi
+            </span>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
           {bankAccounts.map((acc) => (
             <div
               key={acc.id}
-              className="group flex items-center justify-between p-3.5 bg-white dark:bg-[#16171f] rounded-[12px] border border-[#dedee5] dark:border-[#282937] shadow-micro transition-all"
+              onClick={() => onSelectAccountHistory?.(acc)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onSelectAccountHistory?.(acc);
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label={`Lihat mutasi rekening ${acc.name}`}
+              className="group flex items-center justify-between p-3.5 bg-white dark:bg-[#16171f] rounded-[12px] border border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/50 dark:hover:border-[#855bfb]/50 shadow-micro hover:shadow-whisper transition-all cursor-pointer active:scale-[0.99]"
             >
-                <div className="flex items-center gap-3 min-w-0">
+              <div className="flex items-center gap-3 min-w-0">
                 <AccountAvatar acc={acc} />
                 <div className="min-w-0">
-                  <span className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8] block tracking-tight group-hover:text-[#7132f5] transition-colors truncate">
-                    {acc.name}
-                  </span>
-                  <span className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] capitalize font-medium">
-                    {acc.type}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8] block tracking-tight group-hover:text-[#7132f5] dark:group-hover:text-[#a78bfa] transition-colors truncate">
+                      {acc.name}
+                    </span>
+                    <ArrowUpRight className="w-3.5 h-3.5 text-[#7132f5] dark:text-[#a78bfa] opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] capitalize font-medium">
+                      {acc.type}
+                    </span>
+                    <span className="text-[10px] text-[#7132f5] dark:text-[#a78bfa] font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+                      • Mutasi
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -87,7 +111,7 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   }}
                   className="w-8 h-8 rounded-[8px] flex items-center justify-center text-[#9497a9] hover:text-[#7132f5] dark:hover:text-[#a78bfa] hover:bg-[#855bfb]/15 transition-all cursor-pointer active:scale-95 border border-transparent hover:border-[#855bfb]/30"
                   title="Ubah Akun"
-                  aria-label="Ubah Akun"
+                  aria-label={`Ubah Akun ${acc.name}`}
                 >
                   <Edit2 className="w-3.5 h-3.5" />
                 </button>

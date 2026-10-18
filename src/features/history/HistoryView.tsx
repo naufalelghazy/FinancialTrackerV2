@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import type { Transaction, Account, Category } from '../../types';
 import { formatCurrency } from '../../lib/formatters';
 import {
@@ -11,14 +11,22 @@ import {
   ArrowLeftRight,
   ChevronDown,
   ChevronsUpDown,
+  Wallet,
+  Layers,
+  Check,
+  X,
+  RotateCcw,
 } from 'lucide-react';
 import { CategoryIcon } from '../../components/ui/CategoryIcon';
+import { AccountAvatar } from '../../components/ui/AccountAvatar';
 
 interface HistoryViewProps {
   transactions: Transaction[];
   accounts: Account[];
   categories: Category[];
   onEditTransaction: (transaction: Transaction) => void;
+  selectedAccountId?: string;
+  onChangeSelectedAccountId?: (accountId: string) => void;
 }
 
 interface DayGroup {
@@ -41,6 +49,13 @@ const MONTH_NAMES = [
   'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
 ];
+
+const ACCOUNT_TYPE_LABELS: Record<string, string> = {
+  bank: 'Bank',
+  ewallet: 'E-Wallet',
+  credit: 'Kartu Kredit',
+  cash: 'Tunai',
+};
 
 function formatMonthLabel(monthKey: string): string {
   const parts = monthKey.split('-');
@@ -96,15 +111,70 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
   accounts,
   categories,
   onEditTransaction,
+  selectedAccountId: controlledAccountId,
+  onChangeSelectedAccountId,
 }) => {
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
+  const [internalAccountId, setInternalAccountId] = useState<string>('all');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
   const [expandedMonths, setExpandedMonths] = useState<Record<string, boolean>>({});
+
+  const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+
+  const accountDropdownRef = useRef<HTMLDivElement>(null);
+  const categoryDropdownRef = useRef<HTMLDivElement>(null);
+
+  const activeAccountId = controlledAccountId !== undefined ? controlledAccountId : internalAccountId;
+
+  const handleSetAccountFilter = useCallback(
+    (nextId: string) => {
+      if (onChangeSelectedAccountId) {
+        onChangeSelectedAccountId(nextId);
+      } else {
+        setInternalAccountId(nextId);
+      }
+    },
+    [onChangeSelectedAccountId]
+  );
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (accountDropdownRef.current && !accountDropdownRef.current.contains(target)) {
+        setIsAccountDropdownOpen(false);
+      }
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(target)) {
+        setIsCategoryDropdownOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsAccountDropdownOpen(false);
+        setIsCategoryDropdownOpen(false);
+      }
+    };
+    if (isAccountDropdownOpen || isCategoryDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isAccountDropdownOpen, isCategoryDropdownOpen]);
 
   // Fast O(1) lookup maps
   const accountMap = useMemo(() => {
     const map = new Map<string, string>();
     for (const a of accounts) map.set(a.id, a.name);
+    return map;
+  }, [accounts]);
+
+  const accountObjectMap = useMemo(() => {
+    const map = new Map<string, Account>();
+    for (const a of accounts) map.set(a.id, a);
     return map;
   }, [accounts]);
 
@@ -124,7 +194,37 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
   const getCategoryName = useCallback((id?: string) => (id ? categoryMap.get(id) || id : '-'), [categoryMap]);
   const getCategory = useCallback((id?: string) => (id ? categoryObjectMap.get(id) : undefined), [categoryObjectMap]);
 
+  const selectedAccountObj = useMemo(
+    () => (activeAccountId !== 'all' ? accountObjectMap.get(activeAccountId) : undefined),
+    [activeAccountId, accountObjectMap]
+  );
+
+  const selectedCategoryObj = useMemo(
+    () => (selectedCategoryId !== 'all' ? categoryObjectMap.get(selectedCategoryId) : undefined),
+    [selectedCategoryId, categoryObjectMap]
+  );
+
+  const availableCategoriesForFilter = useMemo(() => {
+    if (filterType === 'pengeluaran' || filterType === 'pemasukan') {
+      return categories.filter((c) => c.type === filterType);
+    }
+    return categories;
+  }, [categories, filterType]);
+
   const currentMonthKey = useMemo(() => getCurrentMonthKey(), []);
+
+  const hasActiveFilters =
+    search.trim().length > 0 ||
+    filterType !== 'all' ||
+    activeAccountId !== 'all' ||
+    selectedCategoryId !== 'all';
+
+  const handleResetFilters = () => {
+    setSearch('');
+    setFilterType('all');
+    handleSetAccountFilter('all');
+    setSelectedCategoryId('all');
+  };
 
   // 1. Filtered Transactions
   const filtered = useMemo(() => {
@@ -132,6 +232,18 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
 
     return transactions.filter((t) => {
       if (filterType !== 'all' && t.type !== filterType) {
+        return false;
+      }
+
+      if (activeAccountId !== 'all') {
+        const matchesSource = t.sourceAccountId === activeAccountId;
+        const matchesDest = t.destinationAccountId === activeAccountId;
+        if (!matchesSource && !matchesDest) {
+          return false;
+        }
+      }
+
+      if (selectedCategoryId !== 'all' && t.categoryId !== selectedCategoryId) {
         return false;
       }
 
@@ -148,10 +260,9 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
 
       return notesMatch || sourceMatch || destMatch || categoryMatch || dateMatch;
     });
-  }, [transactions, search, filterType, getAccountName, getCategoryName]);
+  }, [transactions, search, filterType, activeAccountId, selectedCategoryId, getAccountName, getCategoryName]);
 
-
-  // 3. Group by Month, then by Day (Sorted Descending)
+  // 2. Group by Month, then by Day (Sorted Descending)
   const groupedByMonth = useMemo(() => {
     const monthMap = new Map<string, Map<string, Transaction[]>>();
 
@@ -212,17 +323,16 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
   }, [filtered]);
 
   // Check if a specific month is open:
-  // - Open if searching (so matching transactions are visible immediately)
+  // - Open if any filter or search is active (so matching transactions are visible immediately)
   // - Open if user explicitly expanded it
   // - Open by default for current month (or newest month if current month has no transactions)
-  // - Closed by default for past months
   const isMonthExpanded = useCallback(
     (monthKey: string, isFirstMonth: boolean): boolean => {
-      if (search.trim().length > 0) return true;
-
       if (expandedMonths[monthKey] !== undefined) {
         return expandedMonths[monthKey];
       }
+
+      if (hasActiveFilters) return true;
 
       if (monthKey === currentMonthKey) return true;
 
@@ -231,7 +341,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
 
       return false;
     },
-    [search, expandedMonths, currentMonthKey, groupedByMonth]
+    [hasActiveFilters, expandedMonths, currentMonthKey, groupedByMonth]
   );
 
   const toggleMonth = (monthKey: string, isFirstMonth: boolean) => {
@@ -258,9 +368,58 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
 
   return (
     <div className="space-y-4 pb-24">
+      {/* Active Account Mutation Banner (Shown when filtering by a specific account) */}
+      {selectedAccountObj && (
+        <div className="bg-white dark:bg-[#16171f] p-4 rounded-[16px] border border-[#7132f5]/40 dark:border-[#855bfb]/40 shadow-whisper flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <AccountAvatar acc={selectedAccountObj} size="md" />
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#7132f5]/15 text-[#7132f5] dark:text-[#a78bfa]">
+                  Mutasi Rekening
+                </span>
+                <span className="text-[11px] font-medium text-[#686b82] dark:text-[#9ca0ba] capitalize">
+                  {ACCOUNT_TYPE_LABELS[selectedAccountObj.type] || selectedAccountObj.type}
+                </span>
+              </div>
+              <h3 className="text-base font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight truncate mt-0.5">
+                {selectedAccountObj.name}
+              </h3>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#dedee5] dark:border-[#282937]">
+            <div className="sm:text-right">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-[#686b82] dark:text-[#9ca0ba] block">
+                Saldo Saat Ini
+              </span>
+              <span
+                className={`text-sm sm:text-base font-bold tabular-nums ${
+                  selectedAccountObj.balance >= 0
+                    ? 'text-[#101114] dark:text-[#f3f4f8]'
+                    : 'text-[#e53e3e] dark:text-[#f87171]'
+                }`}
+              >
+                {formatCurrency(selectedAccountObj.balance)}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => handleSetAccountFilter('all')}
+              className="px-3 py-2 rounded-[10px] bg-[#edeef3] dark:bg-[#232534] hover:bg-[#e2e4ec] dark:hover:bg-[#2d3042] text-xs font-bold text-[#101114] dark:text-[#f3f4f8] inline-flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+              title="Tampilkan Semua Rekening"
+            >
+              <X className="w-3.5 h-3.5 text-[#686b82] dark:text-[#9ca0ba]" />
+              <span>Semua Rekening</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Search & Filter Header Card */}
       <div className="bg-white dark:bg-[#16171f] p-4 sm:p-5 rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper space-y-3.5">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <div>
             <h2 className="text-base font-bold text-[#101114] dark:text-[#f3f4f8] tracking-[-0.5px]">
               Riwayat Transaksi
@@ -269,7 +428,18 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
               Daftar seluruh mutasi, pengeluaran & pemasukan per bulan
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="px-2.5 py-1 rounded-[8px] bg-[#7132f5]/10 hover:bg-[#7132f5]/20 text-[#7132f5] dark:text-[#a78bfa] text-xs font-bold inline-flex items-center gap-1 transition-colors cursor-pointer"
+                title="Reset Semua Filter"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Reset Filter</span>
+              </button>
+            )}
             <span className="px-2.5 py-1 rounded-[8px] bg-[#edeef3] dark:bg-[#232534] text-xs font-bold text-[#101114] dark:text-[#f3f4f8]">
               {filtered.length} Transaksi
             </span>
@@ -284,8 +454,276 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari transaksi, rekening, kategori, atau catatan..."
-            className="w-full pl-9 pr-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 placeholder:text-[#9497a9] transition-all"
+            className="w-full pl-9 pr-9 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 placeholder:text-[#9497a9] transition-all"
           />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              aria-label="Hapus pencarian"
+              className="w-6 h-6 rounded-full flex items-center justify-center text-[#9497a9] hover:text-[#101114] dark:hover:text-[#f3f4f8] absolute right-2.5 top-1/2 -translate-y-1/2"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Account & Category Popup Dropdown Filters */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {/* Account Filter Dropdown */}
+          <div className="relative" ref={accountDropdownRef}>
+            <button
+              type="button"
+              onClick={() => {
+                setIsAccountDropdownOpen((prev) => !prev);
+                setIsCategoryDropdownOpen(false);
+              }}
+              aria-haspopup="listbox"
+              aria-expanded={isAccountDropdownOpen}
+              className={`w-full px-3 py-2 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border text-left flex items-center justify-between gap-2 transition-all cursor-pointer ${
+                activeAccountId !== 'all'
+                  ? 'border-[#7132f5] ring-2 ring-[#855bfb]/15'
+                  : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/50'
+              }`}
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                {selectedAccountObj ? (
+                  <>
+                    <AccountAvatar acc={selectedAccountObj} size="sm" />
+                    <div className="min-w-0">
+                      <span className="text-xs font-bold text-[#101114] dark:text-[#f3f4f8] truncate block">
+                        {selectedAccountObj.name}
+                      </span>
+                      <span className="text-[10px] text-[#686b82] dark:text-[#9ca0ba] tabular-nums block">
+                        {formatCurrency(selectedAccountObj.balance)}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-7 h-7 rounded-[8px] bg-[#edeef3] dark:bg-[#232534] flex items-center justify-center text-[#686b82] dark:text-[#9ca0ba] shrink-0">
+                      <Wallet className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] truncate block">
+                        Semua Rekening
+                      </span>
+                      <span className="text-[10px] text-[#686b82] dark:text-[#9ca0ba] block">
+                        Filter per akun ({accounts.length})
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+              <ChevronDown
+                className={`w-4 h-4 text-[#686b82] dark:text-[#9ca0ba] shrink-0 transition-transform duration-150 ${
+                  isAccountDropdownOpen ? 'rotate-180 text-[#7132f5]' : ''
+                }`}
+              />
+            </button>
+
+            {isAccountDropdownOpen && (
+              <div
+                role="listbox"
+                aria-label="Filter Rekening"
+                className="absolute left-0 right-0 mt-1.5 z-40 bg-white dark:bg-[#1e1f2b] rounded-[12px] border border-[#dedee5] dark:border-[#282937] shadow-xl max-h-64 overflow-y-auto p-1.5 space-y-0.5"
+              >
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={activeAccountId === 'all'}
+                  onClick={() => {
+                    handleSetAccountFilter('all');
+                    setIsAccountDropdownOpen(false);
+                  }}
+                  className={`w-full px-2.5 py-2 rounded-[9px] text-left flex items-center justify-between gap-2 transition-colors cursor-pointer ${
+                    activeAccountId === 'all'
+                      ? 'bg-[#7132f5]/12 text-[#7132f5] dark:text-[#a78bfa] font-bold'
+                      : 'hover:bg-[#f4f5f8] dark:hover:bg-[#252736] text-[#101114] dark:text-[#f3f4f8]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-7 h-7 rounded-[8px] bg-[#edeef3] dark:bg-[#282937] flex items-center justify-center text-[#686b82] dark:text-[#9ca0ba] shrink-0">
+                      <Wallet className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="text-xs font-semibold truncate">Semua Rekening</span>
+                  </div>
+                  {activeAccountId === 'all' && <Check className="w-4 h-4 text-[#7132f5] shrink-0" />}
+                </button>
+
+                {accounts.map((acc) => {
+                  const isSelected = activeAccountId === acc.id;
+                  return (
+                    <button
+                      key={acc.id}
+                      type="button"
+                      role="option"
+                      aria-selected={isSelected}
+                      onClick={() => {
+                        handleSetAccountFilter(acc.id);
+                        setIsAccountDropdownOpen(false);
+                      }}
+                      className={`w-full px-2.5 py-2 rounded-[9px] text-left flex items-center justify-between gap-2 transition-colors cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#7132f5]/12 text-[#7132f5] dark:text-[#a78bfa] font-bold'
+                          : 'hover:bg-[#f4f5f8] dark:hover:bg-[#252736] text-[#101114] dark:text-[#f3f4f8]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <AccountAvatar acc={acc} size="sm" />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-bold truncate">{acc.name}</span>
+                            <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-[#edeef3] dark:bg-[#282937] text-[#686b82] dark:text-[#9ca0ba] shrink-0">
+                              {ACCOUNT_TYPE_LABELS[acc.type] || acc.type}
+                            </span>
+                          </div>
+                          <span
+                            className={`text-[10px] font-medium tabular-nums block ${
+                              acc.balance < 0
+                                ? 'text-[#e53e3e] dark:text-[#f87171]'
+                                : 'text-[#686b82] dark:text-[#9ca0ba]'
+                            }`}
+                          >
+                            {formatCurrency(acc.balance)}
+                          </span>
+                        </div>
+                      </div>
+                      {isSelected && <Check className="w-4 h-4 text-[#7132f5] shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Category Filter Dropdown */}
+          <div className="relative" ref={categoryDropdownRef}>
+            <button
+              type="button"
+              onClick={() => {
+                setIsCategoryDropdownOpen((prev) => !prev);
+                setIsAccountDropdownOpen(false);
+              }}
+              aria-haspopup="listbox"
+              aria-expanded={isCategoryDropdownOpen}
+              className={`w-full px-3 py-2 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border text-left flex items-center justify-between gap-2 transition-all cursor-pointer ${
+                selectedCategoryId !== 'all'
+                  ? 'border-[#7132f5] ring-2 ring-[#855bfb]/15'
+                  : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/50'
+              }`}
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                {selectedCategoryObj ? (
+                  <>
+                    <CategoryIcon
+                      name={selectedCategoryObj.name}
+                      type={selectedCategoryObj.type}
+                      icon={selectedCategoryObj.icon}
+                      emoji={selectedCategoryObj.emoji}
+                      size="sm"
+                    />
+                    <div className="min-w-0">
+                      <span className="text-xs font-bold text-[#101114] dark:text-[#f3f4f8] truncate block">
+                        {selectedCategoryObj.name}
+                      </span>
+                      <span className="text-[10px] text-[#686b82] dark:text-[#9ca0ba] capitalize block">
+                        {selectedCategoryObj.type}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-7 h-7 rounded-[8px] bg-[#edeef3] dark:bg-[#232534] flex items-center justify-center text-[#686b82] dark:text-[#9ca0ba] shrink-0">
+                      <Layers className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] truncate block">
+                        Semua Kategori
+                      </span>
+                      <span className="text-[10px] text-[#686b82] dark:text-[#9ca0ba] block">
+                        Filter per kategori ({availableCategoriesForFilter.length})
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+              <ChevronDown
+                className={`w-4 h-4 text-[#686b82] dark:text-[#9ca0ba] shrink-0 transition-transform duration-150 ${
+                  isCategoryDropdownOpen ? 'rotate-180 text-[#7132f5]' : ''
+                }`}
+              />
+            </button>
+
+            {isCategoryDropdownOpen && (
+              <div
+                role="listbox"
+                aria-label="Filter Kategori"
+                className="absolute left-0 right-0 mt-1.5 z-40 bg-white dark:bg-[#1e1f2b] rounded-[12px] border border-[#dedee5] dark:border-[#282937] shadow-xl max-h-64 overflow-y-auto p-1.5 space-y-0.5"
+              >
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={selectedCategoryId === 'all'}
+                  onClick={() => {
+                    setSelectedCategoryId('all');
+                    setIsCategoryDropdownOpen(false);
+                  }}
+                  className={`w-full px-2.5 py-2 rounded-[9px] text-left flex items-center justify-between gap-2 transition-colors cursor-pointer ${
+                    selectedCategoryId === 'all'
+                      ? 'bg-[#7132f5]/12 text-[#7132f5] dark:text-[#a78bfa] font-bold'
+                      : 'hover:bg-[#f4f5f8] dark:hover:bg-[#252736] text-[#101114] dark:text-[#f3f4f8]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-7 h-7 rounded-[8px] bg-[#edeef3] dark:bg-[#282937] flex items-center justify-center text-[#686b82] dark:text-[#9ca0ba] shrink-0">
+                      <Layers className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="text-xs font-semibold truncate">Semua Kategori</span>
+                  </div>
+                  {selectedCategoryId === 'all' && <Check className="w-4 h-4 text-[#7132f5] shrink-0" />}
+                </button>
+
+                {availableCategoriesForFilter.map((cat) => {
+                  const isSelected = selectedCategoryId === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      role="option"
+                      aria-selected={isSelected}
+                      onClick={() => {
+                        setSelectedCategoryId(cat.id);
+                        setIsCategoryDropdownOpen(false);
+                      }}
+                      className={`w-full px-2.5 py-2 rounded-[9px] text-left flex items-center justify-between gap-2 transition-colors cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#7132f5]/12 text-[#7132f5] dark:text-[#a78bfa] font-bold'
+                          : 'hover:bg-[#f4f5f8] dark:hover:bg-[#252736] text-[#101114] dark:text-[#f3f4f8]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <CategoryIcon
+                          name={cat.name}
+                          type={cat.type}
+                          icon={cat.icon}
+                          emoji={cat.emoji}
+                          size="sm"
+                        />
+                        <div className="min-w-0">
+                          <span className="text-xs font-bold truncate block">{cat.name}</span>
+                          <span className="text-[10px] text-[#686b82] dark:text-[#9ca0ba] capitalize block">
+                            {cat.type}
+                          </span>
+                        </div>
+                      </div>
+                      {isSelected && <Check className="w-4 h-4 text-[#7132f5] shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Filter Segmented Control */}
@@ -305,7 +743,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                 className={`flex-1 py-1.5 px-2 rounded-[8px] font-semibold flex items-center justify-center gap-1 transition-all ${
                   isActive
                     ? 'bg-white dark:bg-[#282937] text-[#101114] dark:text-[#f3f4f8] shadow-micro'
-                    : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:text-[#f3f4f8]'
+                    : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
                 }`}
               >
                 {Icon && <Icon className="w-3.5 h-3.5 shrink-0" />}
@@ -338,7 +776,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
         <div className="text-center py-12 bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] p-6 text-[#9497a9] dark:text-[#7d8299] shadow-whisper">
           <Calendar className="w-8 h-8 mx-auto mb-2 opacity-40 text-[#686b82] dark:text-[#9ca0ba]" />
           <p className="text-sm font-semibold text-[#101114] dark:text-[#f3f4f8]">Tidak ada transaksi ditemukan</p>
-          <p className="text-xs text-[#9497a9] mt-1">Coba ubah kata kunci pencarian atau filter</p>
+          <p className="text-xs text-[#9497a9] mt-1">Coba ubah kata kunci pencarian atau filter rekening/kategori</p>
         </div>
       ) : (
         <div className="space-y-3.5">

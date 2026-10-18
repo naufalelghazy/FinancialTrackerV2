@@ -1,5 +1,5 @@
 import React from 'react';
-import { Wallet, LayoutDashboard, CreditCard, History, Plus, RefreshCw, Sun, Moon, BarChart3, Settings, Mic } from 'lucide-react';
+import { Wallet, LayoutDashboard, CreditCard, History, Plus, RefreshCw, Sun, Moon, BarChart3, Settings, Mic, WifiOff } from 'lucide-react';
 import type { NavTab } from './BottomNav';
 import { useTheme } from '../../contexts/themeStore';
 
@@ -11,6 +11,8 @@ interface HeaderProps {
   isRefreshing?: boolean;
   isLoading?: boolean;
   onSync?: () => void;
+  pendingSyncCount?: number;
+  isOnline?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -21,6 +23,8 @@ export const Header: React.FC<HeaderProps> = ({
   isRefreshing = false,
   isLoading = false,
   onSync,
+  pendingSyncCount = 0,
+  isOnline = true,
 }) => {
   const { isDark, toggleTheme, currentConfig } = useTheme();
 
@@ -31,6 +35,14 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'saldo', label: 'Saldo & Rekening', icon: Wallet },
     { id: 'tagihan', label: 'Tagihan', icon: CreditCard },
   ];
+
+  const syncTitle = !isOnline
+    ? pendingSyncCount > 0
+      ? `Mode Offline (${pendingSyncCount} perubahan dalam antrean lokal)`
+      : 'Mode Offline (Tersimpan di perangkat)'
+    : pendingSyncCount > 0
+    ? `${pendingSyncCount} perubahan offline siap disinkronkan ke Supabase`
+    : 'Sinkronkan data dengan Supabase';
 
   return (
     <header className="sticky top-0 z-30 bg-white/95 dark:bg-[#16171f]/95 backdrop-blur-sm border-b border-[#dedee5] dark:border-[#282937] shadow-micro transition-colors duration-200">
@@ -103,7 +115,6 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
-
           {/* Theme Quick Toggle Button */}
           <button
             onClick={toggleTheme}
@@ -118,18 +129,55 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </button>
 
-          {/* Sync Button */}
+          {/* Sync Button with Visual Offline Outbox Badge */}
           {onSync && (
             <button
               onClick={onSync}
               disabled={isRefreshing || isLoading}
-              title="Sinkronkan data dengan Supabase"
-              className="h-9 px-2.5 sm:px-3 rounded-[10px] border border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/40 bg-[#fafbfe] dark:bg-[#1e202b] text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8] text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50"
+              title={syncTitle}
+              aria-label={syncTitle}
+              className={`relative h-9 px-2.5 sm:px-3 rounded-[10px] border text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50 ${
+                !isOnline
+                  ? 'border-[#f59e0b]/40 bg-[#f59e0b]/10 text-[#b45309] dark:text-[#fbbf24]'
+                  : pendingSyncCount > 0
+                  ? 'border-[#7132f5]/40 bg-[#7132f5]/10 text-[#7132f5] dark:text-[#a78bfa]'
+                  : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/40 bg-[#fafbfe] dark:bg-[#1e202b] text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
+              }`}
             >
-              <RefreshCw
-                className={`w-3.5 h-3.5 text-[#7132f5] dark:text-[#a78bfa] ${isRefreshing || isLoading ? 'animate-spin' : ''}`}
-              />
-              <span className="hidden lg:inline">{isRefreshing ? 'Sinkron...' : 'Sinkronkan'}</span>
+              {!isOnline ? (
+                <WifiOff className="w-3.5 h-3.5 text-[#f59e0b] shrink-0" />
+              ) : (
+                <RefreshCw
+                  className={`w-3.5 h-3.5 text-[#7132f5] dark:text-[#a78bfa] shrink-0 ${
+                    isRefreshing || isLoading ? 'animate-spin' : ''
+                  }`}
+                />
+              )}
+
+              <span className="hidden lg:inline">
+                {isRefreshing
+                  ? 'Sinkron...'
+                  : !isOnline
+                  ? 'Offline'
+                  : pendingSyncCount > 0
+                  ? 'Sinkronkan'
+                  : 'Sinkronkan'}
+              </span>
+
+              {pendingSyncCount > 0 ? (
+                <span
+                  data-testid="pending-sync-badge"
+                  className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-[#f59e0b] text-white text-[10px] font-bold leading-none tabular-nums shadow-xs"
+                >
+                  {pendingSyncCount}
+                </span>
+              ) : (
+                <span
+                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                    isOnline ? 'bg-[#149e61]' : 'bg-[#f59e0b]'
+                  }`}
+                />
+              )}
             </button>
           )}
 

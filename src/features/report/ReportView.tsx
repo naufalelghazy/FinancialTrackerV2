@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import type { Transaction, Account, Category } from '../../types';
 import { formatCurrency } from '../../lib/formatters';
 import { CategoryIcon } from '../../components/ui/CategoryIcon';
@@ -30,6 +30,101 @@ import {
   Tooltip,
 } from 'recharts';
 import { useTheme } from '../../contexts/themeStore';
+
+interface HorizontalScrollTabsProps {
+  children: React.ReactNode;
+  className?: string;
+  ariaLabel?: string;
+}
+
+const HorizontalScrollTabs: React.FC<HorizontalScrollTabsProps> = ({
+  children,
+  className = '',
+  ariaLabel,
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
+  const pointerIdRef = useRef<number | null>(null);
+  const startXRef = useRef(0);
+  const startYRef = useRef(0);
+  const scrollLeftRef = useRef(0);
+  const movedDistanceRef = useRef(0);
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const el = containerRef.current;
+    if (!el) return;
+    isDraggingRef.current = true;
+    pointerIdRef.current = e.pointerId;
+    movedDistanceRef.current = 0;
+    startXRef.current = e.clientX;
+    startYRef.current = e.clientY;
+    scrollLeftRef.current = el.scrollLeft;
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current || pointerIdRef.current !== e.pointerId) return;
+    const el = containerRef.current;
+    if (!el) return;
+    const deltaX = e.clientX - startXRef.current;
+    const deltaY = e.clientY - startYRef.current;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+
+    if (absX > 4 && absX >= absY) {
+      if (movedDistanceRef.current <= 4 && !el.hasPointerCapture(e.pointerId)) {
+        try {
+          el.setPointerCapture(e.pointerId);
+        } catch {}
+      }
+      movedDistanceRef.current = Math.max(movedDistanceRef.current, absX);
+      el.scrollLeft = scrollLeftRef.current - deltaX;
+    }
+  };
+
+  const finishDrag = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (pointerIdRef.current === e.pointerId) {
+      const el = containerRef.current;
+      if (el && el.hasPointerCapture(e.pointerId)) {
+        try {
+          el.releasePointerCapture(e.pointerId);
+        } catch {}
+      }
+      isDraggingRef.current = false;
+      pointerIdRef.current = null;
+    }
+  };
+
+  const handleClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (movedDistanceRef.current > 6) {
+      e.stopPropagation();
+      e.preventDefault();
+      movedDistanceRef.current = 0;
+      return;
+    }
+    const target = (e.target as HTMLElement).closest('button');
+    if (target && containerRef.current?.contains(target)) {
+      target.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      role="tablist"
+      aria-label={ariaLabel}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={finishDrag}
+      onPointerCancel={finishDrag}
+      onClickCapture={handleClickCapture}
+      style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+      className={`w-full min-w-0 max-w-full overflow-x-auto overscroll-x-contain scrollbar-none select-none cursor-grab active:cursor-grabbing ${className}`}
+    >
+      {children}
+    </div>
+  );
+};
 
 interface ReportViewProps {
   transactions: Transaction[];
@@ -369,10 +464,10 @@ export const ReportView: React.FC<ReportViewProps> = ({
   const selectedIncomeIdx = activeIncomeIndex !== null ? activeIncomeIndex : expandedIncomeIndex;
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6 pb-24 min-w-0 max-w-full">
       {/* Header & Period Filter Controls */}
-      <div className="bg-white dark:bg-[#16171f] p-4 sm:p-5 rounded-[14px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper space-y-3.5">
-        <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3.5 sm:gap-4">
+      <div className="bg-white dark:bg-[#16171f] p-4 sm:p-5 rounded-[14px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper space-y-3.5 min-w-0 max-w-full">
+        <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3.5 sm:gap-4 min-w-0">
           <div className="min-w-0">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-[10px] bg-[#855bfb]/15 text-[#7132f5] dark:text-[#a78bfa] flex items-center justify-center shrink-0">
@@ -382,51 +477,62 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 <h1 className="text-base sm:text-lg lg:text-xl font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
                   Laporan & Analisis Keuangan
                 </h1>
-                <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
-                  Visualisasi tren pemasukan, pengeluaran, dan alokasi kategori
-                </p>
               </div>
             </div>
           </div>
 
-          {/* Period Selector Tabs */}
-          <div className="flex items-center gap-1 overflow-x-auto p-1 rounded-[12px] bg-[#f0f1f5] dark:bg-[#1e202b] border border-[#dedee5]/80 dark:border-[#282937] shrink-0 self-start xl:self-auto max-w-full scrollbar-none shadow-xs">
-            {(
-              [
-                { id: 'this_month', label: 'Bulan Ini' },
-                { id: 'last_month', label: 'Bulan Lalu' },
-                { id: 'last_3_months', label: '3 Bulan' },
-                { id: 'last_6_months', label: '6 Bulan' },
-                { id: 'this_year', label: 'Tahun Ini' },
-                { id: 'all', label: 'Semua' },
-              ] as const
-            ).map((item) => {
-              const isActive = period === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setPeriod(item.id)}
-                  className={`px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                    isActive
-                      ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-sm border border-black/5 dark:border-white/5'
-                      : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8] hover:bg-white/50 dark:hover:bg-[#282937]/50'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              );
-            })}
-            <button
-              onClick={() => setPeriod('custom')}
-              className={`px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-                period === 'custom'
-                  ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-sm border border-black/5 dark:border-white/5'
-                  : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8] hover:bg-white/50 dark:hover:bg-[#282937]/50'
-              }`}
+          {/* Period Selector Tabs (Chart-style Timeframe Bar) */}
+          <div className="w-full xl:w-auto min-w-0 max-w-full">
+            <HorizontalScrollTabs
+              ariaLabel="Filter Periode Laporan"
+              className="flex items-center gap-1 p-1 rounded-[12px] bg-[#f0f1f5] dark:bg-[#1e202b] border border-[#dedee5]/80 dark:border-[#282937] shadow-xs"
             >
-              <Calendar className="w-3.5 h-3.5 shrink-0" />
-              <span>Pilih Tanggal</span>
-            </button>
+              {(
+                [
+                  { id: 'this_month', label: '1M', title: 'Bulan Ini (1 Bulan)' },
+                  { id: 'last_3_months', label: '3M', title: '3 Bulan Terakhir' },
+                  { id: 'last_6_months', label: '6M', title: '6 Bulan Terakhir' },
+                  { id: 'this_year', label: '1Y', title: 'Tahun Ini (1 Tahun)' },
+                  { id: 'all', label: 'ALL', title: 'Semua Waktu' },
+                ] as const
+              ).map((item) => {
+                const isActive = period === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    role="tab"
+                    title={item.title}
+                    aria-selected={isActive}
+                    onClick={() => setPeriod(item.id)}
+                    style={{ touchAction: 'pan-y' }}
+                    className={`flex-1 xl:flex-none shrink-0 px-2 sm:px-3.5 py-1.5 rounded-[9px] text-xs font-bold tracking-wide transition-all whitespace-nowrap text-center cursor-pointer ${
+                      isActive
+                        ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-sm border border-black/5 dark:border-white/5'
+                        : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8] hover:bg-white/50 dark:hover:bg-[#282937]/50'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                role="tab"
+                title="Pilih Rentang Tanggal Kustom"
+                aria-selected={period === 'custom'}
+                onClick={() => setPeriod('custom')}
+                style={{ touchAction: 'pan-y' }}
+                className={`flex-1 xl:flex-none shrink-0 px-2 sm:px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap flex items-center justify-center gap-1 cursor-pointer ${
+                  period === 'custom'
+                    ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-sm border border-black/5 dark:border-white/5'
+                    : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8] hover:bg-white/50 dark:hover:bg-[#282937]/50'
+                }`}
+              >
+                <Calendar className="w-3.5 h-3.5 shrink-0" />
+                <span>Custom</span>
+              </button>
+            </HorizontalScrollTabs>
           </div>
         </div>
 
@@ -504,58 +610,82 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 >
                   30 Hari
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const now = new Date();
+                    const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                    const lastDayLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+                    const fmt = (d: Date) =>
+                      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                    setCustomStartDate(fmt(firstDayLastMonth));
+                    setCustomEndDate(fmt(lastDayLastMonth));
+                  }}
+                  className="px-2.5 py-1 rounded-[8px] bg-white dark:bg-[#282937] hover:bg-[#edeef3] dark:hover:bg-[#343647] border border-[#dedee5] dark:border-[#282937] text-[11px] font-semibold text-[#686b82] dark:text-[#9ca0ba] transition-all shadow-micro cursor-pointer"
+                >
+                  Bulan Lalu
+                </button>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* 2 Clean Executive KPI Cards: Pemasukan & Pengeluaran */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+      {/* 2 Clean Executive KPI Cards: Pemasukan & Pengeluaran (Side-by-side on mobile & desktop) */}
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
         {/* Total Pemasukan */}
-        <div className="bg-white dark:bg-[#16171f] rounded-[14px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba]">
+        <div className="min-w-0 bg-white dark:bg-[#16171f] rounded-[12px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-3 sm:p-5 relative overflow-hidden flex flex-col justify-between">
+          <div className="flex items-center justify-between gap-1.5">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] truncate">
               Pemasukan
             </span>
-            <div className="w-8 h-8 rounded-[8px] bg-[#149e61]/12 text-[#149e61] dark:text-[#34d399] flex items-center justify-center shrink-0">
-              <TrendingUp className="w-4 h-4 stroke-[2.2]" />
+            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-[6px] sm:rounded-[8px] bg-[#149e61]/12 text-[#149e61] dark:text-[#34d399] flex items-center justify-center shrink-0">
+              <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.2]" />
             </div>
           </div>
-          <div className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-[#026b3f] dark:text-[#34d399] mt-2 tabular-nums">
+          <div className="text-sm sm:text-2xl lg:text-3xl font-bold tracking-tight text-[#026b3f] dark:text-[#34d399] mt-1.5 sm:mt-2 tabular-nums truncate">
             +{formatCurrency(totalIncome)}
           </div>
-          <div className="text-[11px] sm:text-xs text-[#686b82] dark:text-[#9ca0ba] mt-1.5 flex items-center gap-1.5">
-            <ArrowUpRight className="w-3.5 h-3.5 text-[#149e61] dark:text-[#34d399]" />
-            <span>{incomeByCategory.length} kategori pemasukan aktif</span>
+          <div className="text-[10px] sm:text-xs text-[#686b82] dark:text-[#9ca0ba] mt-1 sm:mt-1.5 flex items-center gap-1 min-w-0">
+            <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#149e61] dark:text-[#34d399] shrink-0" />
+            <span className="truncate sm:hidden">{incomeByCategory.length} kategori aktif</span>
+            <span className="truncate hidden sm:inline">{incomeByCategory.length} kategori pemasukan aktif</span>
           </div>
         </div>
 
         {/* Total Pengeluaran */}
-        <div className="bg-white dark:bg-[#16171f] rounded-[14px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba]">
+        <div className="min-w-0 bg-white dark:bg-[#16171f] rounded-[12px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-3 sm:p-5 relative overflow-hidden flex flex-col justify-between">
+          <div className="flex items-center justify-between gap-1.5">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] truncate">
               Pengeluaran
             </span>
-            <div className="w-8 h-8 rounded-[8px] bg-[#e53e3e]/12 text-[#e53e3e] dark:text-[#f87171] flex items-center justify-center shrink-0">
-              <TrendingDown className="w-4 h-4 stroke-[2.2]" />
+            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-[6px] sm:rounded-[8px] bg-[#e53e3e]/12 text-[#e53e3e] dark:text-[#f87171] flex items-center justify-center shrink-0">
+              <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.2]" />
             </div>
           </div>
-          <div className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-[#e53e3e] dark:text-[#f87171] mt-2 tabular-nums">
+          <div className="text-sm sm:text-2xl lg:text-3xl font-bold tracking-tight text-[#e53e3e] dark:text-[#f87171] mt-1.5 sm:mt-2 tabular-nums truncate">
             -{formatCurrency(totalExpense)}
           </div>
-          <div className="text-[11px] sm:text-xs text-[#686b82] dark:text-[#9ca0ba] mt-1.5 flex items-center gap-1.5">
-            <ArrowDownRight className="w-3.5 h-3.5 text-[#e53e3e] dark:text-[#f87171]" />
-            <span>{expenseByCategory.length} kategori pengeluaran aktif</span>
+          <div className="text-[10px] sm:text-xs text-[#686b82] dark:text-[#9ca0ba] mt-1 sm:mt-1.5 flex items-center gap-1 min-w-0">
+            <ArrowDownRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#e53e3e] dark:text-[#f87171] shrink-0" />
+            <span className="truncate sm:hidden">{expenseByCategory.length} kategori aktif</span>
+            <span className="truncate hidden sm:inline">{expenseByCategory.length} kategori pengeluaran aktif</span>
           </div>
         </div>
       </div>
 
-      {/* Main Analysis Tabs - Smooth scrollable pill bar with zero layout shift or overflow */}
-      <div className="flex items-center gap-2 border-b border-[#dedee5] dark:border-[#282937] pb-3 overflow-x-auto scrollbar-none w-full -mx-1 px-1">
+      {/* Main Analysis Tabs - Smooth scrollable pill bar with touch swipe, drag, and chevron buttons */}
+      <HorizontalScrollTabs
+        ariaLabel="Tab Analisis Laporan"
+        className="flex items-center gap-2 border-b border-[#dedee5] dark:border-[#282937] pb-3 w-full px-1"
+      >
         <button
+          type="button"
+          role="tab"
+          aria-selected={activeChartTab === 'category'}
           onClick={() => setActiveChartTab('category')}
-          className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-[10px] text-xs font-bold transition-all ${
+          style={{ touchAction: 'pan-y' }}
+          className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2.5 rounded-[10px] text-xs font-bold transition-all cursor-pointer ${
             activeChartTab === 'category'
               ? 'bg-[#7132f5] text-white shadow-micro'
               : 'bg-[#fafbfe] sm:bg-transparent dark:bg-[#1e202b] sm:dark:bg-transparent border border-[#dedee5] sm:border-transparent dark:border-[#282937] text-[#686b82] dark:text-[#9ca0ba] hover:bg-[#edeef3] dark:hover:bg-[#1e202b]'
@@ -566,8 +696,12 @@ export const ReportView: React.FC<ReportViewProps> = ({
         </button>
 
         <button
+          type="button"
+          role="tab"
+          aria-selected={activeChartTab === 'flow'}
           onClick={() => setActiveChartTab('flow')}
-          className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-[10px] text-xs font-bold transition-all ${
+          style={{ touchAction: 'pan-y' }}
+          className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2.5 rounded-[10px] text-xs font-bold transition-all cursor-pointer ${
             activeChartTab === 'flow'
               ? 'bg-[#7132f5] text-white shadow-micro'
               : 'bg-[#fafbfe] sm:bg-transparent dark:bg-[#1e202b] sm:dark:bg-transparent border border-[#dedee5] sm:border-transparent dark:border-[#282937] text-[#686b82] dark:text-[#9ca0ba] hover:bg-[#edeef3] dark:hover:bg-[#1e202b]'
@@ -578,8 +712,12 @@ export const ReportView: React.FC<ReportViewProps> = ({
         </button>
 
         <button
+          type="button"
+          role="tab"
+          aria-selected={activeChartTab === 'source'}
           onClick={() => setActiveChartTab('source')}
-          className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-[10px] text-xs font-bold transition-all ${
+          style={{ touchAction: 'pan-y' }}
+          className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2.5 rounded-[10px] text-xs font-bold transition-all cursor-pointer ${
             activeChartTab === 'source'
               ? 'bg-[#7132f5] text-white shadow-micro'
               : 'bg-[#fafbfe] sm:bg-transparent dark:bg-[#1e202b] sm:dark:bg-transparent border border-[#dedee5] sm:border-transparent dark:border-[#282937] text-[#686b82] dark:text-[#9ca0ba] hover:bg-[#edeef3] dark:hover:bg-[#1e202b]'
@@ -590,8 +728,12 @@ export const ReportView: React.FC<ReportViewProps> = ({
         </button>
 
         <button
+          type="button"
+          role="tab"
+          aria-selected={activeChartTab === 'account'}
           onClick={() => setActiveChartTab('account')}
-          className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2 rounded-[10px] text-xs font-bold transition-all ${
+          style={{ touchAction: 'pan-y' }}
+          className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2.5 rounded-[10px] text-xs font-bold transition-all cursor-pointer ${
             activeChartTab === 'account'
               ? 'bg-[#7132f5] text-white shadow-micro'
               : 'bg-[#fafbfe] sm:bg-transparent dark:bg-[#1e202b] sm:dark:bg-transparent border border-[#dedee5] sm:border-transparent dark:border-[#282937] text-[#686b82] dark:text-[#9ca0ba] hover:bg-[#edeef3] dark:hover:bg-[#1e202b]'
@@ -600,7 +742,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
           <CreditCard className="w-4 h-4 shrink-0" />
           <span>Pengeluaran per Akun</span>
         </button>
-      </div>
+      </HorizontalScrollTabs>
 
       {/* ===================== TAB 1: KATEGORI PENGELUARAN ===================== */}
       {activeChartTab === 'category' && (

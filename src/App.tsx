@@ -79,6 +79,7 @@ function ViewFallback() {
 
 export function App() {
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
+  const [historyAccountFilterId, setHistoryAccountFilterId] = useState<string>('all');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>('akun');
 
@@ -88,6 +89,19 @@ export function App() {
   };
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Offline Sync Outbox & Network Status State
+  const [pendingSyncCount, setPendingSyncCount] = useState<number>(() => getPendingSyncCount());
+  const [isOnline, setIsOnline] = useState<boolean>(() =>
+    typeof navigator !== 'undefined' ? navigator.onLine : true
+  );
+
+  const refreshSyncStatus = useCallback(() => {
+    setPendingSyncCount(getPendingSyncCount());
+    if (typeof navigator !== 'undefined') {
+      setIsOnline(navigator.onLine);
+    }
+  }, []);
 
   // Modal States
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
@@ -169,6 +183,7 @@ export function App() {
         console.error('Failed to initialize data:', err);
       } finally {
         setIsLoading(false);
+        setPendingSyncCount(getPendingSyncCount());
       }
     }
     init();
@@ -189,6 +204,7 @@ export function App() {
       setTransactions(data.transactions);
       setTemplates(tpls);
       const pendingAfter = getPendingSyncCount();
+      setPendingSyncCount(pendingAfter);
       if (pendingBefore > 0 && pendingAfter < pendingBefore) {
         const synced = pendingBefore - pendingAfter;
         showToast(
@@ -200,15 +216,18 @@ export function App() {
       console.error('Refresh failed:', err);
     } finally {
       setIsRefreshing(false);
+      refreshSyncStatus();
     }
-  }, [isRefreshing, showToast]);
+  }, [isRefreshing, refreshSyncStatus, showToast]);
 
-  // Automatically flush offline outbox when network connection returns
+  // Automatically flush offline outbox when network connection returns, and track online/offline status
   useEffect(() => {
     const handleOnline = async () => {
+      setIsOnline(true);
       const pending = getPendingSyncCount();
       if (pending > 0) {
         const synced = await flushOfflineSyncQueue();
+        refreshSyncStatus();
         if (synced > 0) {
           showToast(
             `${synced} antrean offline berhasil disinkronkan!`,
@@ -219,9 +238,18 @@ export function App() {
       }
     };
 
+    const handleOffline = () => {
+      setIsOnline(false);
+      refreshSyncStatus();
+    };
+
     window.addEventListener('online', handleOnline);
-    return () => window.removeEventListener('online', handleOnline);
-  }, [handleRefresh, showToast]);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [handleRefresh, refreshSyncStatus, showToast]);
 
   // Handle create transaction
   const handleAddTransaction = async (data: {
@@ -260,6 +288,8 @@ export function App() {
       setAccounts(nextAccounts);
       localStorage.setItem('ft_transactions', JSON.stringify(nextTransactions));
       localStorage.setItem('ft_accounts', JSON.stringify(nextAccounts));
+    } finally {
+      refreshSyncStatus();
     }
   };
 
@@ -296,6 +326,7 @@ export function App() {
     localStorage.setItem('ft_accounts', JSON.stringify(nextAccounts));
 
     await updateTransactionInDatabase(updated.id, updated);
+    refreshSyncStatus();
   };
 
   // Handle delete transaction
@@ -309,6 +340,7 @@ export function App() {
     localStorage.setItem('ft_accounts', JSON.stringify(nextAccounts));
 
     await deleteTransactionFromDatabase(id);
+    refreshSyncStatus();
   };
 
   // Handle direct execution of template from Dashboard
@@ -362,6 +394,8 @@ export function App() {
       setAccounts(nextAccounts);
       localStorage.setItem('ft_transactions', JSON.stringify(nextTransactions));
       localStorage.setItem('ft_accounts', JSON.stringify(nextAccounts));
+    } finally {
+      refreshSyncStatus();
     }
 
     if (navigator.vibrate) {
@@ -454,6 +488,7 @@ export function App() {
       setAccounts(recomputed);
       localStorage.setItem('ft_accounts', JSON.stringify(recomputed));
     }
+    refreshSyncStatus();
   };
 
   // Handle delete account
@@ -462,6 +497,7 @@ export function App() {
     setAccounts(nextAccounts);
     localStorage.setItem('ft_accounts', JSON.stringify(nextAccounts));
     await deleteAccountFromDatabase(id);
+    refreshSyncStatus();
   };
 
   // Handle edit or add category
@@ -497,6 +533,7 @@ export function App() {
       localStorage.setItem('ft_categories', JSON.stringify(nextCategories));
     }
     setIsCategoryModalOpen(false);
+    refreshSyncStatus();
   };
 
   // Handle delete category
@@ -506,6 +543,7 @@ export function App() {
     localStorage.setItem('ft_categories', JSON.stringify(nextCategories));
     await deleteCategoryFromDatabase(id);
     setIsCategoryModalOpen(false);
+    refreshSyncStatus();
   };
 
   return (
@@ -519,6 +557,8 @@ export function App() {
         isRefreshing={isRefreshing}
         isLoading={isLoading}
         onSync={handleRefresh}
+        pendingSyncCount={pendingSyncCount}
+        isOnline={isOnline}
       />
 
       {/* Main View Area */}
@@ -533,10 +573,12 @@ export function App() {
             isRefreshing={isRefreshing}
             isLoading={isLoading}
             onSync={handleRefresh}
+            pendingSyncCount={pendingSyncCount}
+            isOnline={isOnline}
           />
         </div>
 
-        {/* Desktop Top Header Bar with Quick Theme Selector (Visible on md and above) */}
+        {/* Desktop Top Header Bar with Sync Outbox Status (Visible on md and above) */}
         <header className="hidden md:flex items-center justify-between px-6 lg:px-8 h-16 border-b border-[#dedee5] dark:border-[#282937] bg-white/80 dark:bg-[#16171f]/80 backdrop-blur-md sticky top-0 z-20">
           <div>
             <h1 className="font-bold text-base lg:text-lg text-[#101114] dark:text-[#f3f4f8] tracking-tight">
@@ -547,6 +589,30 @@ export function App() {
               {activeTab === 'tagihan' && 'Tagihan & Pinjaman'}
               {activeTab === 'input' && 'Catat Transaksi Baru'}
             </h1>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {(!isOnline || pendingSyncCount > 0) && (
+              <button
+                type="button"
+                onClick={handleRefresh}
+                disabled={isRefreshing || isLoading}
+                className={`px-3 py-1.5 rounded-[10px] border text-xs font-bold inline-flex items-center gap-2 transition-colors cursor-pointer ${
+                  !isOnline
+                    ? 'border-[#f59e0b]/40 bg-[#f59e0b]/10 text-[#b45309] dark:text-[#fbbf24]'
+                    : 'border-[#7132f5]/40 bg-[#7132f5]/10 text-[#7132f5] dark:text-[#a78bfa]'
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full bg-[#f59e0b] animate-pulse" />
+                <span>
+                  {!isOnline
+                    ? pendingSyncCount > 0
+                      ? `Mode Offline • ${pendingSyncCount} Antrean`
+                      : 'Mode Offline'
+                    : `${pendingSyncCount} Antrean Belum Sinkron`}
+                </span>
+              </button>
+            )}
           </div>
         </header>
 
@@ -615,6 +681,10 @@ export function App() {
                     setSelectedAccount(null);
                     setIsAccountModalOpen(true);
                   }}
+                  onSelectAccountHistory={(acc) => {
+                    setHistoryAccountFilterId(acc.id);
+                    setActiveTab('riwayat');
+                  }}
                 />
               )}
 
@@ -634,6 +704,8 @@ export function App() {
                     transactions={transactions}
                     accounts={accounts}
                     categories={categories}
+                    selectedAccountId={historyAccountFilterId}
+                    onChangeSelectedAccountId={setHistoryAccountFilterId}
                     onEditTransaction={(t) => {
                       setSelectedTransaction(t);
                       setIsTxModalOpen(true);
