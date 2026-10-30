@@ -4,7 +4,7 @@ import type { NavTab } from '../../components/layout/BottomNav';
 import { formatCurrency } from '../../lib/formatters';
 import { CategoryIcon } from '../../components/ui/CategoryIcon';
 import { AccountAvatar } from '../../components/ui/AccountAvatar';
-import { resolveTemplateAccount, resolveTemplateCategory } from '../../services/templateService';
+import { resolveTemplateAccount } from '../../services/templateService';
 import {
   Wallet,
   CreditCard,
@@ -258,105 +258,99 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
 
-      {/* ===================== QUICK TEMPLATES SECTION ===================== */}
-      <div className="bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-4 sm:p-5 space-y-3.5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-[8px] bg-[#7132f5]/10 text-[#7132f5] flex items-center justify-center shrink-0">
-              <Zap className="w-4 h-4 fill-current" />
+      {/* ===================== QUICK TEMPLATES SECTION (Compact High-Density Grid) ===================== */}
+      <div className="bg-white dark:bg-[#16171f] rounded-[14px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-3.5 sm:p-4 space-y-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-[7px] bg-[#7132f5]/10 text-[#7132f5] dark:text-[#a78bfa] flex items-center justify-center shrink-0">
+              <Zap className="w-3.5 h-3.5 fill-current" />
             </div>
-            <div className="min-w-0">
-              <h3 className="font-bold text-sm sm:text-base text-[#101114] dark:text-[#f3f4f8] tracking-tight">
-                Transaksi Cepat & Template Favorit
-              </h3>
-              <p className="text-xs text-[#686b82] dark:text-[#9ca0ba] truncate">
-                Tap kartu untuk langsung mencatat transaksi harian dalam 1-klik
-              </p>
-            </div>
+            <h3 className="font-bold text-xs sm:text-sm text-[#101114] dark:text-[#f3f4f8] tracking-tight truncate">
+              Template Cepat (1-Klik)
+            </h3>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
-            {onAddTemplate && (
-              <button
-                type="button"
-                onClick={onAddTemplate}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] bg-[#7132f5]/10 hover:bg-[#7132f5]/20 text-[#7132f5] dark:text-[#a78bfa] text-xs font-semibold transition-all border border-[#7132f5]/20"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Tambah Template</span>
-              </button>
-            )}
-          </div>
+          {onAddTemplate && (
+            <button
+              type="button"
+              onClick={onAddTemplate}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-[8px] bg-[#7132f5]/10 hover:bg-[#7132f5]/20 text-[#7132f5] dark:text-[#a78bfa] text-[11px] font-bold transition-all border border-[#7132f5]/20 shrink-0 cursor-pointer active:scale-95"
+            >
+              <Plus className="w-3 h-3 stroke-[2.5]" />
+              <span>Tambah</span>
+            </button>
+          )}
         </div>
 
-        {/* Templates Grid */}
+        {/* Compact Templates Grid */}
         {templates && templates.length > 0 ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
             {templates.map((tpl) => {
               const srcAcc = resolveTemplateAccount(accounts, tpl.sourceAccountId);
               const dstAcc = tpl.destinationAccountId
                 ? resolveTemplateAccount(accounts, tpl.destinationAccountId)
                 : null;
-              const cat = tpl.categoryId ? resolveTemplateCategory(categories, tpl.categoryId) : null;
+              const isExpense = tpl.type === 'pengeluaran';
+              const isTransfer = tpl.type === 'transfer';
 
               return (
                 <div
                   key={tpl.id}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => onUseTemplateDirectly?.(tpl)}
-                  className="group relative bg-[#fafbfe] dark:bg-[#12141a] hover:bg-white dark:hover:bg-[#181a20] rounded-[12px] p-3 border border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/50 dark:hover:border-[#7132f5]/50 shadow-micro hover:shadow-md transition-all cursor-pointer flex flex-col justify-between text-left active:scale-[0.98]"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onUseTemplateDirectly?.(tpl);
+                    }
+                  }}
+                  className="group min-w-0 min-h-[52px] bg-[#fafbfe] dark:bg-[#12141a] hover:bg-white dark:hover:bg-[#1b1d26] rounded-[10px] px-2.5 py-2 border border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/60 dark:hover:border-[#855bfb]/60 shadow-2xs hover:shadow-micro transition-all cursor-pointer flex flex-col justify-between text-left active:scale-[0.98]"
                 >
-                  {/* Top: Emoji & Edit button */}
-                  <div className="flex items-center justify-between gap-1 mb-2">
-                    <span className="text-xl w-8 h-8 rounded-[8px] bg-white dark:bg-[#1f222e] border border-[#dedee5]/60 dark:border-[#282937] flex items-center justify-center shrink-0 shadow-2xs">
-                      {tpl.emoji || '⚡'}
-                    </span>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <span
-                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-[5px] uppercase tracking-wider shrink-0 ${
-                          tpl.type === 'pengeluaran'
-                            ? 'bg-red-500/10 text-red-600 dark:text-red-400'
-                            : tpl.type === 'transfer'
-                            ? 'bg-[#7132f5]/10 text-[#7132f5] dark:text-[#a78bfa]'
-                            : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                        }`}
-                      >
-                        {tpl.type === 'pengeluaran' ? 'Keluar' : tpl.type === 'transfer' ? 'Transfer' : 'Masuk'}
+                  {/* Row 1: Emoji + Template Name + Edit Action */}
+                  <div className="flex items-center justify-between gap-1 min-w-0">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="text-xs leading-none shrink-0">
+                        {tpl.emoji || '⚡'}
                       </span>
-                      {onEditTemplate && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onEditTemplate(tpl);
-                          }}
-                          className="p-1 rounded-[6px] text-[#686b82] dark:text-[#9ca0ba] hover:text-[#7132f5] hover:bg-white dark:hover:bg-[#232534] transition-colors shrink-0"
-                          title="Edit template"
-                        >
-                          <Edit2 className="w-3 h-3" />
-                        </button>
-                      )}
+                      <h4 className="text-xs font-bold text-[#101114] dark:text-[#f3f4f8] truncate group-hover:text-[#7132f5] dark:group-hover:text-[#a78bfa] transition-colors">
+                        {tpl.name}
+                      </h4>
                     </div>
+                    {onEditTemplate && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditTemplate(tpl);
+                        }}
+                        className="w-5 h-5 -mr-0.5 rounded-[5px] flex items-center justify-center text-[#9497a9] hover:text-[#7132f5] dark:hover:text-[#a78bfa] hover:bg-[#7132f5]/10 transition-colors shrink-0 cursor-pointer"
+                        title="Edit template"
+                        aria-label={`Edit template ${tpl.name}`}
+                      >
+                        <Edit2 className="w-2.5 h-2.5" />
+                      </button>
+                    )}
                   </div>
 
-                  {/* Middle: Title & Account/Category info */}
-                  <div className="min-w-0 my-1">
-                    <h4 className="text-xs sm:text-sm font-bold text-[#101114] dark:text-[#f3f4f8] truncate">
-                      {tpl.name}
-                    </h4>
-                    <p className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] truncate mt-0.5">
-                      {srcAcc?.name || 'Akun'}
-                      {tpl.type === 'transfer' ? ` → ${dstAcc?.name || 'Tujuan'}` : cat ? ` • ${cat.name}` : ''}
-                    </p>
-                  </div>
-
-                  {/* Bottom: Nominal & Action button */}
-                  <div className="pt-2 border-t border-[#dedee5]/70 dark:border-[#282937] flex items-center justify-between gap-1 mt-1">
-                    <span className="text-xs font-bold text-[#101114] dark:text-[#f3f4f8] tabular-nums whitespace-nowrap">
+                  {/* Row 2: Nominal + Account Info */}
+                  <div className="flex items-center justify-between gap-1.5 mt-1 min-w-0">
+                    <span
+                      className={`text-[11px] font-bold tabular-nums shrink-0 ${
+                        isExpense
+                          ? 'text-[#e53e3e] dark:text-[#f87171]'
+                          : isTransfer
+                          ? 'text-[#7132f5] dark:text-[#a78bfa]'
+                          : 'text-[#149e61] dark:text-[#34d399]'
+                      }`}
+                    >
+                      {isExpense ? '-' : isTransfer ? '' : '+'}
                       {formatCurrency(tpl.amount)}
                     </span>
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#7132f5] dark:text-[#a78bfa] group-hover:translate-x-0.5 transition-transform">
-                      <Zap className="w-2.5 h-2.5 fill-current" />
-                      Catat
+                    <span className="text-[10px] font-medium text-[#686b82] dark:text-[#9ca0ba] truncate">
+                      {isTransfer
+                        ? `${srcAcc?.name || 'Akun'}→${dstAcc?.name || 'Tujuan'}`
+                        : srcAcc?.name || 'Akun'}
                     </span>
                   </div>
                 </div>
@@ -364,13 +358,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             })}
           </div>
         ) : (
-          <div className="p-6 text-center border border-dashed border-[#dedee5] dark:border-[#282937] rounded-[12px]">
+          <div className="py-4 px-3 text-center border border-dashed border-[#dedee5] dark:border-[#282937] rounded-[10px]">
             <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">Belum ada template transaksi.</p>
             {onAddTemplate && (
               <button
                 type="button"
                 onClick={onAddTemplate}
-                className="mt-2 text-xs font-bold text-[#7132f5] dark:text-[#a78bfa] hover:underline"
+                className="mt-1.5 text-xs font-bold text-[#7132f5] dark:text-[#a78bfa] hover:underline cursor-pointer"
               >
                 Buat template pertama Anda
               </button>

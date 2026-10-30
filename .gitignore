@@ -14,8 +14,8 @@ dist-ssr
 
 # Editor directories and files
 .vscode/*
-.agents/*
-.claude/*
+.agents/
+.claude/
 !.vscode/extensions.json
 .idea
 .DS_Store
@@ -34,3 +34,4 @@ DESIGN-autumn.md
 DESIGN-mongodb.md
 DEVELOPMENT_WALKTHROUGH.md
 token-saver/
+skills-lock.json

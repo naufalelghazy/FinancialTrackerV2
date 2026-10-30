@@ -36,53 +36,63 @@
 
 ```text
 f:\project\FinancialTrackerV2\
-├── .agents/                    # Aturan AI agent & skills (antislop, token-saver, dll.)
-├── public/                     # Asset publik, manifest PWA, logo bank lokal SVG
+├── public/                     # Asset publik, manifest PWA, logo bank lokal (.webp / .svg)
 │   └── icons/banks/            # Icon fallback bank (bca, mandiri, gopay, cash, dll.)
 ├── src/
-│   ├── assets/                 # Asset statis internal
 │   ├── components/             # Komponen UI bersama (Shared Components)
 │   │   ├── forms/
 │   │   │   └── TransactionForm.tsx      # Form input transaksi (Krusial: Zero layout shift)
 │   │   ├── layout/
-│   │   │   ├── Header.tsx               # Header aplikasi & toggle tema
-│   │   │   ├── Sidebar.tsx              # Navigasi samping desktop
+│   │   │   ├── Header.tsx               # Header aplikasi, status sync & toggle tema
+│   │   │   ├── Sidebar.tsx              # Navigasi samping desktop & status sync
 │   │   │   ├── BottomNav.tsx            # Navigasi bawah mobile
 │   │   │   ├── ThemeMenuDropdown.tsx    # Modal/dropdown pemilih tema desain
 │   │   │   └── ReloadPrompt.tsx         # PWA update notification
 │   │   ├── modals/
 │   │   │   ├── EditTransactionModal.tsx # Modal edit data transaksi
 │   │   │   ├── EditAccountModal.tsx     # Modal edit / tambah akun rekening
+│   │   │   ├── EditCategoryModal.tsx    # Modal edit / tambah kategori
+│   │   │   ├── EditTemplateModal.tsx    # Modal edit / tambah template cepat
+│   │   │   ├── VoiceTransactionModal.tsx# Modal pencatatan transaksi via suara
 │   │   │   └── SettingsModal.tsx        # Modal konfigurasi & integrasi
 │   │   └── ui/
-│   │       └── CategoryIcon.tsx         # Renderer icon & emoji kategori
+│   │       ├── AccountAvatar.tsx        # Renderer logo & avatar rekening
+│   │       ├── CategoryIcon.tsx         # Renderer icon & emoji kategori
+│   │       └── Toast.tsx                # Komponen notifikasi toast
 │   ├── contexts/
-│   │   └── ThemeContext.tsx    # Context provider multi-tema (Coinbase, The Verge, Kraken, Autumn, MongoDB)
+│   │   ├── ThemeContext.tsx    # Context provider multi-tema (Coinbase, The Verge, Kraken, Autumn, MongoDB)
+│   │   └── themeStore.ts       # Store & tipe tema
 │   ├── features/               # Halaman & fitur utama (Feature-based structure)
 │   │   ├── accounts/
-│   │   │   ├── AccountsView.tsx         # Tampilan manajemen saldo & rekening
+│   │   │   ├── AccountsView.tsx         # Tampilan manajemen saldo, rekening & navigasi mutasi
 │   │   │   └── BillsView.tsx            # Tampilan tagihan kartu kredit (saldo negatif)
 │   │   ├── dashboard/
-│   │   │   └── DashboardView.tsx        # Halaman ringkasan finansial utama
+│   │   │   └── DashboardView.tsx        # Halaman ringkasan finansial utama & mode privasi
 │   │   ├── history/
-│   │   │   └── HistoryView.tsx          # Halaman tabel riwayat transaksi & filter
+│   │   │   └── HistoryView.tsx          # Halaman riwayat transaksi & filter multi-dimensi
 │   │   └── report/
 │   │       └── ReportView.tsx           # Halaman laporan analitik & grafik Recharts
+│   ├── hooks/
+│   │   └── useSpeechRecognition.ts      # Hook Web Speech API bahasa Indonesia
 │   ├── lib/
+│   │   ├── categoryIcons.ts    # Mapping ikon kategori
 │   │   ├── constants.ts        # Akun & kategori default awal (fallback)
+│   │   ├── formatters.ts       # Formatter mata uang & angka
 │   │   └── supabase.ts         # Inisialisasi Supabase client & environment checks
 │   ├── services/
-│   │   ├── financialService.ts # Service utama data (CRUD, kalkulasi saldo, Supabase + LocalStorage)
-│   │   └── logoService.ts      # Service resolver logo bank/ewallet (Logo.dev + SVG lokal)
+│   │   ├── financialService.ts # Service utama data (CRUD, kalkulasi saldo, Offline Outbox, Supabase + LocalStorage)
+│   │   ├── logoService.ts      # Service resolver logo bank/ewallet
+│   │   ├── templateService.ts  # Service CRUD template transaksi cepat
+│   │   └── voiceTransactionParser.ts # Parser NLP transaksi suara bahasa Indonesia
 │   ├── types/
 │   │   └── index.ts            # Definisi tipe TypeScript (Account, Transaction, Category, dll.)
-│   ├── App.tsx                 # Root layout, routing tab aktif, state sinkronisasi
+│   ├── App.tsx                 # Root layout, lazy routing, state sinkronisasi & mode privasi
 │   ├── index.css               # Design tokens, CSS custom variables per tema, font styling
 │   └── main.tsx                # Entry point React
 ├── AGENTS.md                   # Instruksi agent & referensi context
 ├── PROJECT_CONTEXT.md          # Dokumen ini
-├── DEVELOPMENT_WALKTHROUGH.md  # Roadmap & perbandingan V1 vs V2
-└── vite.config.ts              # Konfigurasi Vite, Tailwind v4, dan PWA
+├── README.md                   # Dokumentasi publik repositori
+└── vite.config.ts              # Konfigurasi Vite, code splitting, Tailwind v4, dan PWA
 ```
 
 ---
