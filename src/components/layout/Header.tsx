@@ -70,8 +70,12 @@ export const Header: React.FC<HeaderProps> = ({
           </span>
         </div>
 
-        {/* Desktop Navigation Tabs (Hidden on Mobile) */}
-        <nav className="hidden md:flex items-center gap-1 bg-surface-sunken p-1 rounded-[12px] border border-hairline">
+        {/* Desktop Navigation Tabs.
+            Gated at `lg` to match where <Sidebar> takes over. Gating it at
+            `md` left a tablet-portrait window (768–1023px) where the header
+            tabs AND the bottom nav were both on screen, and the sixth tab was
+            clipped by the action buttons. */}
+        <nav className="hidden lg:flex items-center gap-1 bg-surface-sunken p-1 rounded-[12px] border border-hairline">
           {desktopNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
