@@ -7,6 +7,7 @@ import type {
 } from "../../types";
 import type { NavTab } from "../../components/layout/BottomNav";
 import { formatCurrency } from "../../lib/formatters";
+import { ACCOUNT_TYPE_LABELS } from "../../lib/labels";
 import {
   currentMonthKey,
   formatMonthLabel,
@@ -881,7 +882,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         {acc.name}
                       </span>
                       <span className="text-[10px] text-ink-muted uppercase">
-                        {acc.type}
+                        {ACCOUNT_TYPE_LABELS[acc.type] || acc.type}
                       </span>
                     </div>
                   </div>

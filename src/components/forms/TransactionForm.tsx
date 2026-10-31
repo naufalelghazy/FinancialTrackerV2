@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
+import { useDismissable } from '../../hooks/useDismissable';
 import type { TransactionType, Account, Category, QuickTemplate } from '../../types';
 import { formatCurrency, formatNumberWithDots, parseRawAmount } from '../../lib/formatters';
 import {
@@ -10,12 +11,14 @@ import {
   BookmarkPlus,
   Mic,
   ChevronDown,
-  Check,
 } from 'lucide-react';
 import { CategoryIcon } from '../ui/CategoryIcon';
+import { CategoryPickerList } from '../ui/CategoryPickerList';
 import { AccountAvatar } from '../ui/AccountAvatar';
+import { AccountPickerList } from '../ui/AccountPickerList';
 import { resolveTemplateAccount, resolveTemplateCategory } from '../../services/templateService';
 import { ACCOUNT_TYPE_LABELS } from '../../lib/labels';
+import { todayLocalISO } from '../../lib/date';
 
 interface TransactionFormProps {
   accounts: Account[];
@@ -66,7 +69,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   );
   const [categoryId, setCategoryId] = useState(() => prefilledData?.categoryId || '');
   const [date, setDate] = useState(
-    () => prefilledData?.date || new Date().toISOString().split('T')[0]
+    () => prefilledData?.date || todayLocalISO()
   );
   const [notes, setNotes] = useState(() => prefilledData?.notes || '');
   const [isSuccess, setIsSuccess] = useState(false);
@@ -76,7 +79,9 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   const [activeDropdown, setActiveDropdown] = useState<
     'source' | 'destination' | 'category' | null
   >(null);
-  const [fieldError, setFieldError] = useState<'source' | 'destination' | 'category' | null>(null);
+  const [fieldError, setFieldError] = useState<
+    'amount' | 'source' | 'destination' | 'category' | null
+  >(null);
 
   const dropdownAreaRef = useRef<HTMLDivElement>(null);
   const sourceTriggerRef = useRef<HTMLButtonElement>(null);
@@ -90,31 +95,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
   }, [prefilledData, onClearPrefilledData]);
 
   // Tutup popup dropdown saat klik di luar atau tekan Escape
-  useEffect(() => {
-    if (!activeDropdown) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownAreaRef.current &&
-        !dropdownAreaRef.current.contains(event.target as Node)
-      ) {
-        setActiveDropdown(null);
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setActiveDropdown(null);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [activeDropdown]);
+  const dismissDropdown = useCallback(() => setActiveDropdown(null), []);
+  useDismissable(dropdownAreaRef, activeDropdown !== null, dismissDropdown);
 
   const filteredCategories = categories.filter((c) => c.type === type);
   const selectedCategory = categories.find((c) => c.id === categoryId);
@@ -130,11 +112,48 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
     setAmountDisplay(formatNumberWithDots(e.target.value));
   };
 
+  /** Arrow/Home/End navigation for the type radiogroup. */
+  const handleTypeGroupKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const order = ['pengeluaran', 'transfer', 'pemasukan'] as const;
+    const currentIdx = order.indexOf(type);
+    let nextIdx = currentIdx;
+
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      nextIdx = (currentIdx + 1) % order.length;
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      nextIdx = (currentIdx - 1 + order.length) % order.length;
+    } else if (e.key === 'Home') {
+      nextIdx = 0;
+    } else if (e.key === 'End') {
+      nextIdx = order.length - 1;
+    } else {
+      return;
+    }
+
+    e.preventDefault();
+    setType(order[nextIdx]);
+    setCategoryId('');
+    setFieldError(null);
+    setActiveDropdown(null);
+    // Move focus with the selection, as the radiogroup pattern expects.
+    const target = document.querySelector<HTMLElement>(
+      `[data-type-option="${order[nextIdx]}"]`
+    );
+    target?.focus();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
+
     const rawAmount = parseRawAmount(amountDisplay);
-    if (!rawAmount) return;
+    // Returning silently made the Simpan button look broken: nothing was
+    // highlighted and nothing was said.
+    if (!rawAmount || rawAmount <= 0) {
+      setFieldError('amount');
+      document.getElementById('tx-amount-input')?.focus();
+      return;
+    }
 
     if (!sourceAccountId) {
       setFieldError('source');
@@ -292,18 +311,30 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         </div>
       )}
 
-      {/* Type Toggle - Kraken Style Segmented Control */}
-      <div className="grid grid-cols-3 p-1 bg-surface-sunken rounded-[12px] gap-1 border border-hairline">
+      {/* Type Toggle - Kraken Style Segmented Control.
+          Roving tabindex: the group is a single tab stop and arrow keys move
+          between options, per the radiogroup pattern. It used to be
+          tabIndex={-1} on all three, which made the transaction type
+          completely unreachable from the keyboard. */}
+      <div
+        className="grid grid-cols-3 p-1 bg-surface-sunken rounded-[12px] gap-1 border border-hairline"
+        role="radiogroup"
+        aria-label="Jenis Transaksi"
+        onKeyDown={handleTypeGroupKeyDown}
+      >
         <button
           type="button"
-          tabIndex={-1}
+          role="radio"
+          aria-checked={type === 'pengeluaran'}
+          tabIndex={type === 'pengeluaran' ? 0 : -1}
+          data-type-option="pengeluaran"
           onClick={() => {
             setType('pengeluaran');
             setCategoryId('');
             setFieldError(null);
             setActiveDropdown(null);
           }}
-          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-colors duration-150 ${
+          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
             type === 'pengeluaran'
               ? 'bg-ink text-white shadow-micro'
               : 'text-ink-muted hover:text-ink'
@@ -315,14 +346,17 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
 
         <button
           type="button"
-          tabIndex={-1}
+          role="radio"
+          aria-checked={type === 'transfer'}
+          tabIndex={type === 'transfer' ? 0 : -1}
+          data-type-option="transfer"
           onClick={() => {
             setType('transfer');
             setCategoryId('');
             setFieldError(null);
             setActiveDropdown(null);
           }}
-          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-colors duration-150 ${
+          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
             type === 'transfer'
               ? 'bg-brand text-white shadow-micro'
               : 'text-ink-muted hover:text-ink'
@@ -334,14 +368,17 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
 
         <button
           type="button"
-          tabIndex={-1}
+          role="radio"
+          aria-checked={type === 'pemasukan'}
+          tabIndex={type === 'pemasukan' ? 0 : -1}
+          data-type-option="pemasukan"
           onClick={() => {
             setType('pemasukan');
             setCategoryId('');
             setFieldError(null);
             setActiveDropdown(null);
           }}
-          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-colors duration-150 ${
+          className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
             type === 'pemasukan'
               ? 'bg-positive text-white shadow-micro'
               : 'text-ink-muted hover:text-ink'
@@ -387,6 +424,11 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
             className="w-full text-4xl font-bold text-ink text-center tracking-[-1px] outline-none placeholder:text-ink-subtle"
           />
         </div>
+        {fieldError === 'amount' && !parseRawAmount(amountDisplay) && (
+          <p className="text-center text-[11px] font-semibold text-negative mt-1">
+            Masukkan nominal lebih dari nol
+          </p>
+        )}
       </div>
 
       {/* Form Fields Card */}
@@ -453,65 +495,20 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
             </button>
 
             {activeDropdown === 'source' && (
-              <div
-                role="listbox"
-                aria-label="Pilih Akun Rekening / Dompet"
-                className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-[14px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
-              >
-                <div className="p-1.5 max-h-60 overflow-y-auto divide-y divide-hairline/40">
-                  {accounts.map((acc) => {
-                    const isSelected = sourceAccountId === acc.id;
-                    return (
-                      <button
-                        key={acc.id}
-                        type="button"
-                        role="option"
-                        aria-selected={isSelected}
-                        onClick={() => {
-                          setSourceAccountId(acc.id);
-                          if (destinationAccountId === acc.id) {
-                            setDestinationAccountId('');
-                          }
-                          setFieldError(null);
-                          setActiveDropdown(null);
-                        }}
-                        className={`w-full min-h-[44px] px-3 py-2 rounded-[10px] text-left flex items-center justify-between gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-brand ${
-                          isSelected
-                            ? 'bg-brand text-white font-bold'
-                            : 'text-ink hover:bg-surface-sunken font-medium'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <AccountAvatar acc={acc} size="sm" />
-                          <span className="truncate text-sm">{acc.name}</span>
-                          <span
-                            className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${
-                              isSelected
-                                ? 'bg-black/15 text-current'
-                                : 'bg-surface-sunken text-ink-muted'
-                            }`}
-                          >
-                            {ACCOUNT_TYPE_LABELS[acc.type] || acc.type}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span
-                            className={`text-xs tabular-nums ${
-                              isSelected
-                                ? 'text-current font-bold'
-                                : acc.balance < 0
-                                ? 'text-negative font-semibold'
-                                : 'text-ink-muted font-semibold'
-                            }`}
-                          >
-                            {formatCurrency(acc.balance)}
-                          </span>
-                          {isSelected && <Check className="w-4 h-4 shrink-0" />}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+              <div className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-[14px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                <AccountPickerList
+                  ariaLabel="Pilih Akun Rekening / Dompet"
+                  accounts={accounts}
+                  selectedId={sourceAccountId}
+                  onSelect={(acc) => {
+                    setSourceAccountId(acc.id);
+                    if (destinationAccountId === acc.id) {
+                      setDestinationAccountId('');
+                    }
+                    setFieldError(null);
+                    setActiveDropdown(null);
+                  }}
+                />
               </div>
             )}
           </div>
@@ -582,62 +579,17 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                 </button>
 
                 {activeDropdown === 'destination' && (
-                  <div
-                    role="listbox"
-                    aria-label="Pilih Akun Tujuan"
-                    className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-[14px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
-                  >
-                    <div className="p-1.5 max-h-60 overflow-y-auto divide-y divide-hairline/40">
-                      {availableDestinationAccounts.map((acc) => {
-                        const isSelected = destinationAccountId === acc.id;
-                        return (
-                          <button
-                            key={acc.id}
-                            type="button"
-                            role="option"
-                            aria-selected={isSelected}
-                            onClick={() => {
-                              setDestinationAccountId(acc.id);
-                              setFieldError(null);
-                              setActiveDropdown(null);
-                            }}
-                            className={`w-full min-h-[44px] px-3 py-2 rounded-[10px] text-left flex items-center justify-between gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-brand ${
-                              isSelected
-                                ? 'bg-brand text-white font-bold'
-                                : 'text-ink hover:bg-surface-sunken font-medium'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <AccountAvatar acc={acc} size="sm" />
-                              <span className="truncate text-sm">{acc.name}</span>
-                              <span
-                                className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${
-                                  isSelected
-                                    ? 'bg-black/15 text-current'
-                                    : 'bg-surface-sunken text-ink-muted'
-                                }`}
-                              >
-                                {ACCOUNT_TYPE_LABELS[acc.type] || acc.type}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span
-                                className={`text-xs tabular-nums ${
-                                  isSelected
-                                    ? 'text-current font-bold'
-                                    : acc.balance < 0
-                                    ? 'text-negative font-semibold'
-                                    : 'text-ink-muted font-semibold'
-                                }`}
-                              >
-                                {formatCurrency(acc.balance)}
-                              </span>
-                              {isSelected && <Check className="w-4 h-4 shrink-0" />}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
+                  <div className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-[14px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                    <AccountPickerList
+                      ariaLabel="Pilih Akun Tujuan"
+                      accounts={availableDestinationAccounts}
+                      selectedId={destinationAccountId}
+                      onSelect={(acc) => {
+                        setDestinationAccountId(acc.id);
+                        setFieldError(null);
+                        setActiveDropdown(null);
+                      }}
+                    />
                   </div>
                 )}
               </div>
@@ -709,55 +661,18 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                 </button>
 
                 {activeDropdown === 'category' && (
-                  <div
-                    role="listbox"
-                    aria-label="Pilih Kategori Transaksi"
-                    className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-[14px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
-                  >
-                    <div className="p-1.5 max-h-60 overflow-y-auto divide-y divide-hairline/40">
-                      {filteredCategories.map((cat) => {
-                        const isSelected = categoryId === cat.id;
-                        return (
-                          <button
-                            key={cat.id}
-                            type="button"
-                            role="option"
-                            aria-selected={isSelected}
-                            onClick={() => {
-                              setCategoryId(cat.id);
-                              setFieldError(null);
-                              setActiveDropdown(null);
-                            }}
-                            className={`w-full min-h-[42px] px-3 py-2 rounded-[10px] text-left flex items-center justify-between gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-brand ${
-                              isSelected
-                                ? 'bg-brand text-white font-bold'
-                                : 'text-ink hover:bg-surface-sunken font-medium'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <span
-                                className={`w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 ${
-                                  isSelected
-                                    ? 'bg-black/15 text-current'
-                                    : 'bg-surface-sunken'
-                                }`}
-                              >
-                                <CategoryIcon
-                                  name={cat.name}
-                                  type={type}
-                                  icon={cat.icon}
-                                  emoji={cat.emoji}
-                                  size="sm"
-                                  className={isSelected ? '!text-current' : ''}
-                                />
-                              </span>
-                              <span className="truncate text-sm">{cat.name}</span>
-                            </div>
-                            {isSelected && <Check className="w-4 h-4 shrink-0" />}
-                          </button>
-                        );
-                      })}
-                    </div>
+                  <div className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-[14px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                    <CategoryPickerList
+                      ariaLabel="Pilih Kategori Transaksi"
+                      categories={filteredCategories}
+                      selectedId={categoryId}
+                      type={type}
+                      onSelect={(cat) => {
+                        setCategoryId(cat.id);
+                        setFieldError(null);
+                        setActiveDropdown(null);
+                      }}
+                    />
                   </div>
                 )}
               </div>

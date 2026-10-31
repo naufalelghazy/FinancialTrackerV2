@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import type {
   Transaction,
   Account,
@@ -10,9 +10,13 @@ import {
   formatNumberInput,
   parseNumberInput,
 } from "../../lib/formatters";
-import { X, Trash2, AlertTriangle, ChevronDown, Check } from "lucide-react";
+import { X, Trash2, AlertTriangle, ChevronDown } from "lucide-react";
 import { CategoryIcon } from "../ui/CategoryIcon";
+import { CategoryPickerList } from "../ui/CategoryPickerList";
+import { ModalShell } from "../ui/ModalShell";
+import { useDismissable } from "../../hooks/useDismissable";
 import { AccountAvatar } from "../ui/AccountAvatar";
+import { AccountPickerList } from "../ui/AccountPickerList";
 import { ACCOUNT_TYPE_LABELS } from "../../lib/labels";
 
 interface EditTransactionModalProps {
@@ -30,7 +34,7 @@ interface EditTransactionModalProps {
     categoryId?: string;
     date: string;
     notes: string;
-  }) => Promise<void>;
+  }) => Promise<void | boolean>;
   onDelete: (id: string) => Promise<void>;
 }
 
@@ -48,7 +52,7 @@ interface EditModalContentProps {
     categoryId?: string;
     date: string;
     notes: string;
-  }) => Promise<void>;
+  }) => Promise<void | boolean>;
   onDelete: (id: string) => Promise<void>;
 }
 
@@ -84,31 +88,8 @@ const EditModalContent: React.FC<EditModalContentProps> = ({
 
   const dropdownAreaRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!activeDropdown) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownAreaRef.current &&
-        !dropdownAreaRef.current.contains(event.target as Node)
-      ) {
-        setActiveDropdown(null);
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setActiveDropdown(null);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [activeDropdown]);
+  const dismissDropdown = useCallback(() => setActiveDropdown(null), []);
+  useDismissable(dropdownAreaRef, activeDropdown !== null, dismissDropdown);
 
   const selectedCategory = categories.find((c) => c.id === categoryId);
   const selectedSourceAccount = accounts.find((a) => a.id === sourceAccountId);
@@ -163,7 +144,7 @@ const EditModalContent: React.FC<EditModalContentProps> = ({
 
     setIsSubmitting(true);
     try {
-      await onSave({
+      const accepted = await onSave({
         id: transaction.id,
         amount: numericAmount,
         type,
@@ -174,6 +155,12 @@ const EditModalContent: React.FC<EditModalContentProps> = ({
         date,
         notes: notes.trim(),
       });
+      // A rejected write resolves with `false`; keep the modal (and the user's
+      // typed values) open so they can fix what the server objected to.
+      if (accepted === false) {
+        setErrorMsg("Perubahan ditolak server. Periksa kembali datanya.");
+        return;
+      }
       onClose();
     } catch (err: unknown) {
       const msg =
@@ -208,12 +195,19 @@ const EditModalContent: React.FC<EditModalContentProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-xs animate-in fade-in">
-      <div
-        className="bg-surface rounded-[16px] w-full max-w-sm overflow-hidden shadow-whisper border border-hairline max-h-[90vh] flex flex-col transition-colors duration-200"
-        role="dialog"
-        aria-modal="true"
-      >
+    <ModalShell
+      onClose={() => {
+        // First Escape closes an open dropdown; a second closes the modal.
+        if (activeDropdown) {
+          setActiveDropdown(null);
+          return;
+        }
+        onClose();
+      }}
+      ariaLabel="Ubah Transaksi"
+      maxWidthClass="max-w-sm"
+      zIndexClass="z-50"
+    >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-hairline shrink-0">
           <div className="flex items-center gap-2.5">
@@ -400,68 +394,19 @@ const EditModalContent: React.FC<EditModalContentProps> = ({
               </button>
 
               {activeDropdown === "source" && (
-                <div
-                  role="listbox"
-                  aria-label="Pilih Rekening"
-                  className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-[14px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
-                >
-                  <div className="p-1.5 max-h-52 overflow-y-auto divide-y divide-hairline/40">
-                    {accounts.map((acc) => {
-                      const isSelected = sourceAccountId === acc.id;
-                      return (
-                        <button
-                          key={acc.id}
-                          type="button"
-                          role="option"
-                          aria-selected={isSelected}
-                          onClick={() => {
-                            setSourceAccountId(acc.id);
-                            if (destinationAccountId === acc.id) {
-                              setDestinationAccountId("");
-                            }
-                            setActiveDropdown(null);
-                          }}
-                          className={`w-full min-h-[42px] px-3 py-2 rounded-[10px] text-left flex items-center justify-between gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-brand ${
-                            isSelected
-                              ? "bg-brand text-white font-bold"
-                              : "text-ink hover:bg-surface-sunken font-medium"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 min-w-0">
-                            <AccountAvatar acc={acc} size="sm" />
-                            <span className="truncate text-xs sm:text-sm">
-                              {acc.name}
-                            </span>
-                            <span
-                              className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${
-                                isSelected
-                                  ? "bg-black/15 text-current"
-                                  : "bg-surface-sunken text-ink-muted"
-                              }`}
-                            >
-                              {ACCOUNT_TYPE_LABELS[acc.type] || acc.type}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span
-                              className={`text-xs tabular-nums ${
-                                isSelected
-                                  ? "text-current font-bold"
-                                  : acc.balance < 0
-                                    ? "text-negative font-semibold"
-                                    : "text-ink-muted font-semibold"
-                              }`}
-                            >
-                              {formatCurrency(acc.balance)}
-                            </span>
-                            {isSelected && (
-                              <Check className="w-4 h-4 shrink-0" />
-                            )}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
+                <div className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-[14px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                  <AccountPickerList
+                    ariaLabel="Pilih Rekening"
+                    accounts={accounts}
+                    selectedId={sourceAccountId}
+                    onSelect={(acc) => {
+                      setSourceAccountId(acc.id);
+                      if (destinationAccountId === acc.id) {
+                        setDestinationAccountId("");
+                      }
+                      setActiveDropdown(null);
+                    }}
+                  />
                 </div>
               )}
             </div>
@@ -524,65 +469,16 @@ const EditModalContent: React.FC<EditModalContentProps> = ({
                 </button>
 
                 {activeDropdown === "destination" && (
-                  <div
-                    role="listbox"
-                    aria-label="Pilih Rekening Tujuan"
-                    className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-[14px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
-                  >
-                    <div className="p-1.5 max-h-52 overflow-y-auto divide-y divide-hairline/40">
-                      {availableDestinationAccounts.map((acc) => {
-                        const isSelected = destinationAccountId === acc.id;
-                        return (
-                          <button
-                            key={acc.id}
-                            type="button"
-                            role="option"
-                            aria-selected={isSelected}
-                            onClick={() => {
-                              setDestinationAccountId(acc.id);
-                              setActiveDropdown(null);
-                            }}
-                            className={`w-full min-h-[42px] px-3 py-2 rounded-[10px] text-left flex items-center justify-between gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-brand ${
-                              isSelected
-                                ? "bg-brand text-white font-bold"
-                                : "text-ink hover:bg-surface-sunken font-medium"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <AccountAvatar acc={acc} size="sm" />
-                              <span className="truncate text-xs sm:text-sm">
-                                {acc.name}
-                              </span>
-                              <span
-                                className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${
-                                  isSelected
-                                    ? "bg-black/15 text-current"
-                                    : "bg-surface-sunken text-ink-muted"
-                                }`}
-                              >
-                                {ACCOUNT_TYPE_LABELS[acc.type] || acc.type}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span
-                                className={`text-xs tabular-nums ${
-                                  isSelected
-                                    ? "text-current font-bold"
-                                    : acc.balance < 0
-                                      ? "text-negative font-semibold"
-                                      : "text-ink-muted font-semibold"
-                                }`}
-                              >
-                                {formatCurrency(acc.balance)}
-                              </span>
-                              {isSelected && (
-                                <Check className="w-4 h-4 shrink-0" />
-                              )}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
+                  <div className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-[14px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                    <AccountPickerList
+                      ariaLabel="Pilih Rekening Tujuan"
+                      accounts={availableDestinationAccounts}
+                      selectedId={destinationAccountId}
+                      onSelect={(acc) => {
+                        setDestinationAccountId(acc.id);
+                        setActiveDropdown(null);
+                      }}
+                    />
                   </div>
                 )}
               </div>
@@ -646,63 +542,17 @@ const EditModalContent: React.FC<EditModalContentProps> = ({
                 </button>
 
                 {activeDropdown === "category" && (
-                  <div
-                    role="listbox"
-                    aria-label="Pilih Kategori"
-                    className="absolute left-0 right-0 bottom-full mb-1.5 z-30 rounded-[14px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
-                  >
-                    <div className="p-1.5 max-h-52 overflow-y-auto divide-y divide-hairline/40">
-                      {filteredCategories.map((cat) => {
-                        const isSelected = categoryId === cat.id;
-                        return (
-                          <button
-                            key={cat.id}
-                            type="button"
-                            role="option"
-                            aria-selected={isSelected}
-                            onClick={() => {
-                              setCategoryId(cat.id);
-                              setActiveDropdown(null);
-                            }}
-                            className={`w-full min-h-[42px] px-3 py-2 rounded-[10px] text-left flex items-center justify-between gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-brand ${
-                              isSelected
-                                ? "bg-brand text-white font-bold"
-                                : "text-ink hover:bg-surface-sunken font-medium"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <span
-                                className={`w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 ${
-                                  isSelected
-                                    ? "bg-black/15 text-current"
-                                    : "bg-surface-sunken"
-                                }`}
-                              >
-                                <CategoryIcon
-                                  name={cat.name}
-                                  type={type}
-                                  icon={cat.icon}
-                                  emoji={cat.emoji}
-                                  size="sm"
-                                  className={isSelected ? "!text-current" : ""}
-                                />
-                              </span>
-                              <span className="truncate text-xs sm:text-sm">
-                                {cat.name}
-                              </span>
-                            </div>
-                            {isSelected && (
-                              <Check className="w-4 h-4 shrink-0" />
-                            )}
-                          </button>
-                        );
-                      })}
-                      {filteredCategories.length === 0 && (
-                        <p className="px-3 py-6 text-center text-xs text-ink-subtle">
-                          Tidak ada kategori yang cocok
-                        </p>
-                      )}
-                    </div>
+                  <div className="absolute left-0 right-0 bottom-full mb-1.5 z-30 rounded-[14px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                    <CategoryPickerList
+                      ariaLabel="Pilih Kategori"
+                      categories={filteredCategories}
+                      selectedId={categoryId}
+                      type={type}
+                      onSelect={(cat) => {
+                        setCategoryId(cat.id);
+                        setActiveDropdown(null);
+                      }}
+                    />
                   </div>
                 )}
               </div>
@@ -757,8 +607,7 @@ const EditModalContent: React.FC<EditModalContentProps> = ({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </ModalShell>
   );
 };
 

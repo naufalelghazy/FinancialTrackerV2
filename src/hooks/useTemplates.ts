@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { QuickTemplate } from '../types';
 import {
   addQuickTemplate,
@@ -36,6 +36,22 @@ export function useTemplates(options: TemplateActionOptions) {
   const { getLedger, addTransaction, deleteTransaction, onError, onRecorded, onInfo } = options;
   const [templates, setTemplates] = useState<QuickTemplate[]>(() => loadCachedQuickTemplates());
 
+  /**
+   * Always-current copy of `templates`, so the save callbacks do not have to
+   * list `templates` as a dependency. Depending on it captured a stale list:
+   * two rapid saves would each start from the same snapshot and the first one
+   * would be overwritten. Mirrors the list at write time AND on each render.
+   */
+  const templatesRef = useRef(templates);
+  useEffect(() => {
+    templatesRef.current = templates;
+  }, [templates]);
+
+  const writeTemplates = (next: QuickTemplate[]) => {
+    templatesRef.current = next;
+    setTemplates(next);
+  };
+
   /** Hydrates from the server once on mount. */
   useEffect(() => {
     let cancelled = false;
@@ -63,46 +79,58 @@ export function useTemplates(options: TemplateActionOptions) {
 
   const saveTemplate = useCallback(
     async (data: Omit<QuickTemplate, 'id'> & { id?: string }) => {
+      const snapshot = templatesRef.current;
       try {
         if (data.id) {
-          setTemplates(await updateQuickTemplate(data as QuickTemplate, templates));
+          writeTemplates(await updateQuickTemplate(data as QuickTemplate, snapshot));
         } else {
-          const { updatedList } = await addQuickTemplate(data, templates);
-          setTemplates(updatedList);
+          const { updatedList } = await addQuickTemplate(data, snapshot);
+          writeTemplates(updatedList);
         }
       } catch (err) {
         console.error('Failed to save template:', err);
         onError('Template gagal disimpan');
+        // The service reverted its cache; re-mirror it so the UI stops showing
+        // a template the server never accepted.
+        writeTemplates(loadCachedQuickTemplates());
       }
     },
-    [templates, onError]
+    [onError]
   );
 
   const removeTemplate = useCallback(
     async (id: string) => {
+      const snapshot = templatesRef.current;
+      const optimistic = snapshot.filter((t) => t.id !== id);
+      writeTemplates(optimistic);
       try {
-        setTemplates(await deleteQuickTemplate(id, templates));
+        writeTemplates(await deleteQuickTemplate(id, snapshot));
       } catch (err) {
         console.error('Failed to delete template:', err);
         onError('Template gagal dihapus');
+        writeTemplates(loadCachedQuickTemplates());
       }
     },
-    [templates, onError]
+    [onError]
   );
 
   /** Saves the current form as a new template. */
   const saveAsTemplate = useCallback(
     async (data: Omit<QuickTemplate, 'id'>) => {
       try {
-        const { newTemplate, updatedList } = await addQuickTemplate(data, templates);
-        setTemplates(updatedList);
+        const { newTemplate, updatedList } = await addQuickTemplate(
+          data,
+          templatesRef.current
+        );
+        writeTemplates(updatedList);
         onInfo(`Template "${newTemplate.name}" berhasil disimpan!`, 'Dapat digunakan kapan saja di Dashboard atau Form');
       } catch (err) {
         console.error('Failed to save template from form:', err);
         onError('Template gagal disimpan');
+        writeTemplates(loadCachedQuickTemplates());
       }
     },
-    [templates, onInfo, onError]
+    [onInfo, onError]
   );
 
   /** Records a transaction straight from a template, then offers undo. */

@@ -92,11 +92,14 @@ describe('calculateAccountBalances', () => {
     expect(result[0].balance).toBe(1000);
   });
 
-  it('ignores a transfer with no destination', () => {
+  it('debits a transfer with no destination, matching isExpense()', () => {
+    // The balance rule and lib/transactions.isExpense() used to disagree: the
+    // balance skipped such a transfer while reports counted it as spending,
+    // so the same money vanished from one number and appeared in another.
     const result = calculateAccountBalances([account('a', 1000)], [
       tx({ id: '1', type: 'transfer', amount: 500, sourceAccountId: 'a' }),
     ]);
-    expect(result[0].balance).toBe(1000);
+    expect(result[0].balance).toBe(500);
   });
 
   it('skips a corrupt amount instead of poisoning every balance', () => {

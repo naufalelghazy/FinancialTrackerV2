@@ -3,6 +3,7 @@ import {
   X,
   CheckCircle2,
   ShieldAlert,
+  AlertTriangle,
   Wallet,
   Plus,
   Edit2,
@@ -23,6 +24,7 @@ import type { Account, Category, QuickTemplate } from "../../types";
 import { formatCurrency } from "../../lib/formatters";
 import { isSupabaseConfigured } from "../../lib/supabase";
 import { AccountAvatar } from "../ui/AccountAvatar";
+import { ModalShell } from "../ui/ModalShell";
 import { CategoryIcon } from "../ui/CategoryIcon";
 import { getLogoDevToken, setLogoDevToken } from "../../services/logoService";
 import {
@@ -34,6 +36,11 @@ import {
   resolveTemplateAccount,
   resolveTemplateCategory,
 } from "../../services/templateService";
+import {
+  discardStuckItems,
+  getStuckSyncItems,
+  type OutboxItem,
+} from "../../services/outbox";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -51,7 +58,7 @@ interface SettingsModalProps {
 }
 
 export type SettingsTab =
-  "akun" | "kategori" | "template" | "tampilan" | "backend";
+  "akun" | "kategori" | "template" | "tampilan" | "backend" | "antrean";
 
 export const SettingsModal: React.FC<SettingsModalProps> = (props) => {
   if (!props.isOpen) return null;
@@ -139,16 +146,17 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
     { id: "kategori", label: "Kategori", icon: Layers },
     { id: "template", label: "Template", icon: Zap },
     { id: "tampilan", label: "Tema", icon: Palette },
+    { id: "antrean", label: "Antrean", icon: AlertTriangle },
     { id: "backend", label: "Backend", icon: Server },
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/55 backdrop-blur-xs animate-in fade-in">
-      <div
-        className="bg-surface rounded-[16px] w-full max-w-xl overflow-hidden shadow-whisper border border-hairline flex flex-col max-h-[90vh] transition-colors duration-200"
-        role="dialog"
-        aria-modal="true"
-      >
+    <ModalShell
+      onClose={onClose}
+      ariaLabel="Pengaturan Aplikasi"
+      maxWidthClass="max-w-2xl"
+      zIndexClass="z-50"
+    >
         {/* Modal Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-hairline shrink-0">
           <div className="flex items-center gap-2.5">
@@ -175,33 +183,48 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
           </button>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="p-2 sm:px-5 sm:pt-3 border-b border-hairline bg-canvas shrink-0">
-          <div className="grid grid-cols-5 gap-1 p-1 bg-surface-sunken rounded-[11px]">
+        {/* Body: vertical tab rail on the left, content on the right.
+            Horizontal tabs could not fit six labels in this width — every one
+            was truncated to "Reke…", "Kateg…". A left rail gives each label a
+            full line, and on phones it collapses to an icon rail. */}
+        <div className="flex flex-1 min-h-0">
+          {/* Tab Navigation */}
+          <div
+            role="tablist"
+            aria-orientation="vertical"
+            aria-label="Bagian pengaturan"
+            className="w-12 sm:w-44 shrink-0 border-r border-hairline bg-canvas p-1.5 sm:p-2 space-y-1 overflow-y-auto"
+          >
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               return (
                 <button
                   type="button"
+                  role="tab"
+                  aria-selected={isActive}
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center justify-center gap-1.5 py-2 px-1.5 sm:px-2.5 rounded-[9px] text-[11px] sm:text-xs font-bold transition-all ${
+                  title={tab.label}
+                  className={`w-full min-h-[40px] flex items-center gap-2 justify-center sm:justify-start px-2 sm:px-2.5 py-2 rounded-[9px] text-xs font-bold transition-all focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand ${
                     isActive
                       ? "bg-surface text-brand-text shadow-micro"
-                      : "text-ink-muted hover:text-ink"
+                      : "text-ink-muted hover:text-ink hover:bg-surface-sunken"
                   }`}
                 >
-                  <Icon className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate">{tab.label}</span>
+                  <Icon className="w-4 h-4 shrink-0" />
+                  {/* The icon alone carries the meaning on narrow screens;
+                      `sr-only` keeps the name readable for assistive tech. */}
+                  <span className="sr-only sm:not-sr-only sm:truncate">
+                    {tab.label}
+                  </span>
                 </button>
               );
             })}
           </div>
-        </div>
 
-        {/* Modal Content Area */}
-        <div className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-4">
+          {/* Modal Content Area */}
+          <div className="p-4 sm:p-5 overflow-y-auto flex-1 min-w-0 space-y-4">
           {/* ================= TAB 1: AKUN & REKENING ================= */}
           {activeTab === "akun" && (
             <div className="space-y-3">
@@ -971,8 +994,131 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
               </button>
             </div>
           )}
+
+          {activeTab === "antrean" && (
+            <QueueTab onClose={onClose} />
+          )}
+          </div>
         </div>
+    </ModalShell>
+  );
+};
+
+/**
+ * Reviews mutations the server permanently rejected.
+ *
+ * The sync toast tells the user to "open Settings to review" them, so this
+ * panel has to exist — before, `discardStuckItems()` was only ever called
+ * from tests, and failed writes piled up forever while the unsynced badge
+ * never cleared.
+ */
+const QueueTab: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const [items, setItems] = useState<OutboxItem[]>(() => getStuckSyncItems());
+  const [justCleared, setJustCleared] = useState(0);
+
+  const refresh = () => {
+    setItems(getStuckSyncItems());
+  };
+
+  const handleDiscard = () => {
+    const removed = discardStuckItems();
+    setJustCleared(removed);
+    refresh();
+  };
+
+  const tableLabel = (table: OutboxItem["table"]) =>
+    table === "transactions"
+      ? "Transaksi"
+      : table === "accounts"
+        ? "Rekening"
+        : "Kategori";
+
+  if (items.length === 0) {
+    return (
+      <div className="space-y-3">
+        <div className="flex flex-col items-center justify-center py-10 text-center">
+          <div className="w-12 h-12 rounded-full bg-positive/15 text-positive flex items-center justify-center mb-3">
+            <CheckCircle2 className="w-6 h-6" />
+          </div>
+          <h3 className="font-bold text-sm text-ink">Antrean bersih</h3>
+          <p className="text-xs text-ink-muted mt-1 max-w-[260px]">
+            Tidak ada perubahan yang ditolak server. Perubahan offline akan
+            tersinkron sendiri begitu koneksi kembali.
+          </p>
+          {justCleared > 0 && (
+            <p className="text-[11px] font-bold text-positive mt-3">
+              {justCleared} perubahan bermasalah dibersihkan.
+            </p>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            refresh();
+            setJustCleared(0);
+          }}
+          className="w-full py-2.5 rounded-[12px] bg-surface-sunken text-xs font-bold text-ink hover:bg-canvas border border-hairline transition-colors"
+        >
+          Periksa Ulang
+        </button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-full btn-kraken-primary text-xs py-3 rounded-[12px] shadow-whisper"
+        >
+          Selesai
+        </button>
       </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="p-3 rounded-[12px] bg-negative/10 border border-negative/30">
+        <p className="text-xs font-bold text-negative flex items-center gap-1.5">
+          <AlertTriangle className="w-3.5 h-3.5" />
+          {items.length} perubahan ditolak server
+        </p>
+        <p className="text-[11px] text-ink-muted mt-1 leading-relaxed">
+          Perubahan ini tidak akan pernah berhasil dikirim ulang. Data di
+          perangkatmu tetap seperti sekarang; yang hilang hanya perubahan yang
+          gagal tersimpan.
+        </p>
+      </div>
+
+      <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
+        {items.map((item) => (
+          <div
+            key={item.clientRowId}
+            className="p-3 rounded-[12px] bg-canvas border border-hairline"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-bold text-ink">
+                {tableLabel(item.table)}
+              </span>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-surface-sunken text-ink-muted">
+                {item.action}
+              </span>
+            </div>
+            {item.lastError && (
+              <p className="text-[11px] font-mono text-negative mt-1.5 break-words">
+                {item.lastError}
+              </p>
+            )}
+            <p className="text-[10px] text-ink-subtle mt-1.5 tabular-nums">
+              {item.attempts} percobaan
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        onClick={handleDiscard}
+        className="w-full py-3 rounded-[12px] bg-negative text-white text-xs font-bold hover:opacity-90 transition-opacity"
+      >
+        Bersihkan Semua Perubahan Ditolak
+      </button>
     </div>
   );
 };

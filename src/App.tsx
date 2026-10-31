@@ -242,6 +242,15 @@ export function App() {
             onClose={ui.accountModal.close}
             onSave={app.saveAccount}
             onDelete={app.deleteAccount}
+            transactionCount={
+              ui.accountModal.item
+                ? app.transactions.filter(
+                    (t) =>
+                      t.sourceAccountId === ui.accountModal.item?.id ||
+                      t.destinationAccountId === ui.accountModal.item?.id
+                  ).length
+                : 0
+            }
           />
         )}
 
@@ -252,6 +261,13 @@ export function App() {
             onClose={ui.categoryModal.close}
             onSave={app.saveCategory}
             onDelete={app.deleteCategory}
+            transactionCount={
+              ui.categoryModal.item
+                ? app.transactions.filter(
+                    (t) => t.categoryId === ui.categoryModal.item?.id
+                  ).length
+                : 0
+            }
           />
         )}
 

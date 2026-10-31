@@ -128,12 +128,16 @@ export function useTransactionActions(options: UseTransactionActionsOptions) {
         if (isPermanentWriteError(err)) {
           restore(previous);
           onError('Perubahan gagal disimpan', err.message);
-          return;
+          return false;
         }
         console.error('Unexpected edit failure:', err);
       } finally {
         refreshSyncStatus();
       }
+      // Resolving normally made callers close their modal on a write the
+      // server had rejected, so the error toast appeared after the edit
+      // context was already gone.
+      return true;
     },
     [commit, restore, refreshSyncStatus, onError]
   );

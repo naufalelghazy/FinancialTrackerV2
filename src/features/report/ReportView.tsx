@@ -115,7 +115,9 @@ const HorizontalScrollTabs: React.FC<HorizontalScrollTabsProps> = ({
     }
     const target = (e.target as HTMLElement).closest("button");
     if (target && containerRef.current?.contains(target)) {
-      target.scrollIntoView({
+      // Not every environment implements this (jsdom, some older WebViews),
+      // and a missing smooth-scroll must not break the tap.
+      target.scrollIntoView?.({
         behavior: "smooth",
         inline: "center",
         block: "nearest",
@@ -1013,8 +1015,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                         <span className="text-[10px] sm:text-xs font-semibold text-ink-muted mt-0.5">
                           {formatPercent(
                             expenseByCategory[selectedExpenseIdx].percentage,
-                          )}
-                          % dari total
+                          )} dari total
                         </span>
                       </div>
                     ) : (
@@ -1075,7 +1076,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                               {cat.name}
                             </span>
                             <span className="text-[11px] font-mono font-bold text-ink-muted ml-1 shrink-0">
-                              {formatPercent(cat.percentage, 0)}%
+                              {formatPercent(cat.percentage, 0)}
                             </span>
                           </div>
                         </div>
@@ -1155,7 +1156,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                               {cat.name}
                             </span>
                             <span className="text-[11px] text-ink-muted block">
-                              {formatPercent(cat.percentage)}% dari total
+                              {formatPercent(cat.percentage)} dari total
                               pengeluaran • {cat.transactions.length} transaksi
                             </span>
                           </div>
@@ -1168,7 +1169,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                               -{formatCurrency(cat.amount)}
                             </span>
                             <span className="text-[10px] px-2 py-0.5 rounded-[6px] bg-surface-sunken font-bold text-brand-text inline-block mt-0.5">
-                              {formatPercent(cat.percentage)}%
+                              {formatPercent(cat.percentage)}
                             </span>
                           </div>
                           <div
@@ -1559,8 +1560,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                         <span className="text-[10px] sm:text-xs font-semibold text-ink-muted mt-0.5">
                           {formatPercent(
                             incomeByCategory[selectedIncomeIdx].percentage,
-                          )}
-                          % dari total
+                          )} dari total
                         </span>
                       </div>
                     ) : (
@@ -1621,7 +1621,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                               {cat.name}
                             </span>
                             <span className="text-[11px] font-mono font-bold text-ink-muted ml-1 shrink-0">
-                              {formatPercent(cat.percentage, 0)}%
+                              {formatPercent(cat.percentage, 0)}
                             </span>
                           </div>
                         </div>
@@ -1698,7 +1698,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                               {cat.name}
                             </span>
                             <span className="text-[11px] text-ink-muted block">
-                              {formatPercent(cat.percentage)}% dari total
+                              {formatPercent(cat.percentage)} dari total
                               pendapatan • {cat.transactions.length} transaksi
                             </span>
                           </div>
@@ -1711,7 +1711,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                               +{formatCurrency(cat.amount)}
                             </span>
                             <span className="text-[10px] px-2 py-0.5 rounded-[6px] bg-surface-sunken font-bold text-positive-bright inline-block mt-0.5">
-                              {formatPercent(cat.percentage)}%
+                              {formatPercent(cat.percentage)}
                             </span>
                           </div>
                           <div
@@ -1884,7 +1884,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                           -{formatCurrency(acc.amount)}
                         </span>
                         <span className="text-[10px] text-ink-subtle font-semibold">
-                          {formatPercent(percentage)}% dari total belanja
+                          {formatPercent(percentage)} dari total belanja
                         </span>
                       </div>
                     </div>

@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { X, Trash2, AlertTriangle, Layers, Search, Check } from "lucide-react";
 import type { Category } from "../../types";
 import { CategoryIcon } from "../ui/CategoryIcon";
+import { ModalShell } from "../ui/ModalShell";
 import {
   CATEGORY_ICON_LIST,
   CATEGORY_ICON_GROUPS,
@@ -20,6 +21,8 @@ interface EditCategoryModalProps {
     icon?: string;
   }) => Promise<void>;
   onDelete?: (id: string) => Promise<void>;
+  /** How many transactions use this category; drives the delete warning. */
+  transactionCount?: number;
 }
 
 function resolveInitialCategoryIconId(category: Category | null): string {
@@ -40,7 +43,7 @@ function resolveInitialCategoryIconId(category: Category | null): string {
 
 const EditCategoryModalContent: React.FC<
   Omit<EditCategoryModalProps, "isOpen">
-> = ({ category, onClose, onSave, onDelete }) => {
+> = ({ category, onClose, onSave, onDelete, transactionCount = 0 }) => {
   const isEditing = Boolean(category);
 
   const [name, setName] = useState(() => category?.name || "");
@@ -57,16 +60,6 @@ const EditCategoryModalContent: React.FC<
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
 
   const filteredIcons = useMemo(() => {
     return CATEGORY_ICON_LIST.filter((item) => {
@@ -136,12 +129,12 @@ const EditCategoryModalContent: React.FC<
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-      <div
-        className="bg-surface rounded-[16px] w-full max-w-lg overflow-hidden shadow-whisper border border-hairline flex flex-col max-h-[92vh] transition-colors duration-200"
-        role="dialog"
-        aria-modal="true"
-      >
+    <ModalShell
+      onClose={onClose}
+      ariaLabel={isEditing ? "Ubah Kategori" : "Tambah Kategori"}
+      maxWidthClass="max-w-lg"
+      zIndexClass="z-50"
+    >
         {/* Modal Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-hairline shrink-0">
           <div className="flex items-center gap-2.5">
@@ -350,6 +343,15 @@ const EditCategoryModalContent: React.FC<
           </div>
 
           {/* Action Buttons */}
+          {isEditing && transactionCount > 0 && (
+            <p className="text-[11px] leading-relaxed text-ink-muted bg-surface-sunken rounded-[10px] p-2.5">
+              Kategori ini dipakai oleh{" "}
+              <strong className="text-ink">{transactionCount} transaksi</strong>.
+              Menghapusnya tidak menghapus transaksi tersebut, tapi kategori
+              mereka akan kosong dan laporan per kategori kehilangan
+              pecahannya.
+            </p>
+          )}
           <div className="pt-2 flex items-center justify-between gap-3 border-t border-hairline">
             {isEditing && onDelete ? (
               <button
@@ -395,8 +397,7 @@ const EditCategoryModalContent: React.FC<
             </div>
           </div>
         </form>
-      </div>
-    </div>
+    </ModalShell>
   );
 };
 
@@ -406,6 +407,7 @@ export const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
   onClose,
   onSave,
   onDelete,
+  transactionCount,
 }) => {
   if (!isOpen) return null;
 
@@ -416,6 +418,7 @@ export const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
       onClose={onClose}
       onSave={onSave}
       onDelete={onDelete}
+      transactionCount={transactionCount}
     />
   );
 };

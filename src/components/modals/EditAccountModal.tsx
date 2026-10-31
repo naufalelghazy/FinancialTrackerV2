@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   X,
   Landmark,
@@ -14,6 +14,7 @@ import {
   parseRawAmount,
 } from "../../lib/formatters";
 import { getLogoDevUrl, getLocalFallback } from "../../services/logoService";
+import { ModalShell } from "../ui/ModalShell";
 
 interface EditAccountModalProps {
   isOpen: boolean;
@@ -27,11 +28,13 @@ interface EditAccountModalProps {
     initialBalance: number;
   }) => Promise<void>;
   onDelete?: (id: string) => Promise<void>;
+  /** How many transactions reference this account; drives the delete warning. */
+  transactionCount?: number;
 }
 
 const EditAccountModalContent: React.FC<
   Omit<EditAccountModalProps, "isOpen">
-> = ({ account, onClose, onSave, onDelete }) => {
+> = ({ account, onClose, onSave, onDelete, transactionCount = 0 }) => {
   const isEditing = Boolean(account);
 
   const [name, setName] = useState(() => account?.name || "");
@@ -49,16 +52,6 @@ const EditAccountModalContent: React.FC<
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [previewFailed, setPreviewFailed] = useState(false);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
 
   const previewLogoSrc = !previewFailed
     ? getLogoDevUrl(name, website) || getLocalFallback(name)
@@ -121,12 +114,12 @@ const EditAccountModalContent: React.FC<
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/45 backdrop-blur-xs animate-in fade-in">
-      <div
-        className="bg-surface rounded-[16px] w-full max-w-sm overflow-hidden shadow-whisper border border-hairline transition-colors duration-200"
-        role="dialog"
-        aria-modal="true"
-      >
+    <ModalShell
+      onClose={onClose}
+      ariaLabel={isEditing ? "Kelola Akun & Saldo" : "Tambah Akun Baru"}
+      maxWidthClass="max-w-sm"
+    >
+      <div className="flex flex-col max-h-[90vh] w-full overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-hairline">
           <div className="flex items-center gap-2.5">
@@ -309,6 +302,13 @@ const EditAccountModalContent: React.FC<
                 Sistem akan menghitung selisih dan menyesuaikan saldo awal agar
                 saldo akhir sama persis dengan angka di atas.
               </p>
+              <p className="text-[11px] text-warning mt-1.5 leading-snug flex gap-1.5">
+                <span aria-hidden="true">⚠</span>
+                <span>
+                  Saldo awal adalah titik nol semua perhitungan, jadi koreksi ini
+                  juga menggeser saldo di laporan bulan-bulan sebelumnya.
+                </span>
+              </p>
             </div>
           ) : (
             <div>
@@ -343,28 +343,43 @@ const EditAccountModalContent: React.FC<
             </button>
 
             {isEditing && onDelete && (
-              <button
-                type="button"
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className={`w-full py-2.5 rounded-[12px] text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                  confirmDelete
-                    ? "bg-negative text-white"
-                    : "bg-transparent text-negative-bright hover:bg-negative/10"
-                }`}
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>
-                  {confirmDelete
-                    ? "Konfirmasi Hapus Akun Ini?"
-                    : "Hapus Akun Ini"}
-                </span>
-              </button>
+              <>
+                {transactionCount > 0 && (
+                  <p className="text-[11px] leading-relaxed text-ink-muted bg-surface-sunken rounded-[10px] p-2.5">
+                    Rekening ini dipakai oleh{" "}
+                    <strong className="text-ink">
+                      {transactionCount} transaksi
+                    </strong>
+                    . Menghapusnya tidak menghapus transaksi tersebut — riwayat
+                    itu akan kehilangan rekeningnya dan saldo bulan lalu ikut
+                    berubah. Kalau tidak yakin, ubah nama rekening saja.
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className={`w-full py-2.5 rounded-[12px] text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                    confirmDelete
+                      ? "bg-negative text-white"
+                      : "bg-transparent text-negative-bright hover:bg-negative/10"
+                  }`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>
+                    {confirmDelete
+                      ? transactionCount > 0
+                        ? `Ya, tetap hapus rekening ini?`
+                        : "Konfirmasi Hapus Akun Ini?"
+                      : "Hapus Akun Ini"}
+                  </span>
+                </button>
+              </>
             )}
           </div>
         </form>
       </div>
-    </div>
+    </ModalShell>
   );
 };
 
@@ -374,6 +389,7 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
   onClose,
   onSave,
   onDelete,
+  transactionCount,
 }) => {
   if (!isOpen) return null;
 
@@ -384,6 +400,7 @@ export const EditAccountModal: React.FC<EditAccountModalProps> = ({
       onClose={onClose}
       onSave={onSave}
       onDelete={onDelete}
+      transactionCount={transactionCount}
     />
   );
 };

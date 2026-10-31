@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   Mic,
   MicOff,
@@ -28,7 +28,10 @@ import { useSpeechRecognition } from "../../hooks/useSpeechRecognition";
 import { parseVoiceTransaction } from "../../services/voiceTransactionParser";
 import { formatCurrency } from "../../lib/formatters";
 import { CategoryIcon } from "../ui/CategoryIcon";
-import { ACCOUNT_TYPE_LABELS } from "../../lib/labels";
+import { CategoryPickerList } from "../ui/CategoryPickerList";
+import { ModalShell } from "../ui/ModalShell";
+import { useDismissable } from "../../hooks/useDismissable";
+import { AccountPickerList } from "../ui/AccountPickerList";
 
 interface VoiceTransactionModalProps {
   isOpen: boolean;
@@ -136,39 +139,11 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
   }, [isSupported, startListening, stopListening, resetTranscript]);
 
   // Close popup dropdown on outside click
-  useEffect(() => {
-    if (!activeDropdown) return;
-    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
-      if (
-        dropdownAreaRef.current &&
-        !dropdownAreaRef.current.contains(event.target as Node)
-      ) {
-        setActiveDropdown(null);
-      }
-    };
-    document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("touchstart", handlePointerDown);
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("touchstart", handlePointerDown);
-    };
-  }, [activeDropdown]);
+  const dismissDropdown = useCallback(() => setActiveDropdown(null), []);
+  useDismissable(dropdownAreaRef, activeDropdown !== null, dismissDropdown);
 
-  // Keyboard Escape support for dropdowns and modal
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        if (activeDropdown) {
-          event.stopPropagation();
-          setActiveDropdown(null);
-        } else {
-          onClose();
-        }
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [activeDropdown, onClose]);
+  // Escape handling (dropdown first, then dismiss) lives in ModalShell so the
+  // focus trap and the close path cannot disagree.
 
   const parsedBase = useMemo(() => {
     if (!activeText.trim()) return null;
@@ -328,17 +303,21 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
-      onClick={onClose}
+    <ModalShell
+      onClose={() => {
+        // Escape closes an open dropdown first, then the modal.
+        if (activeDropdown) {
+          setActiveDropdown(null);
+          return;
+        }
+        onClose();
+      }}
+      ariaLabel="Input Transaksi Suara"
+      ariaLabelledBy="voice-modal-title"
+      maxWidthClass="max-w-lg"
+      zIndexClass="z-50"
+      closeOnBackdrop
     >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="voice-modal-title"
-        className="relative w-full max-w-lg bg-surface rounded-[24px] border border-hairline shadow-2xl flex flex-col max-h-[90dvh] overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
         {/* Fixed Header */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-hairline/70 shrink-0">
           <div className="flex items-center gap-2.5">
@@ -726,196 +705,50 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
 
                 {/* Floating Popup Dropdown Menu: Payment / Source Account */}
                 {activeDropdown === "account" && (
-                  <div
-                    role="listbox"
-                    aria-label="Pilih Akun Pembayaran"
-                    className="absolute left-0 right-0 bottom-full mb-2 z-30 rounded-[14px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
-                  >
-                    <div className="flex items-center justify-between px-3 py-2 bg-canvas border-b border-hairline/70">
-                      <span className="text-[11px] font-bold text-ink">
-                        {parsed.type === "transfer"
-                          ? "Pilih Rekening Asal"
-                          : "Pilih Metode Pembayaran"}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setActiveDropdown(null)}
-                        aria-label="Tutup daftar akun"
-                        className="w-6 h-6 -m-2 p-2 box-content rounded-full flex items-center justify-center text-ink-muted hover:text-ink dark:hover:text-white hover:bg-surface-sunken"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    <div className="p-1.5 max-h-48 overflow-y-auto divide-y divide-hairline/40">
-                      {accounts.map((acc) => {
-                        const isSelected = parsed.sourceAccountId === acc.id;
-                        return (
-                          <button
-                            key={acc.id}
-                            type="button"
-                            role="option"
-                            aria-selected={isSelected}
-                            onClick={() => {
-                              setOverrideAccountId(acc.id);
-                              setActiveDropdown(null);
-                            }}
-                            className={`w-full min-h-[42px] px-3 py-2 rounded-[10px] text-left flex items-center justify-between gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-brand ${
-                              isSelected
-                                ? "bg-brand text-white font-bold"
-                                : "text-ink hover:bg-surface-sunken font-semibold"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="truncate text-xs">
-                                {acc.name}
-                              </span>
-                              <span
-                                className={`text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0 ${
-                                  isSelected
-                                    ? "bg-black/15 text-current"
-                                    : "bg-surface-sunken text-ink-muted"
-                                }`}
-                              >
-                                {ACCOUNT_TYPE_LABELS[acc.type] || acc.type}
-                              </span>
-                            </div>
-                            {isSelected && (
-                              <Check className="w-4 h-4 shrink-0" />
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
+                  <div className="absolute left-0 right-0 bottom-full mb-2 z-30 rounded-[14px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                    <AccountPickerList
+                      ariaLabel="Pilih Akun Pembayaran"
+                      accounts={accounts}
+                      selectedId={parsed?.sourceAccountId ?? ""}
+                      onSelect={(acc) => {
+                        setOverrideAccountId(acc.id);
+                        if (parsed?.destinationAccountId === acc.id) {
+                          setOverrideDestinationAccountId("");
+                        }
+                        setActiveDropdown(null);
+                      }}
+                    />
                   </div>
                 )}
 
                 {/* Floating Popup Dropdown Menu: Destination Account */}
                 {activeDropdown === "destination" && (
-                  <div
-                    role="listbox"
-                    aria-label="Pilih Rekening Tujuan"
-                    className="absolute left-0 right-0 bottom-full mb-2 z-30 rounded-[14px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
-                  >
-                    <div className="flex items-center justify-between px-3 py-2 bg-canvas border-b border-hairline/70">
-                      <span className="text-[11px] font-bold text-ink">
-                        Pilih Rekening Tujuan
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setActiveDropdown(null)}
-                        aria-label="Tutup daftar rekening tujuan"
-                        className="w-6 h-6 -m-2 p-2 box-content rounded-full flex items-center justify-center text-ink-muted hover:text-ink dark:hover:text-white hover:bg-surface-sunken"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    <div className="p-1.5 max-h-48 overflow-y-auto divide-y divide-hairline/40">
-                      {availableDestinationAccounts.map((acc) => {
-                        const isSelected =
-                          parsed.destinationAccountId === acc.id;
-                        return (
-                          <button
-                            key={acc.id}
-                            type="button"
-                            role="option"
-                            aria-selected={isSelected}
-                            onClick={() => {
-                              setOverrideDestinationAccountId(acc.id);
-                              setActiveDropdown(null);
-                            }}
-                            className={`w-full min-h-[42px] px-3 py-2 rounded-[10px] text-left flex items-center justify-between gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-brand ${
-                              isSelected
-                                ? "bg-brand text-white font-bold"
-                                : "text-ink hover:bg-surface-sunken font-semibold"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="truncate text-xs">
-                                {acc.name}
-                              </span>
-                              <span
-                                className={`text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0 ${
-                                  isSelected
-                                    ? "bg-black/15 text-current"
-                                    : "bg-surface-sunken text-ink-muted"
-                                }`}
-                              >
-                                {ACCOUNT_TYPE_LABELS[acc.type] || acc.type}
-                              </span>
-                            </div>
-                            {isSelected && (
-                              <Check className="w-4 h-4 shrink-0" />
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
+                  <div className="absolute left-0 right-0 bottom-full mb-2 z-30 rounded-[14px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                    <AccountPickerList
+                      ariaLabel="Pilih Rekening Tujuan"
+                      accounts={availableDestinationAccounts}
+                      selectedId={parsed?.destinationAccountId ?? ""}
+                      onSelect={(acc) => {
+                        setOverrideDestinationAccountId(acc.id);
+                        setActiveDropdown(null);
+                      }}
+                    />
                   </div>
                 )}
 
                 {/* Floating Popup Dropdown Menu: Category */}
                 {activeDropdown === "category" && (
-                  <div
-                    role="listbox"
-                    aria-label="Pilih Kategori Transaksi"
-                    className="absolute left-0 right-0 bottom-full mb-2 z-30 rounded-[14px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
-                  >
-                    <div className="flex items-center justify-between px-3 py-2 bg-canvas border-b border-hairline/70">
-                      <span className="text-[11px] font-bold text-ink">
-                        Pilih Kategori Transaksi
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setActiveDropdown(null)}
-                        aria-label="Tutup daftar kategori"
-                        className="w-6 h-6 -m-2 p-2 box-content rounded-full flex items-center justify-center text-ink-muted hover:text-ink dark:hover:text-white hover:bg-surface-sunken"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    <div className="p-1.5 max-h-48 overflow-y-auto divide-y divide-hairline/40">
-                      {availableCategories.map((cat) => {
-                        const isSelected = parsed.categoryId === cat.id;
-                        return (
-                          <button
-                            key={cat.id}
-                            type="button"
-                            role="option"
-                            aria-selected={isSelected}
-                            onClick={() => {
-                              setOverrideCategoryId(cat.id);
-                              setActiveDropdown(null);
-                            }}
-                            className={`w-full min-h-[42px] px-3 py-2 rounded-[10px] text-left flex items-center justify-between gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-brand ${
-                              isSelected
-                                ? "bg-brand text-white font-bold"
-                                : "text-ink hover:bg-surface-sunken font-semibold"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <CategoryIcon
-                                name={cat.name}
-                                type={cat.type}
-                                emoji={cat.emoji}
-                                icon={cat.icon}
-                                size="sm"
-                              />
-                              <span className="truncate text-xs">
-                                {cat.name}
-                              </span>
-                            </div>
-                            {isSelected && (
-                              <Check className="w-4 h-4 shrink-0" />
-                            )}
-                          </button>
-                        );
-                      })}
-                      {availableCategories.length === 0 && (
-                        <p className="px-3 py-6 text-center text-xs text-ink-subtle">
-                          Tidak ada kategori yang cocok
-                        </p>
-                      )}
-                    </div>
+                  <div className="absolute left-0 right-0 bottom-full mb-2 z-30 rounded-[14px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                    <CategoryPickerList
+                      ariaLabel="Pilih Kategori Transaksi"
+                      categories={availableCategories}
+                      selectedId={parsed?.categoryId ?? ""}
+                      type={parsed?.type === "pemasukan" ? "pemasukan" : "pengeluaran"}
+                      onSelect={(cat) => {
+                        setOverrideCategoryId(cat.id);
+                        setActiveDropdown(null);
+                      }}
+                    />
                   </div>
                 )}
               </div>
@@ -1032,8 +865,7 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
             </>
           )}
         </div>
-      </div>
-    </div>
+    </ModalShell>
   );
 };
 

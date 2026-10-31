@@ -9,8 +9,6 @@ import {
   Eye,
   EyeOff,
   GripVertical,
-  ArrowUp,
-  ArrowDown,
 } from "lucide-react";
 import { AccountAvatar } from "../../components/ui/AccountAvatar";
 import { sortAccountsForDisplay } from "../../lib/accountOrder";
@@ -158,8 +156,14 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     if (navigator.vibrate) navigator.vibrate(15);
   };
 
-  /** Keyboard/assistive path: nudge one card and save immediately. */
-  const moveBy = (from: number, delta: number) => {
+  /**
+   * Keyboard route for reordering.
+   *
+   * Dragging is pointer-only, which left keyboard and screen-reader users
+   * with no way to change the order at all. The grip is a real tab stop: focus
+   * it and press Enter/Space/Arrow keys to nudge the card one slot.
+   */
+  const moveByKeyboard = (from: number, delta: number) => {
     if (!canReorder) return;
     const to = from + delta;
     if (to < 0 || to >= ordered.length) return;
@@ -167,7 +171,14 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
     const [moved] = next.splice(from, 1);
     next.splice(to, 0, moved);
     onReorderAccounts?.(next);
+    suppressClickRef.current = true;
     if (navigator.vibrate) navigator.vibrate(10);
+    // Keep focus on the grip, which has moved with the card.
+    window.setTimeout(() => {
+      document
+        .querySelector<HTMLElement>(`[data-drag-handle="${moved}"]`)
+        ?.focus();
+    }, 0);
   };
 
   return (
@@ -276,15 +287,36 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                     : "border-hairline hover:border-brand/50 hover:shadow-whisper cursor-pointer active:scale-[0.99]"
                 }`}
               >
-                {/* Drag handle: 44px of touch area, 28px visual. */}
+                {/* Drag handle: 44px of touch area, 28px visual. Also the
+                    keyboard entry point for reordering. */}
                 {canReorder && (
                   <span
-                    data-drag-handle
+                    data-drag-handle={acc.id}
                     role="button"
-                    tabIndex={-1}
-                    aria-label={`Geser ${acc.name}`}
+                    tabIndex={0}
+                    aria-label={`Geser ${acc.name}, posisi ${index + 1} dari ${ordered.length}. Panah atas atau bawah untuk memindahkan.`}
                     onPointerDown={startDrag(acc.id)}
-                    className="-ml-2 w-7 h-7 p-2 box-content rounded-[8px] flex items-center justify-center text-ink-subtle hover:text-brand-text hover:bg-brand-soft transition-colors cursor-grab active:cursor-grabbing touch-none shrink-0"
+                    onKeyDown={(e) => {
+                      if (e.key === "ArrowUp") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        moveByKeyboard(index, -1);
+                      } else if (e.key === "ArrowDown") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        moveByKeyboard(index, 1);
+                      } else if (e.key === "Home") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        moveByKeyboard(index, -index);
+                      } else if (e.key === "End") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        moveByKeyboard(index, ordered.length - 1 - index);
+                      }
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="-ml-2 w-7 h-7 p-2 box-content rounded-[8px] flex items-center justify-center text-ink-subtle hover:text-brand-text hover:bg-brand-soft transition-colors cursor-grab active:cursor-grabbing touch-none shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                   >
                     <GripVertical className="w-4 h-4" />
                   </span>
@@ -318,38 +350,6 @@ export const AccountsView: React.FC<AccountsViewProps> = ({
                   >
                     {maskAmount(acc.balance)}
                   </span>
-
-                  {/* Keyboard route for the same action. Screen-reader and
-                      keyboard users cannot drag, so the order is also reachable
-                      one step at a time. */}
-                  {canReorder && (
-                    <span className="flex flex-col">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          moveBy(index, -1);
-                        }}
-                        disabled={index === 0}
-                        className="w-5 h-5 rounded-[4px] flex items-center justify-center text-ink-subtle hover:text-brand-text hover:bg-brand-soft disabled:opacity-25 disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-default"
-                        aria-label={`Naikkan ${acc.name}`}
-                      >
-                        <ArrowUp className="w-3 h-3" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          moveBy(index, 1);
-                        }}
-                        disabled={index === ordered.length - 1}
-                        className="w-5 h-5 rounded-[4px] flex items-center justify-center text-ink-subtle hover:text-brand-text hover:bg-brand-soft disabled:opacity-25 disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-default"
-                        aria-label={`Turunkan ${acc.name}`}
-                      >
-                        <ArrowDown className="w-3 h-3" />
-                      </button>
-                    </span>
-                  )}
 
                   <button
                     type="button"

@@ -148,9 +148,17 @@ export async function addQuickTemplate(
         notes: newTemplate.notes || '',
         emoji: newTemplate.emoji || '📌',
       });
-      if (error) console.error('Failed to insert quick template to Supabase:', error);
+      if (error) {
+        // Throwing (rather than logging) lets the hook roll the cache back and
+        // tell the user. Swallowing it made the UI report success for a write
+        // the server had rejected, and the next refresh silently deleted the
+        // "saved" template.
+        throw new Error(error.message || 'Insert template ditolak server');
+      }
     } catch (err) {
       console.error('Error inserting quick template to Supabase:', err);
+      saveQuickTemplates(currentTemplates);
+      throw err;
     }
   }
 
@@ -184,9 +192,13 @@ export async function updateQuickTemplate(
           emoji: updated.emoji || '📌',
         })
         .eq('id', updated.id);
-      if (error) console.error('Failed to update quick template in Supabase:', error);
+      if (error) {
+        throw new Error(error.message || 'Update template ditolak server');
+      }
     } catch (err) {
-      console.error('Error updating quick template in Supabase:', err);
+      console.error('Error updating quick template to Supabase:', err);
+      saveQuickTemplates(currentTemplates);
+      throw err;
     }
   }
 
@@ -208,9 +220,13 @@ export async function deleteQuickTemplate(
       const db = await loadSupabase();
       if (!db) return updatedList;
       const { error } = await db.from('quick_templates').delete().eq('id', id);
-      if (error) console.error('Failed to delete quick template from Supabase:', error);
+      if (error) {
+        throw new Error(error.message || 'Hapus template ditolak server');
+      }
     } catch (err) {
       console.error('Error deleting quick template from Supabase:', err);
+      saveQuickTemplates(currentTemplates);
+      throw err;
     }
   }
 

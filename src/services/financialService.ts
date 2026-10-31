@@ -138,9 +138,10 @@ export function calculateAccountBalances(
     } else if (tx.type === 'transfer') {
       // Same account on both sides is a no-op, not a double count.
       if (tx.destinationAccountId && tx.destinationAccountId === tx.sourceAccountId) return;
-      // A transfer with no destination would debit the source and credit
-      // nobody, silently destroying money. Skip it instead of half-applying.
-      if (!tx.destinationAccountId) return;
+      // A transfer with no destination debits the source and credits nobody.
+      // This used to be skipped entirely, which contradicted isExpense() in
+      // lib/transactions.ts — that one treats it as spending so the money is
+      // never silently dropped. Debit-only keeps both rules consistent.
       if (tx.sourceAccountId && balanceMap[tx.sourceAccountId] !== undefined) {
         balanceMap[tx.sourceAccountId] -= amt;
       }

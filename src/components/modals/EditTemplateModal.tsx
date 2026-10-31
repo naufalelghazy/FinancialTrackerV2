@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import {
   X,
   Trash2,
@@ -16,13 +16,15 @@ import type {
   TransactionType,
 } from "../../types";
 import {
-  formatCurrency,
   formatNumberWithDots,
   parseRawAmount,
 } from "../../lib/formatters";
+import { ModalShell } from "../ui/ModalShell";
+import { useDismissable } from "../../hooks/useDismissable";
 import { CategoryIcon } from "../ui/CategoryIcon";
+import { CategoryPickerList } from "../ui/CategoryPickerList";
 import { AccountAvatar } from "../ui/AccountAvatar";
-import { ACCOUNT_TYPE_LABELS } from "../../lib/labels";
+import { AccountPickerList } from "../ui/AccountPickerList";
 
 interface EditTemplateModalProps {
   isOpen: boolean;
@@ -91,31 +93,8 @@ const EditTemplateModalContent: React.FC<
 
   const dropdownAreaRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!activeDropdown) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownAreaRef.current &&
-        !dropdownAreaRef.current.contains(event.target as Node)
-      ) {
-        setActiveDropdown(null);
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setActiveDropdown(null);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [activeDropdown]);
+  const dismissDropdown = useCallback(() => setActiveDropdown(null), []);
+  useDismissable(dropdownAreaRef, activeDropdown !== null, dismissDropdown);
 
   const filteredCategories = categories.filter((c) => c.type === type);
   const selectedCategory = categories.find((c) => c.id === categoryId);
@@ -175,8 +154,19 @@ const EditTemplateModalContent: React.FC<
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs">
-      <div className="bg-surface rounded-[20px] max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-hairline max-h-[92vh] overflow-y-auto">
+    <ModalShell
+      onClose={() => {
+        if (activeDropdown) {
+          setActiveDropdown(null);
+          return;
+        }
+        onClose();
+      }}
+      ariaLabel={isEditing ? "Edit Template Transaksi" : "Tambah Template Baru"}
+      maxWidthClass="max-w-lg"
+      zIndexClass="z-50"
+    >
+      <div className="p-5 sm:p-6 max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between pb-3 border-b border-hairline">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-[10px] bg-brand-soft text-brand-text flex items-center justify-center font-bold text-sm">
@@ -398,53 +388,19 @@ const EditTemplateModalContent: React.FC<
               </button>
 
               {activeDropdown === "source" && (
-                <div
-                  role="listbox"
-                  aria-label="Pilih Akun Sumber"
-                  className="absolute left-0 right-0 bottom-full mb-1.5 z-30 rounded-[12px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
-                >
-                  <div className="p-1.5 max-h-48 overflow-y-auto divide-y divide-hairline/40">
-                    {accounts.map((acc) => {
-                      const isSelected = sourceAccountId === acc.id;
-                      return (
-                        <button
-                          key={acc.id}
-                          type="button"
-                          role="option"
-                          aria-selected={isSelected}
-                          onClick={() => {
-                            setSourceAccountId(acc.id);
-                            if (destinationAccountId === acc.id) {
-                              setDestinationAccountId("");
-                            }
-                            setActiveDropdown(null);
-                          }}
-                          className={`w-full min-h-[40px] px-2.5 py-1.5 rounded-[8px] text-left flex items-center justify-between gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-brand ${
-                            isSelected
-                              ? "bg-brand text-white font-bold"
-                              : "text-ink hover:bg-surface-sunken font-semibold"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 min-w-0">
-                            <AccountAvatar acc={acc} size="sm" />
-                            <span className="truncate text-xs">{acc.name}</span>
-                            <span
-                              className={`text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0 ${
-                                isSelected
-                                  ? "bg-black/15 text-current"
-                                  : "bg-surface-sunken text-ink-muted"
-                              }`}
-                            >
-                              {ACCOUNT_TYPE_LABELS[acc.type] || acc.type}
-                            </span>
-                          </div>
-                          {isSelected && (
-                            <Check className="w-3.5 h-3.5 shrink-0" />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
+                <div className="absolute left-0 right-0 bottom-full mb-1.5 z-30 rounded-[12px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                  <AccountPickerList
+                    ariaLabel="Pilih Akun Sumber"
+                    accounts={accounts}
+                    selectedId={sourceAccountId}
+                    onSelect={(acc) => {
+                      setSourceAccountId(acc.id);
+                      if (destinationAccountId === acc.id) {
+                        setDestinationAccountId("");
+                      }
+                      setActiveDropdown(null);
+                    }}
+                  />
                 </div>
               )}
             </div>
@@ -493,52 +449,16 @@ const EditTemplateModalContent: React.FC<
                 </button>
 
                 {activeDropdown === "destination" && (
-                  <div
-                    role="listbox"
-                    aria-label="Pilih Akun Tujuan"
-                    className="absolute left-0 right-0 bottom-full mb-1.5 z-30 rounded-[12px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
-                  >
-                    <div className="p-1.5 max-h-48 overflow-y-auto divide-y divide-hairline/40">
-                      {availableDestinationAccounts.map((acc) => {
-                        const isSelected = destinationAccountId === acc.id;
-                        return (
-                          <button
-                            key={acc.id}
-                            type="button"
-                            role="option"
-                            aria-selected={isSelected}
-                            onClick={() => {
-                              setDestinationAccountId(acc.id);
-                              setActiveDropdown(null);
-                            }}
-                            className={`w-full min-h-[40px] px-2.5 py-1.5 rounded-[8px] text-left flex items-center justify-between gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-brand ${
-                              isSelected
-                                ? "bg-brand text-white font-bold"
-                                : "text-ink hover:bg-surface-sunken font-semibold"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <AccountAvatar acc={acc} size="sm" />
-                              <span className="truncate text-xs">
-                                {acc.name}
-                              </span>
-                              <span
-                                className={`text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0 ${
-                                  isSelected
-                                    ? "bg-black/15 text-current"
-                                    : "bg-surface-sunken text-ink-muted"
-                                }`}
-                              >
-                                {formatCurrency(acc.balance)}
-                              </span>
-                            </div>
-                            {isSelected && (
-                              <Check className="w-3.5 h-3.5 shrink-0" />
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
+                  <div className="absolute left-0 right-0 bottom-full mb-1.5 z-30 rounded-[12px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                    <AccountPickerList
+                      ariaLabel="Pilih Akun Tujuan"
+                      accounts={availableDestinationAccounts}
+                      selectedId={destinationAccountId}
+                      onSelect={(acc) => {
+                        setDestinationAccountId(acc.id);
+                        setActiveDropdown(null);
+                      }}
+                    />
                   </div>
                 )}
               </div>
@@ -588,63 +508,17 @@ const EditTemplateModalContent: React.FC<
                 </button>
 
                 {activeDropdown === "category" && (
-                  <div
-                    role="listbox"
-                    aria-label="Pilih Kategori"
-                    className="absolute left-0 right-0 bottom-full mb-1.5 z-30 rounded-[12px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
-                  >
-                    <div className="p-1.5 max-h-48 overflow-y-auto divide-y divide-hairline/40">
-                      {filteredCategories.map((cat) => {
-                        const isSelected = categoryId === cat.id;
-                        return (
-                          <button
-                            key={cat.id}
-                            type="button"
-                            role="option"
-                            aria-selected={isSelected}
-                            onClick={() => {
-                              setCategoryId(cat.id);
-                              setActiveDropdown(null);
-                            }}
-                            className={`w-full min-h-[40px] px-2.5 py-1.5 rounded-[8px] text-left flex items-center justify-between gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-brand ${
-                              isSelected
-                                ? "bg-brand text-white font-bold"
-                                : "text-ink hover:bg-surface-sunken font-semibold"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span
-                                className={`w-6 h-6 rounded-[6px] flex items-center justify-center shrink-0 ${
-                                  isSelected
-                                    ? "bg-black/15 text-current"
-                                    : "bg-surface-sunken"
-                                }`}
-                              >
-                                <CategoryIcon
-                                  name={cat.name}
-                                  type={type}
-                                  icon={cat.icon}
-                                  emoji={cat.emoji}
-                                  size="sm"
-                                  className={isSelected ? "!text-current" : ""}
-                                />
-                              </span>
-                              <span className="truncate text-xs">
-                                {cat.name}
-                              </span>
-                            </div>
-                            {isSelected && (
-                              <Check className="w-3.5 h-3.5 shrink-0" />
-                            )}
-                          </button>
-                        );
-                      })}
-                      {filteredCategories.length === 0 && (
-                        <p className="px-2.5 py-6 text-center text-xs text-ink-subtle">
-                          Tidak ada kategori yang cocok
-                        </p>
-                      )}
-                    </div>
+                  <div className="absolute left-0 right-0 bottom-full mb-1.5 z-30 rounded-[12px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+                    <CategoryPickerList
+                      ariaLabel="Pilih Kategori"
+                      categories={filteredCategories}
+                      selectedId={categoryId}
+                      type={type}
+                      onSelect={(cat) => {
+                        setCategoryId(cat.id);
+                        setActiveDropdown(null);
+                      }}
+                    />
                   </div>
                 )}
               </div>
@@ -731,7 +605,7 @@ const EditTemplateModalContent: React.FC<
           </div>
         </form>
       </div>
-    </div>
+    </ModalShell>
   );
 };
 

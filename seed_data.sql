@@ -15,8 +15,14 @@ CREATE TABLE IF NOT EXISTS public.accounts (
   icon_url text,
   color text DEFAULT '#7132f5',
   initial_balance numeric DEFAULT 0,
+  -- Display order in the Saldo tab. Null means "sort alphabetically after the
+  -- accounts that have an explicit order", so existing rows keep working.
+  sort_order integer,
   created_at timestamptz DEFAULT now()
 );
+
+-- Migration for databases created before sort_order existed:
+-- ALTER TABLE public.accounts ADD COLUMN IF NOT EXISTS sort_order integer;
 
 -- 2. TABEL KATEGORI
 CREATE TABLE IF NOT EXISTS public.categories (
