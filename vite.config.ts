@@ -55,8 +55,32 @@ export default defineConfig({
         clientsClaim: true,
         cleanupOutdatedCaches: true,
         navigateFallback: '/index.html',
+        // Without this, any mistyped asset path resolves to index.html and the
+        // browser then fails to parse HTML as JavaScript.
+        navigateFallbackDenylist: [/^\/assets\//, /\.(?:js|css|png|svg|woff2)$/],
+        // Only the shell is precached. Every view is already a separate chunk
+        // behind `React.lazy`, so precaching all of them defeated that split:
+        // the service worker downloaded 1.3 MB — including the 396 kB chart
+        // library — on first load, even for a user who never opens the report.
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globIgnores: [
+          '**/vendor-recharts-*.js',
+          '**/ReportView-*.js',
+          '**/SettingsModal-*.js',
+          '**/VoiceTransactionModal-*.js',
+        ],
         runtimeCaching: [
+          {
+            // Lazily-loaded chunks are cached the first time they are requested,
+            // so a route is instant on the second visit without being paid for
+            // on the first.
+            urlPattern: /\/assets\/.*\.js$/i,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'lazy-chunks',
+              expiration: { maxEntries: 40, maxAgeSeconds: 60 * 60 * 24 * 30 },
+            },
+          },
           {
             // Navigation / index.html requests: ALWAYS NetworkFirst to catch newly deployed bundle hashes
             urlPattern: ({ request }) => request.mode === 'navigate',
@@ -101,6 +125,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/') || id.includes('node_modules/scheduler')) {
+            return 'vendor-react';
+          }
           if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-')) {
             return 'vendor-recharts';
           }

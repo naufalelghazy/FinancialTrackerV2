@@ -22,6 +22,7 @@ import { useSpeechRecognition } from '../../hooks/useSpeechRecognition';
 import { parseVoiceTransaction } from '../../services/voiceTransactionParser';
 import { formatCurrency } from '../../lib/formatters';
 import { CategoryIcon } from '../ui/CategoryIcon';
+import { ACCOUNT_TYPE_LABELS } from '../../lib/labels';
 
 interface VoiceTransactionModalProps {
   isOpen: boolean;
@@ -58,13 +59,6 @@ const EXAMPLE_PHRASES = [
   'Kopi kenangan 18.000 dana',
   'Indomaret 50rb',
 ];
-
-const ACCOUNT_TYPE_LABELS: Record<Account['type'], string> = {
-  bank: 'Bank',
-  ewallet: 'E-Wallet',
-  credit: 'Kredit / Paylater',
-  cash: 'Tunai',
-};
 
 type ActiveDropdownType = 'account' | 'destination' | 'category' | null;
 

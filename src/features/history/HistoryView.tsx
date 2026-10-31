@@ -19,6 +19,12 @@ import {
 } from 'lucide-react';
 import { CategoryIcon } from '../../components/ui/CategoryIcon';
 import { AccountAvatar } from '../../components/ui/AccountAvatar';
+import { ACCOUNT_TYPE_LABELS } from '../../lib/labels';
+import {
+  currentMonthKey as getCurrentMonthKey,
+  formatIndonesianDateLong as formatIndonesianDate,
+  formatMonthLabel,
+} from '../../lib/date';
 
 interface HistoryViewProps {
   transactions: Transaction[];
@@ -45,67 +51,8 @@ interface MonthGroup {
   netTotal: number;
 }
 
-const MONTH_NAMES = [
-  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-];
-
-const ACCOUNT_TYPE_LABELS: Record<string, string> = {
-  bank: 'Bank',
-  ewallet: 'E-Wallet',
-  credit: 'Kartu Kredit',
-  cash: 'Tunai',
-};
-
-function formatMonthLabel(monthKey: string): string {
-  const parts = monthKey.split('-');
-  if (parts.length !== 2) return monthKey;
-  const year = parseInt(parts[0], 10);
-  const month = parseInt(parts[1], 10);
-  if (!year || !month || month < 1 || month > 12) return monthKey;
-  return `${MONTH_NAMES[month - 1]} ${year}`;
-}
-
-function formatIndonesianDate(dateStr: string): string {
-  if (!dateStr) return '-';
-  const parts = dateStr.split('-');
-  if (parts.length !== 3) return dateStr;
-  const year = parseInt(parts[0], 10);
-  const month = parseInt(parts[1], 10);
-  const day = parseInt(parts[2], 10);
-
-  const dateObj = new Date(year, month - 1, day);
-  const today = new Date();
-  const yesterday = new Date();
-  yesterday.setDate(today.getDate() - 1);
-
-  const isToday =
-    today.getFullYear() === year &&
-    today.getMonth() + 1 === month &&
-    today.getDate() === day;
-
-  const isYesterday =
-    yesterday.getFullYear() === year &&
-    yesterday.getMonth() + 1 === month &&
-    yesterday.getDate() === day;
-
-  const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-
-  const dayName = dayNames[dateObj.getDay()];
-  const monthName = MONTH_NAMES[month - 1];
-
-  if (isToday) return `Hari Ini, ${day} ${monthName} ${year}`;
-  if (isYesterday) return `Kemarin, ${day} ${monthName} ${year}`;
-  return `${dayName}, ${day} ${monthName} ${year}`;
-}
-
-function getCurrentMonthKey(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  return `${year}-${month}`;
-}
-
+/* Month and date formatting now lives in 'lib/date': the four helpers that used
+   to be defined here were byte-for-byte copies of the shared ones. */
 export const HistoryView: React.FC<HistoryViewProps> = ({
   transactions,
   accounts,
@@ -268,10 +215,14 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
 
     for (const t of filtered) {
       const monthKey = t.date.slice(0, 7);
-      if (!monthMap.has(monthKey)) {
-        monthMap.set(monthKey, new Map<string, Transaction[]>());
+      // Allocate the inner map once and keep the reference; a `get()!` lookup
+      // right after a `set()` is a promise to the compiler that it's already
+      // there, which is exactly the kind of claim that breaks silently later.
+      let dayMap = monthMap.get(monthKey);
+      if (!dayMap) {
+        dayMap = new Map<string, Transaction[]>();
+        monthMap.set(monthKey, dayMap);
       }
-      const dayMap = monthMap.get(monthKey)!;
       const list = dayMap.get(t.date) || [];
       list.push(t);
       dayMap.set(t.date, list);
@@ -282,7 +233,8 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
     const result: MonthGroup[] = [];
 
     for (const monthKey of sortedMonthKeys) {
-      const dayMap = monthMap.get(monthKey)!;
+      const dayMap = monthMap.get(monthKey);
+      if (!dayMap) continue;
       const sortedDates = Array.from(dayMap.keys()).sort((a, b) => b.localeCompare(a));
 
       const days: DayGroup[] = [];

@@ -312,7 +312,7 @@ describe('normalizeOutboxItem - format migration', () => {
       action: 'add_category',
       payload: { id: crypto.randomUUID(), name: 'Makan', type: 'pengeluaran' },
     });
-    expect(category?.payload).toMatchObject({ name: 'Makan', emoji: '🏷️' });
+    expect(category?.payload).toMatchObject({ name: 'Makan', emoji: '\u{1F3F7}\u{FE0F}' });
   });
 
   it('synthesises a stable id when a legacy payload has none', () => {
@@ -327,5 +327,24 @@ describe('normalizeOutboxItem - format migration', () => {
     expect(normalizeOutboxItem(null)).toBeNull();
     expect(normalizeOutboxItem('teks')).toBeNull();
     expect(normalizeOutboxItem({ action: 'hapus_semua' })).toBeNull();
+  });
+});
+
+describe('seeded rows are never queued', () => {
+  it('skips a mutation for a non-uuid row id', () => {
+    // A seeded account such as 'cash' has no server row and its id would be
+    // rejected by the uuid column, so it must never enter the queue.
+    enqueueUpsert('accounts', 'cash', { name: 'CASH' });
+    expect(getPendingSyncCount()).toBe(0);
+  });
+
+  it('still queues a real uuid', () => {
+    enqueueUpsert('accounts', crypto.randomUUID(), { name: 'BCA' });
+    expect(getPendingSyncCount()).toBe(1);
+  });
+
+  it('skips a delete for a non-uuid row id', () => {
+    enqueueDelete('categories', 'makan');
+    expect(getPendingSyncCount()).toBe(0);
   });
 });

@@ -1,8 +1,9 @@
-import { supabase, isSupabaseConfigured, SUPABASE_SESSION_HINT } from '../lib/supabase';
+import { loadSupabase, isSupabaseConfigured, SUPABASE_SESSION_HINT } from '../lib/supabase';
 import type { Account, AccountType, Category, Transaction, TransactionType } from '../types';
 import { INITIAL_ACCOUNTS, INITIAL_CATEGORIES } from '../lib/constants';
 import { getLogoDevUrl, getLocalFallback, LOCAL_FALLBACK_ICONS, BANK_DOMAIN_MAP } from './logoService';
 import { classifyWriteError, isBrowserOffline, PermanentWriteError } from '../lib/errors';
+import { isUuid } from '../lib/uuid';
 import {
   enqueueDelete,
   enqueueUpsert,
@@ -249,7 +250,8 @@ export function clearLocalSnapshot(): void {
  * Supabase is unconfigured, unreachable, or slow.
  */
 export async function loadFinancialData(): Promise<FinancialData> {
-  if (!isSupabaseConfigured || !supabase) {
+  const db = await loadSupabase();
+  if (!db) {
     return localFinancialData();
   }
 
@@ -263,8 +265,8 @@ export async function loadFinancialData(): Promise<FinancialData> {
     await flushOutbox();
 
     const [accRes, catRes] = await Promise.all([
-      supabase.from('accounts').select('*').order('name'),
-      supabase.from('categories').select('*').order('name'),
+      db.from('accounts').select('*').order('name'),
+      db.from('categories').select('*').order('name'),
     ]);
 
     if (accRes.error) throw accRes.error;
@@ -276,7 +278,7 @@ export async function loadFinancialData(): Promise<FinancialData> {
     const rows: Record<string, unknown>[] = [];
     for (let page = 0; ; page += 1) {
       const from = page * pageSize;
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('transactions')
         .select('*')
         .order('date', { ascending: false })
@@ -321,16 +323,43 @@ export async function loadFinancialData(): Promise<FinancialData> {
  * Write helpers
  * ------------------------------------------------------------------ */
 
+/**
+ * Resolves the client for a remote write, or throws the reason it is impossible.
+ *
+ * All three write helpers used to repeat this check verbatim. Keeping it in one
+ * place means the "no backend configured" and "device is offline" paths cannot
+ * drift apart, and both reach the outbox through the same classifier.
+ */
+async function requireClient() {
+  const db = await loadSupabase();
+  if (!db) throw new Error('Supabase client is not configured');
+  if (isBrowserOffline()) {
+    throw new Error('Perangkat sedang offline');
+  }
+  return db;
+}
+
+/**
+ * Rejects a write addressed to a row that the server cannot have.
+ *
+ * Seeded accounts and categories carry readable ids (`'cash'`, `'makan'`) in the
+ * `uuid` primary key column. Postgres answers such a write with `22P02`, which
+ * the classifier treats as permanent — correctly, but the user would see a red
+ * error for a row the app itself created. Returning the outcome here means the
+ * call is skipped locally instead of becoming a doomed request.
+ */
+function isLocalOnlyRow(rowId: string): boolean {
+  return !isUuid(rowId);
+}
+
 async function upsertRemote(
   table: OutboxTable,
   rowId: string,
   values: Record<string, unknown>
 ): Promise<void> {
-  if (!supabase) throw new Error('Supabase client is not configured');
-  if (isBrowserOffline()) {
-    throw new Error('Perangkat sedang offline');
-  }
-  const { error } = await supabase.from(table).upsert({ id: rowId, ...values }, { onConflict: 'id' });
+  if (isLocalOnlyRow(rowId)) return;
+  const db = await requireClient();
+  const { error } = await db.from(table).upsert({ id: rowId, ...values }, { onConflict: 'id' });
   if (error) throw error;
 }
 
@@ -339,20 +368,16 @@ async function updateRemote(
   rowId: string,
   values: Record<string, unknown>
 ): Promise<void> {
-  if (!supabase) throw new Error('Supabase client is not configured');
-  if (isBrowserOffline()) {
-    throw new Error('Perangkat sedang offline');
-  }
-  const { error } = await supabase.from(table).update(values).eq('id', rowId);
+  if (isLocalOnlyRow(rowId)) return;
+  const db = await requireClient();
+  const { error } = await db.from(table).update(values).eq('id', rowId);
   if (error) throw error;
 }
 
 async function deleteRemote(table: OutboxTable, rowId: string): Promise<void> {
-  if (!supabase) throw new Error('Supabase client is not configured');
-  if (isBrowserOffline()) {
-    throw new Error('Perangkat sedang offline');
-  }
-  const { error } = await supabase.from(table).delete().eq('id', rowId);
+  if (isLocalOnlyRow(rowId)) return;
+  const db = await requireClient();
+  const { error } = await db.from(table).delete().eq('id', rowId);
   if (error) throw error;
 }
 
@@ -366,7 +391,14 @@ async function performWrite(
   rowId: string,
   values: Record<string, unknown>
 ): Promise<{ queued: boolean }> {
-  if (!isSupabaseConfigured || !supabase) {
+  if (!isSupabaseConfigured) {
+    return { queued: false };
+  }
+
+  // A seeded row (`'cash'`, `'makan'`) has no server counterpart to update or
+  // delete, and cannot be inserted under that id. Skipping here keeps it out of
+  // the outbox, so it can never become a permanently failing queue entry.
+  if (isLocalOnlyRow(rowId)) {
     return { queued: false };
   }
 

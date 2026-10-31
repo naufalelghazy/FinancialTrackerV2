@@ -6,14 +6,13 @@ import {
   History,
   Plus,
   Settings,
-  RefreshCw,
   Sun,
   Moon,
   BarChart3,
   Mic,
-  WifiOff,
 } from 'lucide-react';
 import type { NavTab } from './BottomNav';
+import { SyncBadge } from './SyncBadge';
 import { useTheme } from '../../contexts/themeStore';
 import { ThemeMenuDropdown } from './ThemeMenuDropdown';
 
@@ -50,14 +49,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'tagihan', label: 'Tagihan & Pinjaman', icon: CreditCard },
   ];
 
-  const syncTitle = !isOnline
-    ? pendingSyncCount > 0
-      ? `Mode Offline (${pendingSyncCount} perubahan dalam antrean lokal)`
-      : 'Mode Offline (Tersimpan di perangkat)'
-    : pendingSyncCount > 0
-    ? `${pendingSyncCount} perubahan offline siap disinkronkan ke Supabase`
-    : 'Sinkronkan dengan Supabase';
-
   return (
     <aside className="hidden md:flex flex-col justify-between w-64 lg:w-72 h-screen sticky top-0 bg-white dark:bg-[#16171f] border-r border-hairline dark:border-[#282937] p-4 lg:p-5 select-none shrink-0 shadow-[1px_0_12px_rgba(0,0,0,0.02)] dark:shadow-[1px_0_12px_rgba(0,0,0,0.3)] z-30 transition-colors duration-200 overflow-y-auto overflow-x-hidden">
       {/* Top Portion: Brand, Theme Switcher & Navigation */}
@@ -65,9 +56,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Brand Header */}
         <div
           onClick={() => onChangeTab('dashboard')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onChangeTab('dashboard');
+            }
+          }}
           className="flex items-center gap-3 cursor-pointer group"
           role="button"
           tabIndex={0}
+          aria-label="Buka dashboard"
         >
           <div
             className="w-10 h-10 rounded-[12px] flex items-center justify-center shadow-micro transition-colors shrink-0"
@@ -170,45 +168,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </button>
 
           {onSync && (
-            <button
-              onClick={onSync}
-              disabled={isRefreshing || isLoading}
-              title={syncTitle}
-              aria-label={syncTitle}
-              className={`py-2 px-2.5 rounded-[10px] border text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50 ${
-                !isOnline
-                  ? 'border-[#f59e0b]/40 bg-[#f59e0b]/10 text-[#b45309] dark:text-[#fbbf24]'
-                  : pendingSyncCount > 0
-                  ? 'border-brand/40 bg-brand-soft text-brand-text dark:text-[#a78bfa]'
-                  : 'border-hairline dark:border-[#282937] hover:border-brand/40 bg-canvas dark:bg-[#1e202b] text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8]'
-              }`}
-            >
-              {!isOnline ? (
-                <WifiOff className="w-3.5 h-3.5 text-[#f59e0b] shrink-0" />
-              ) : (
-                <RefreshCw
-                  className={`w-3.5 h-3.5 text-brand-text dark:text-[#a78bfa] shrink-0 ${
-                    isRefreshing || isLoading ? 'animate-spin' : ''
-                  }`}
-                />
-              )}
-
-              {pendingSyncCount > 0 ? (
-                <span
-                  data-testid="sidebar-pending-sync-badge"
-                  className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-[#f59e0b] text-white text-[10px] font-bold leading-none tabular-nums shadow-xs"
-                >
-                  {pendingSyncCount}
-                </span>
-              ) : (
-                <span
-                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                    isOnline ? 'bg-[#149e61]' : 'bg-[#f59e0b]'
-                  }`}
-                  title={isOnline ? 'Terhubung' : 'Offline'}
-                />
-              )}
-            </button>
+            <SyncBadge
+              isOnline={isOnline}
+              pendingSyncCount={pendingSyncCount}
+              isRefreshing={isRefreshing}
+              isLoading={isLoading}
+              onSync={onSync}
+              variant="full"
+              testId="sidebar-pending-sync-badge"
+            />
           )}
         </div>
 

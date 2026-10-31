@@ -4,6 +4,7 @@ import { formatCurrency, formatNumberInput, parseNumberInput } from '../../lib/f
 import { X, Trash2, AlertTriangle, ChevronDown, Check } from 'lucide-react';
 import { CategoryIcon } from '../ui/CategoryIcon';
 import { AccountAvatar } from '../ui/AccountAvatar';
+import { ACCOUNT_TYPE_LABELS } from '../../lib/labels';
 
 interface EditTransactionModalProps {
   isOpen: boolean;
@@ -41,13 +42,6 @@ interface EditModalContentProps {
   }) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }
-
-const ACCOUNT_TYPE_LABELS: Record<string, string> = {
-  bank: 'Bank',
-  ewallet: 'E-Wallet',
-  cash: 'Tunai',
-  credit: 'Kredit',
-};
 
 const EditModalContent: React.FC<EditModalContentProps> = ({
   transaction,

@@ -13,7 +13,8 @@
  *    push the same mutation twice.
  */
 
-import { isSupabaseConfigured, supabase } from '../lib/supabase';
+import { isSupabaseConfigured, loadSupabase } from '../lib/supabase';
+import { isUuid } from '../lib/uuid';
 import { classifyWriteError, isBrowserOffline } from '../lib/errors';
 
 export const OUTBOX_KEY = 'ft_pending_sync';
@@ -271,6 +272,11 @@ export function enqueueMutation(
   rowId: string,
   values: Record<string, unknown>
 ): void {
+  // Seeded rows (`'cash'`, `'makan'`) live only on this device: their ids are not
+  // uuids, so any request for them is answered with `22P02`. Queuing one would
+  // create an entry that can never succeed and would burn all its retries.
+  if (!isUuid(rowId)) return;
+
   const queue = readOutbox();
   const now = new Date().toISOString();
   const existingIndex = queue.findIndex((item) => item.clientRowId === rowId);
@@ -447,10 +453,11 @@ export interface FlushResult {
 }
 
 async function runItem(item: OutboxItem): Promise<void> {
-  if (!supabase) throw new Error('Supabase client is not configured');
+  const db = await loadSupabase();
+  if (!db) throw new Error('Supabase client is not configured');
 
   if (item.action === 'insert') {
-    const { error } = await supabase
+    const { error } = await db
       .from(item.table)
       .upsert({ id: item.clientRowId, ...item.payload }, { onConflict: 'id' });
     if (error) throw error;
@@ -458,12 +465,12 @@ async function runItem(item: OutboxItem): Promise<void> {
   }
 
   if (item.action === 'update') {
-    const { error } = await supabase.from(item.table).update(item.payload).eq('id', item.clientRowId);
+    const { error } = await db.from(item.table).update(item.payload).eq('id', item.clientRowId);
     if (error) throw error;
     return;
   }
 
-  const { error } = await supabase.from(item.table).delete().eq('id', item.clientRowId);
+  const { error } = await db.from(item.table).delete().eq('id', item.clientRowId);
   if (error) throw error;
 }
 
@@ -477,7 +484,7 @@ export async function flushOutbox(): Promise<FlushResult> {
     return { synced: 0, failed: 0, stuck: 0, skipped: true };
   }
 
-  if (!isSupabaseConfigured || !supabase || isBrowserOffline()) {
+  if (!isSupabaseConfigured || isBrowserOffline()) {
     return { synced: 0, failed: 0, stuck: getStuckSyncItems().length, skipped: true };
   }
 

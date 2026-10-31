@@ -40,10 +40,25 @@
       Fonts: only the Kraken baseline is render-blocking (it is the default
       theme). Every other design system loads its family on demand from the
       theme provider, so first paint no longer waits on eight families.
+
+      `media="print"` + `onload` is the standard non-blocking stylesheet trick:
+      the browser fetches it at low priority and never blocks first paint on it.
+      `noscript` covers the case where nothing runs at all.
     -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap"
+      media="print"
+      onload="this.media='all'"
+    >
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap"
+      >
+    </noscript>
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />

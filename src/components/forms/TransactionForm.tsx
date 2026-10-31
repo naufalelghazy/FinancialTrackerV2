@@ -15,6 +15,7 @@ import {
 import { CategoryIcon } from '../ui/CategoryIcon';
 import { AccountAvatar } from '../ui/AccountAvatar';
 import { resolveTemplateAccount, resolveTemplateCategory } from '../../services/templateService';
+import { ACCOUNT_TYPE_LABELS } from '../../lib/labels';
 
 interface TransactionFormProps {
   accounts: Account[];
@@ -42,13 +43,6 @@ interface TransactionFormProps {
   }) => Promise<{ ok: boolean; queued?: boolean } | void>;
   onSaveAsTemplate?: (data: Omit<QuickTemplate, 'id'>) => void;
 }
-
-const ACCOUNT_TYPE_LABELS: Record<string, string> = {
-  bank: 'Bank',
-  ewallet: 'E-Wallet',
-  cash: 'Tunai',
-  credit: 'Kredit',
-};
 
 export const TransactionForm: React.FC<TransactionFormProps> = ({
   accounts,

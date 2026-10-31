@@ -13,6 +13,7 @@ import type { Account, Category, QuickTemplate, TransactionType } from '../../ty
 import { formatCurrency, formatNumberWithDots, parseRawAmount } from '../../lib/formatters';
 import { CategoryIcon } from '../ui/CategoryIcon';
 import { AccountAvatar } from '../ui/AccountAvatar';
+import { ACCOUNT_TYPE_LABELS } from '../../lib/labels';
 
 interface EditTemplateModalProps {
   isOpen: boolean;
@@ -28,13 +29,6 @@ const PRESET_EMOJIS = [
   '🍔', '☕', '⛽', '🔄', '💵', '🛒', '🍱', '🍜', '🛵', '🚗',
   '💡', '📶', '📱', '👕', '🎮', '📺', '🏥', '💳', '🎁', '💰',
 ];
-
-const ACCOUNT_TYPE_LABELS: Record<string, string> = {
-  bank: 'Bank',
-  ewallet: 'E-Wallet',
-  cash: 'Tunai',
-  credit: 'Kredit',
-};
 
 const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>> = ({
   template,

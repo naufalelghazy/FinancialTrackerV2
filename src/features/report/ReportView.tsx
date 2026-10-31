@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import type { Transaction, Account, Category } from '../../types';
-import { formatCurrency } from '../../lib/formatters';
+import { formatCurrency, formatCompactCurrency, formatPercent } from '../../lib/formatters';
 import { isInternalTransfer } from '../../lib/transactions';
 import { CategoryIcon } from '../../components/ui/CategoryIcon';
 import { AccountAvatar } from '../../components/ui/AccountAvatar';
@@ -815,7 +815,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                           {formatCurrency(expenseByCategory[selectedExpenseIdx].amount)}
                         </span>
                         <span className="text-[10px] sm:text-xs font-semibold text-ink-muted dark:text-[#9ca0ba] mt-0.5">
-                          {expenseByCategory[selectedExpenseIdx].percentage.toFixed(1)}% dari total
+                          {formatPercent(expenseByCategory[selectedExpenseIdx].percentage)}% dari total
                         </span>
                       </div>
                     ) : (
@@ -862,7 +862,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                               {cat.name}
                             </span>
                             <span className="text-[11px] font-mono font-bold text-ink-muted dark:text-[#9ca0ba] ml-1 shrink-0">
-                              {cat.percentage.toFixed(0)}%
+                              {formatPercent(cat.percentage, 0)}%
                             </span>
                           </div>
                         </div>
@@ -928,7 +928,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                               {cat.name}
                             </span>
                             <span className="text-[11px] text-ink-muted dark:text-[#9ca0ba] block">
-                              {cat.percentage.toFixed(1)}% dari total pengeluaran • {cat.transactions.length} transaksi
+                              {formatPercent(cat.percentage)}% dari total pengeluaran • {cat.transactions.length} transaksi
                             </span>
                           </div>
                         </div>
@@ -940,7 +940,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                               -{formatCurrency(cat.amount)}
                             </span>
                             <span className="text-[10px] px-2 py-0.5 rounded-[6px] bg-surface-sunken dark:bg-[#282937] font-bold text-brand-text dark:text-[#a78bfa] inline-block mt-0.5">
-                              {cat.percentage.toFixed(1)}%
+                              {formatPercent(cat.percentage)}%
                             </span>
                           </div>
                           <div
@@ -1095,15 +1095,11 @@ export const ReportView: React.FC<ReportViewProps> = ({
                       stroke={isDark ? '#7d8299' : '#9497a9'}
                       fontSize={11}
                       tickLine={false}
-                      tickFormatter={(val) => {
-                        if (val >= 1000000) return `${(val / 1000000).toFixed(0)}Jt`;
-                        if (val >= 1000) return `${(val / 1000).toFixed(0)}Rb`;
-                        return `${val}`;
-                      }}
+                      tickFormatter={(val: number) => formatCompactCurrency(val)}
                     />
                     <Tooltip
                       contentStyle={tooltipStyle}
-                      formatter={(val: any) => [formatCurrency(Number(val) || 0), '']}
+                      formatter={(val) => [formatCurrency(Number(val) || 0), '']}
                     />
                     <Bar
                       dataKey="pemasukan"
@@ -1165,14 +1161,11 @@ export const ReportView: React.FC<ReportViewProps> = ({
                       stroke={isDark ? '#7d8299' : '#9497a9'}
                       fontSize={11}
                       tickLine={false}
-                      tickFormatter={(val) => {
-                        if (Math.abs(val) >= 1000000) return `${(val / 1000000).toFixed(0)}Jt`;
-                        return `${val}`;
-                      }}
+                      tickFormatter={(val: number) => formatCompactCurrency(val)}
                     />
                     <Tooltip
                       contentStyle={tooltipStyle}
-                      formatter={(val: any) => [formatCurrency(Number(val) || 0), 'Net Surplus']}
+                      formatter={(val) => [formatCurrency(Number(val) || 0), 'Net Surplus']}
                     />
                     <Area
                       type="monotone"
@@ -1264,7 +1257,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                           +{formatCurrency(incomeByCategory[selectedIncomeIdx].amount)}
                         </span>
                         <span className="text-[10px] sm:text-xs font-semibold text-ink-muted dark:text-[#9ca0ba] mt-0.5">
-                          {incomeByCategory[selectedIncomeIdx].percentage.toFixed(1)}% dari total
+                          {formatPercent(incomeByCategory[selectedIncomeIdx].percentage)}% dari total
                         </span>
                       </div>
                     ) : (
@@ -1311,7 +1304,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                               {cat.name}
                             </span>
                             <span className="text-[11px] font-mono font-bold text-ink-muted dark:text-[#9ca0ba] ml-1 shrink-0">
-                              {cat.percentage.toFixed(0)}%
+                              {formatPercent(cat.percentage, 0)}%
                             </span>
                           </div>
                         </div>
@@ -1374,7 +1367,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                               {cat.name}
                             </span>
                             <span className="text-[11px] text-ink-muted dark:text-[#9ca0ba] block">
-                              {cat.percentage.toFixed(1)}% dari total pendapatan • {cat.transactions.length} transaksi
+                              {formatPercent(cat.percentage)}% dari total pendapatan • {cat.transactions.length} transaksi
                             </span>
                           </div>
                         </div>
@@ -1386,7 +1379,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                               +{formatCurrency(cat.amount)}
                             </span>
                             <span className="text-[10px] px-2 py-0.5 rounded-[6px] bg-surface-sunken dark:bg-[#282937] font-bold text-[#10b981] dark:text-[#34d399] inline-block mt-0.5">
-                              {cat.percentage.toFixed(1)}%
+                              {formatPercent(cat.percentage)}%
                             </span>
                           </div>
                           <div
@@ -1533,7 +1526,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                           -{formatCurrency(acc.amount)}
                         </span>
                         <span className="text-[10px] text-ink-subtle font-semibold">
-                          {percentage.toFixed(1)}% dari total belanja
+                          {formatPercent(percentage)}% dari total belanja
                         </span>
                       </div>
                     </div>

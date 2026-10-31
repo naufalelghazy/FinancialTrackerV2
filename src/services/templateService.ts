@@ -1,18 +1,13 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { loadSupabase, isSupabaseConfigured } from '../lib/supabase';
+import { isUuid, toUuidOrNull } from '../lib/uuid';
 import type { QuickTemplate, TransactionType } from '../types';
 import { INITIAL_TEMPLATES } from '../lib/constants';
 
 const STORAGE_KEY = 'ft_quick_templates';
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/** Trims first: a trailing space would make an otherwise valid uuid fail. */
 function toValidUuidOrNull(val?: string | null): string | null {
-  if (!val) return null;
-  const trimmed = val.trim();
-  return UUID_REGEX.test(trimmed) ? trimmed : null;
-}
-
-function isUuid(val: string): boolean {
-  return UUID_REGEX.test(val);
+  return toUuidOrNull(val?.trim());
 }
 
 /**
@@ -70,12 +65,13 @@ export function saveQuickTemplates(templates: QuickTemplate[]): void {
 export async function loadQuickTemplates(): Promise<QuickTemplate[]> {
   const cached = loadCachedQuickTemplates();
 
-  if (!isSupabaseConfigured || !supabase) {
+  const db = await loadSupabase();
+  if (!db) {
     return cached;
   }
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('quick_templates')
       .select('*')
       .order('created_at', { ascending: false });
@@ -107,7 +103,7 @@ export async function loadQuickTemplates(): Promise<QuickTemplate[]> {
           emoji: t.emoji || '📌',
         }));
 
-        const { error } = await supabase.from('quick_templates').insert(rowsToInsert);
+        const { error } = await db.from('quick_templates').insert(rowsToInsert);
         if (error) console.warn('Initial templates seed to Supabase skipped:', error.message);
       } catch (seedErr) {
         console.warn('Initial templates seed to Supabase skipped:', seedErr);
@@ -137,9 +133,11 @@ export async function addQuickTemplate(
   const updatedList = [newTemplate, ...currentTemplates];
   saveQuickTemplates(updatedList);
 
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseConfigured) {
     try {
-      const { error } = await supabase.from('quick_templates').insert({
+      const db = await loadSupabase();
+      if (!db) return { newTemplate, updatedList };
+      const { error } = await db.from('quick_templates').insert({
         id: newTemplate.id,
         name: newTemplate.name,
         type: newTemplate.type,
@@ -169,9 +167,11 @@ export async function updateQuickTemplate(
   const updatedList = currentTemplates.map((t) => (t.id === updated.id ? updated : t));
   saveQuickTemplates(updatedList);
 
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseConfigured) {
     try {
-      const { error } = await supabase
+      const db = await loadSupabase();
+      if (!db) return updatedList;
+      const { error } = await db
         .from('quick_templates')
         .update({
           name: updated.name,
@@ -203,9 +203,11 @@ export async function deleteQuickTemplate(
   const updatedList = currentTemplates.filter((t) => t.id !== id);
   saveQuickTemplates(updatedList);
 
-  if (isSupabaseConfigured && supabase) {
+  if (isSupabaseConfigured) {
     try {
-      const { error } = await supabase.from('quick_templates').delete().eq('id', id);
+      const db = await loadSupabase();
+      if (!db) return updatedList;
+      const { error } = await db.from('quick_templates').delete().eq('id', id);
       if (error) console.error('Failed to delete quick template from Supabase:', error);
     } catch (err) {
       console.error('Error deleting quick template from Supabase:', err);
