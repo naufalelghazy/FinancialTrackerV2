@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatCompactCurrency,
   formatCurrency,
+  formatNumber,
   formatNumberInput,
   formatNumberWithDots,
+  formatPercent,
   parseNumberInput,
   parseRawAmount,
 } from './formatters';
@@ -100,5 +103,58 @@ describe('parseRawAmount', () => {
   it('round-trips through the formatter', () => {
     const original = 4250000;
     expect(parseRawAmount(formatNumberWithDots(String(original)))).toBe(original);
+  });
+});
+
+describe('formatNumber', () => {
+  it('groups digits without a currency prefix', () => {
+    expect(formatNumber(1234567)).toBe('1.234.567');
+  });
+
+  it('guards NaN', () => {
+    expect(formatNumber(Number.NaN)).toBe('0');
+  });
+});
+
+describe('formatPercent', () => {
+  it('keeps one decimal by default', () => {
+    expect(formatPercent(12.34)).toBe('12.3%');
+  });
+
+  it('drops a trailing .0 so whole percentages read cleanly', () => {
+    expect(formatPercent(50)).toBe('50%');
+  });
+
+  it('honours the requested precision', () => {
+    expect(formatPercent(12.34, 0)).toBe('12%');
+    expect(formatPercent(12.345, 2)).toBe('12.35%');
+  });
+
+  it('guards NaN', () => {
+    expect(formatPercent(Number.NaN)).toBe('0%');
+  });
+});
+
+describe('formatCompactCurrency', () => {
+  it('uses Indonesian magnitude suffixes', () => {
+    expect(formatCompactCurrency(1_500_000)).toBe('1,5 jt');
+    expect(formatCompactCurrency(2_000_000)).toBe('2 jt');
+    expect(formatCompactCurrency(850_000)).toBe('850 rb');
+  });
+
+  it('handles billions', () => {
+    expect(formatCompactCurrency(2_400_000_000)).toBe('2,4 M');
+  });
+
+  it('keeps small values exact so an axis is not rounded to 0', () => {
+    expect(formatCompactCurrency(750)).toBe('750');
+  });
+
+  it('keeps the sign for negatives', () => {
+    expect(formatCompactCurrency(-1_500_000)).toBe('-1,5 jt');
+  });
+
+  it('guards NaN', () => {
+    expect(formatCompactCurrency(Number.NaN)).toBe('0');
   });
 });

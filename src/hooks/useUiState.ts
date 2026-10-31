@@ -1,7 +1,25 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { Account, Category, QuickTemplate, Transaction, TransactionType } from '../types';
 import type { NavTab } from '../components/layout/BottomNav';
 import type { SettingsTab } from '../components/modals/SettingsModal';
+import { readLastTab, readRawLastTab, writeLastTab } from '../lib/lastTab';
+import { consumeReloadFlag, markNextLoadAsReload } from '../lib/sessionFlag';
+
+/**
+ * Tab yang dipakai saat aplikasi dimuat.
+ *
+ * Dua situasi dibedakan dengan sengaja:
+ *
+ * - **Muat ulang** (F5, tarik-untuk-refresh, service worker memperbarui
+ *   halaman): pulihkan tab apa pun, termasuk `input`. Pengguna sedang di
+ *   tengah sesuatu; memindahkannya ke tab lain terasa seperti bug.
+ * - **Peluncuran baru**: hanya tab "menetap" yang dipulihkan. Membuka aplikasi
+ *   langsung pada form kosong tidak diminta siapa pun.
+ */
+function resolveInitialTab(): NavTab {
+  if (consumeReloadFlag()) return readRawLastTab() ?? readLastTab();
+  return readLastTab();
+}
 
 /** What the voice modal hands to the form. */
 export interface VoicePrefill {
@@ -44,8 +62,23 @@ function useEntityModal<T>(): EntityModal<T> {
 }
 
 export function useUiState() {
-  const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
+  // Reopens on whichever tab the user left, with `input` restored only across a
+  // reload -- see `resolveInitialTab`.
+  const [activeTab, setActiveTab] = useState<NavTab>(resolveInitialTab);
   const [historyAccountFilterId, setHistoryAccountFilterId] = useState<string>('all');
+
+  // Persist on every change rather than on unload: `beforeunload` does not fire
+  // when an installed PWA is swiped away on mobile, which is the common case.
+  useEffect(() => {
+    writeLastTab(activeTab);
+  }, [activeTab]);
+
+  // A reload is the only event we cannot observe after the fact, so leave a
+  // flag behind for the next page load to pick up.
+  useEffect(() => {
+    window.addEventListener('beforeunload', markNextLoadAsReload);
+    return () => window.removeEventListener('beforeunload', markNextLoadAsReload);
+  }, []);
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>('akun');

@@ -11,6 +11,11 @@ export interface Account {
   initialBalance?: number;
   balance: number;
   /**
+   * Posisi tampil di daftar Saldo. Akun tanpa nilai dianggap 0 dan diurutkan
+   * berdasarkan nama setelah yang bernilai, sehingga data lama tetap tampil rapi.
+   */
+  sortOrder?: number;
+  /**
    * True when this record only exists on this device because the server has not
    * acknowledged it yet (offline outbox). It is replaced in place once the
    * queued mutation is flushed, so the id never changes.

@@ -248,22 +248,22 @@ export const CATEGORY_MAP: Record<string, CategoryVisualConfig> = {
   // Food & Beverage
   makan: {
     icon: Utensils,
-    color: 'text-[#d97706] dark:text-[#fbbf24]',
+    color: 'text-[#d97706]',
     label: 'Makan',
   },
   'coffee/snack': {
     icon: Coffee,
-    color: 'text-[#b45309] dark:text-[#f59e0b]',
+    color: 'text-warning',
     label: 'Coffee/Snack',
   },
   coffee: {
     icon: Coffee,
-    color: 'text-[#b45309] dark:text-[#f59e0b]',
+    color: 'text-warning',
     label: 'Coffee',
   },
   'makanan pokok': {
     icon: ShoppingCart,
-    color: 'text-[#059669] dark:text-[#34d399]',
+    color: 'text-positive-bright',
     label: 'Makanan Pokok',
   },
   'minuman pokok': {
@@ -280,7 +280,7 @@ export const CATEGORY_MAP: Record<string, CategoryVisualConfig> = {
   // Transport & Mobility
   bensin: {
     icon: Fuel,
-    color: 'text-[#dc2626] dark:text-[#f87171]',
+    color: 'text-negative',
     label: 'Bensin',
   },
   parkir: {
@@ -319,22 +319,22 @@ export const CATEGORY_MAP: Record<string, CategoryVisualConfig> = {
   // Health, Selfcare, Social
   'kesehatan/healthcare': {
     icon: HeartPulse,
-    color: 'text-[#e11d48] dark:text-[#fb7185]',
+    color: 'text-[#e11d48]',
     label: 'Kesehatan/Healthcare',
   },
   kesehatan: {
     icon: HeartPulse,
-    color: 'text-[#e11d48] dark:text-[#fb7185]',
+    color: 'text-[#e11d48]',
     label: 'Kesehatan',
   },
   selfcare: {
     icon: Sparkles,
-    color: 'text-[#7c3aed] dark:text-[#a78bfa]',
+    color: 'text-[#7c3aed]',
     label: 'Selfcare',
   },
   toiletries: {
     icon: Sparkles,
-    color: 'text-[#7c3aed] dark:text-[#a78bfa]',
+    color: 'text-[#7c3aed]',
     label: 'Toiletries',
   },
   'hobby/entertainment': {
@@ -356,22 +356,22 @@ export const CATEGORY_MAP: Record<string, CategoryVisualConfig> = {
   // Finance, Bills, Obligations
   subscriptions: {
     icon: Tv,
-    color: 'text-[#7132f5] dark:text-[#a78bfa]',
+    color: 'text-brand-text',
     label: 'Subscriptions',
   },
   admin: {
     icon: ReceiptText,
-    color: 'text-[#64748b] dark:text-[#94a3b8]',
+    color: 'text-ink-muted',
     label: 'Admin',
   },
   'bayar paylatter': {
     icon: CreditCard,
-    color: 'text-[#e11d48] dark:text-[#f43f5e]',
+    color: 'text-[#e11d48]',
     label: 'Bayar Paylatter',
   },
   loan: {
     icon: Building2,
-    color: 'text-[#e11d48] dark:text-[#f43f5e]',
+    color: 'text-[#e11d48]',
     label: 'Loan',
   },
   'nabung/invest': {
@@ -386,14 +386,14 @@ export const CATEGORY_MAP: Record<string, CategoryVisualConfig> = {
   },
   'annual expenses': {
     icon: CalendarDays,
-    color: 'text-[#64748b] dark:text-[#94a3b8]',
+    color: 'text-ink-muted',
     label: 'Annual Expenses',
   },
 
   // Social & Giving
   donate: {
     icon: HeartHandshake,
-    color: 'text-[#059669] dark:text-[#34d399]',
+    color: 'text-positive-bright',
     label: 'Donate',
   },
   'kondangan/kado': {
@@ -410,41 +410,41 @@ export const CATEGORY_MAP: Record<string, CategoryVisualConfig> = {
   // Incomes (Green)
   gaji: {
     icon: Briefcase,
-    color: 'text-[#059669] dark:text-[#34d399]',
+    color: 'text-positive-bright',
     label: 'Gaji',
   },
   'kembalian hutang': {
     icon: HandCoins,
-    color: 'text-[#059669] dark:text-[#34d399]',
+    color: 'text-positive-bright',
     label: 'Kembalian Hutang',
   },
   interest: {
     icon: Percent,
-    color: 'text-[#059669] dark:text-[#34d399]',
+    color: 'text-positive-bright',
     label: 'Interest',
   },
   cashback: {
     icon: Coins,
-    color: 'text-[#059669] dark:text-[#34d399]',
+    color: 'text-positive-bright',
     label: 'Cashback',
   },
 
   // Transfers (Purple)
   'pindah akun': {
     icon: ArrowLeftRight,
-    color: 'text-[#7132f5] dark:text-[#a78bfa]',
+    color: 'text-brand-text',
     label: 'Pindah Akun',
   },
   transfer: {
     icon: ArrowLeftRight,
-    color: 'text-[#7132f5] dark:text-[#a78bfa]',
+    color: 'text-brand-text',
     label: 'Transfer',
   },
 };
 
 export const DEFAULT_CATEGORY_CONFIG: CategoryVisualConfig = {
   icon: Tag,
-  color: 'text-[#64748b] dark:text-[#94a3b8]',
+  color: 'text-ink-muted',
   label: 'Lainnya',
 };
 
@@ -464,8 +464,8 @@ export function getCategoryVisualConfig(
     const IconComponent = CATEGORY_ICON_REGISTRY[directIconKey];
     const color =
       type === 'pemasukan'
-        ? 'text-[#059669] dark:text-[#34d399]'
-        : 'text-[#7132f5] dark:text-[#a78bfa]';
+        ? 'text-positive-bright'
+        : 'text-brand-text';
     return {
       icon: IconComponent,
       color,
@@ -491,7 +491,7 @@ export function getCategoryVisualConfig(
   if (type === 'pemasukan') {
     return {
       icon: HandCoins,
-      color: 'text-[#059669] dark:text-[#34d399]',
+      color: 'text-positive-bright',
       label: name || 'Pemasukan',
     };
   }

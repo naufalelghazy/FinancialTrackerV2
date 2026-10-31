@@ -4,9 +4,11 @@ import {
   addAccountToDatabase,
   deleteAccountFromDatabase,
   getAccountIcon,
+  reorderAccountsInDatabase,
   updateAccountInDatabase,
 } from '../services/financialService';
 import { isPermanentWriteError } from '../lib/errors';
+import { applyAccountOrder } from '../lib/accountOrder';
 import type { LedgerState, LedgerUpdater } from './useLedger';
 
 export interface AccountInput {
@@ -106,5 +108,34 @@ export function useAccountActions(options: AccountActionOptions) {
     [commit, restore, refreshSyncStatus, onError]
   );
 
-  return { saveAccount, deleteAccount };
+  /**
+   * Menyimpan urutan tampil daftar rekening.
+   *
+   * Sama seperti edit akun: diterapkan lebih dulu di layar, dikembalikan bila
+   * server menolak secara permanen. Menggeser kartu harus terasa instan, dan
+   * kegagalan jaringan sudah ditangani antrean offline.
+   */
+  const reorderAccounts = useCallback(
+    async (orderedIds: string[]) => {
+      const previous = commit((current) => ({
+        accounts: applyAccountOrder(current.accounts, orderedIds),
+      }));
+
+      try {
+        await reorderAccountsInDatabase(orderedIds);
+      } catch (err) {
+        if (isPermanentWriteError(err)) {
+          restore(previous);
+          onError('Urutan rekening gagal disimpan', err.message);
+          return;
+        }
+        console.error('Unexpected account reorder failure:', err);
+      } finally {
+        refreshSyncStatus();
+      }
+    },
+    [commit, restore, refreshSyncStatus, onError]
+  );
+
+  return { saveAccount, deleteAccount, reorderAccounts };
 }

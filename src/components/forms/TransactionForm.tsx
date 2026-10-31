@@ -267,7 +267,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
       {/* Quick Template Chips */}
       {templates && templates.length > 0 && (
         <div className="space-y-1.5 pb-1">
-          <div className="flex items-center justify-between text-xs font-semibold text-ink-muted dark:text-[#9ca0ba]">
+          <div className="flex items-center justify-between text-xs font-semibold text-ink-muted">
             <span className="flex items-center gap-1.5">
               <Zap className="w-3.5 h-3.5 text-brand-text fill-current" />
               Pilih dari Template Favorit:
@@ -279,11 +279,11 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                 key={tpl.id}
                 type="button"
                 onClick={() => handleApplyTemplate(tpl)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] bg-white dark:bg-[#181a20] border border-hairline dark:border-[#282937] hover:border-brand dark:hover:border-brand shadow-2xs text-xs font-semibold text-ink dark:text-[#f3f4f8] shrink-0 transition-all active:scale-95"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] bg-surface border border-hairline hover:border-brand dark:hover:border-brand shadow-2xs text-xs font-semibold text-ink shrink-0 transition-all active:scale-95"
               >
                 <span>{tpl.emoji || '⚡'}</span>
                 <span>{tpl.name}</span>
-                <span className="text-[10px] text-ink-muted dark:text-[#9ca0ba] font-normal tabular-nums">
+                <span className="text-[10px] text-ink-muted font-normal tabular-nums">
                   ({formatNumberWithDots(String(tpl.amount))})
                 </span>
               </button>
@@ -293,7 +293,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
       )}
 
       {/* Type Toggle - Kraken Style Segmented Control */}
-      <div className="grid grid-cols-3 p-1 bg-surface-sunken dark:bg-[#232534] rounded-[12px] gap-1 border border-hairline dark:border-[#282937]">
+      <div className="grid grid-cols-3 p-1 bg-surface-sunken rounded-[12px] gap-1 border border-hairline">
         <button
           type="button"
           tabIndex={-1}
@@ -305,8 +305,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
           }}
           className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-colors duration-150 ${
             type === 'pengeluaran'
-              ? 'bg-[#101114] text-white shadow-micro'
-              : 'text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8]'
+              ? 'bg-ink text-white shadow-micro'
+              : 'text-ink-muted hover:text-ink'
           }`}
         >
           <ArrowUpRight className="w-3.5 h-3.5" />
@@ -325,7 +325,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
           className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-colors duration-150 ${
             type === 'transfer'
               ? 'bg-brand text-white shadow-micro'
-              : 'text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8]'
+              : 'text-ink-muted hover:text-ink'
           }`}
         >
           <ArrowLeftRight className="w-3.5 h-3.5" />
@@ -343,8 +343,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
           }}
           className={`flex items-center justify-center gap-1.5 py-2.5 rounded-[10px] font-semibold text-xs tracking-tight transition-colors duration-150 ${
             type === 'pemasukan'
-              ? 'bg-[#149e61] text-white shadow-micro'
-              : 'text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8]'
+              ? 'bg-positive text-white shadow-micro'
+              : 'text-ink-muted hover:text-ink'
           }`}
         >
           <ArrowDownLeft className="w-3.5 h-3.5" />
@@ -353,11 +353,11 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
       </div>
 
       {/* Amount Card - Clean Display with Voice Input */}
-      <div className="bg-white dark:bg-[#16171f] rounded-[16px] p-5 sm:p-6 border border-hairline dark:border-[#282937] shadow-whisper text-center">
+      <div className="bg-surface rounded-[16px] p-5 sm:p-6 border border-hairline shadow-whisper text-center">
         <div className="flex items-center justify-between min-h-[26px]">
           <label
             htmlFor="tx-amount-input"
-            className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted dark:text-[#9ca0ba]"
+            className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted"
           >
             Nominal Transaksi
           </label>
@@ -384,25 +384,25 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
             onChange={handleAmountChange}
             placeholder="0"
             required
-            className="w-full text-4xl font-bold text-ink dark:text-[#f3f4f8] text-center tracking-[-1px] outline-none placeholder:text-ink-subtle"
+            className="w-full text-4xl font-bold text-ink text-center tracking-[-1px] outline-none placeholder:text-ink-subtle"
           />
         </div>
       </div>
 
       {/* Form Fields Card */}
-      <div className="bg-white dark:bg-[#16171f] rounded-[16px] p-5 border border-hairline dark:border-[#282937] shadow-whisper space-y-4">
+      <div className="bg-surface rounded-[16px] p-5 border border-hairline shadow-whisper space-y-4">
         <div ref={dropdownAreaRef} className="space-y-4">
           {/* Source Account Popup Dropdown */}
           <div className="relative">
             <div className="flex items-center justify-between mb-1.5 h-4">
               <span
                 id="tx-source-account-label"
-                className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted dark:text-[#9ca0ba] leading-4"
+                className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted leading-4"
               >
                 {type === 'transfer' ? 'Dari Akun' : 'Akun'}
               </span>
               {fieldError === 'source' && !selectedSourceAccount && (
-                <span className="text-[11px] font-semibold text-[#c53030] dark:text-[#f87171] leading-none">
+                <span className="text-[11px] font-semibold text-negative leading-none">
                   Pilih rekening terlebih dahulu
                 </span>
               )}
@@ -415,12 +415,12 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
               aria-expanded={activeDropdown === 'source'}
               aria-haspopup="listbox"
               onClick={() => toggleDropdown('source')}
-              className={`w-full min-h-[42px] px-3.5 py-2 rounded-[12px] bg-canvas dark:bg-[#13141c] border text-sm font-medium text-ink dark:text-[#f3f4f8] flex items-center justify-between gap-2 transition-all outline-none focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
+              className={`w-full min-h-[42px] px-3.5 py-2 rounded-[12px] bg-canvas border text-sm font-medium text-ink flex items-center justify-between gap-2 transition-all outline-none focus-visible:outline-2 focus-visible:outline-brand ${
                 activeDropdown === 'source'
-                  ? 'border-brand ring-2 ring-[#855bfb]/15'
+                  ? 'border-brand ring-2 ring-brand/15'
                   : fieldError === 'source'
-                  ? 'border-[#e53e3e] ring-2 ring-[#e53e3e]/15'
-                  : 'border-hairline dark:border-[#282937] hover:border-[#7132f5]/60'
+                  ? 'border-negative ring-2 ring-negative/15'
+                  : 'border-hairline hover:border-brand'
               }`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
@@ -428,24 +428,24 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                   <>
                     <AccountAvatar acc={selectedSourceAccount} size="sm" />
                     <span className="truncate font-semibold">{selectedSourceAccount.name}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-sunken dark:bg-[#232534] text-ink-muted dark:text-[#9ca0ba] font-semibold shrink-0">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-sunken text-ink-muted font-semibold shrink-0">
                       {ACCOUNT_TYPE_LABELS[selectedSourceAccount.type] || selectedSourceAccount.type}
                     </span>
                   </>
                 ) : (
-                  <span className="truncate text-ink dark:text-[#f3f4f8]">
+                  <span className="truncate text-ink">
                     Pilih Akun Rekening / Dompet
                   </span>
                 )}
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 {selectedSourceAccount && (
-                  <span className="text-xs font-bold tabular-nums text-ink-muted dark:text-[#9ca0ba]">
+                  <span className="text-xs font-bold tabular-nums text-ink-muted">
                     {formatCurrency(selectedSourceAccount.balance)}
                   </span>
                 )}
                 <ChevronDown
-                  className={`w-4 h-4 text-ink-muted dark:text-[#9ca0ba] shrink-0 transition-transform duration-150 ${
+                  className={`w-4 h-4 text-ink-muted shrink-0 transition-transform duration-150 ${
                     activeDropdown === 'source' ? 'rotate-180' : ''
                   }`}
                 />
@@ -456,9 +456,9 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
               <div
                 role="listbox"
                 aria-label="Pilih Akun Rekening / Dompet"
-                className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-[14px] bg-white dark:bg-[#16171f] border border-hairline dark:border-[#282937] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-[14px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
               >
-                <div className="p-1.5 max-h-60 overflow-y-auto divide-y divide-[#dedee5]/40 dark:divide-[#282937]/50">
+                <div className="p-1.5 max-h-60 overflow-y-auto divide-y divide-hairline/40">
                   {accounts.map((acc) => {
                     const isSelected = sourceAccountId === acc.id;
                     return (
@@ -475,10 +475,10 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                           setFieldError(null);
                           setActiveDropdown(null);
                         }}
-                        className={`w-full min-h-[44px] px-3 py-2 rounded-[10px] text-left flex items-center justify-between gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
+                        className={`w-full min-h-[44px] px-3 py-2 rounded-[10px] text-left flex items-center justify-between gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-brand ${
                           isSelected
                             ? 'bg-brand text-white font-bold'
-                            : 'text-ink dark:text-[#f3f4f8] hover:bg-surface-sunken dark:hover:bg-[#1e202b] font-medium'
+                            : 'text-ink hover:bg-surface-sunken font-medium'
                         }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
@@ -488,7 +488,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                             className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${
                               isSelected
                                 ? 'bg-black/15 text-current'
-                                : 'bg-surface-sunken dark:bg-[#232534] text-ink-muted dark:text-[#9ca0ba]'
+                                : 'bg-surface-sunken text-ink-muted'
                             }`}
                           >
                             {ACCOUNT_TYPE_LABELS[acc.type] || acc.type}
@@ -500,8 +500,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                               isSelected
                                 ? 'text-current font-bold'
                                 : acc.balance < 0
-                                ? 'text-[#c53030] dark:text-[#f87171] font-semibold'
-                                : 'text-ink-muted dark:text-[#9ca0ba] font-semibold'
+                                ? 'text-negative font-semibold'
+                                : 'text-ink-muted font-semibold'
                             }`}
                           >
                             {formatCurrency(acc.balance)}
@@ -523,12 +523,12 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                 <div className="flex items-center justify-between mb-1.5 h-5">
                   <span
                     id="tx-destination-account-label"
-                    className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted dark:text-[#9ca0ba] leading-none"
+                    className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted leading-none"
                   >
                     Ke Akun Tujuan
                   </span>
                   {fieldError === 'destination' && !selectedDestinationAccount && (
-                    <span className="text-[11px] font-semibold text-[#c53030] dark:text-[#f87171] leading-none">
+                    <span className="text-[11px] font-semibold text-negative leading-none">
                       Pilih akun tujuan terlebih dahulu
                     </span>
                   )}
@@ -541,12 +541,12 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                   aria-expanded={activeDropdown === 'destination'}
                   aria-haspopup="listbox"
                   onClick={() => toggleDropdown('destination')}
-                  className={`w-full min-h-[42px] px-3.5 py-2 rounded-[12px] bg-canvas dark:bg-[#13141c] border text-sm font-medium text-ink dark:text-[#f3f4f8] flex items-center justify-between gap-2 transition-all outline-none focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
+                  className={`w-full min-h-[42px] px-3.5 py-2 rounded-[12px] bg-canvas border text-sm font-medium text-ink flex items-center justify-between gap-2 transition-all outline-none focus-visible:outline-2 focus-visible:outline-brand ${
                     activeDropdown === 'destination'
-                      ? 'border-brand ring-2 ring-[#855bfb]/15'
+                      ? 'border-brand ring-2 ring-brand/15'
                       : fieldError === 'destination'
-                      ? 'border-[#e53e3e] ring-2 ring-[#e53e3e]/15'
-                      : 'border-hairline dark:border-[#282937] hover:border-[#7132f5]/60'
+                      ? 'border-negative ring-2 ring-negative/15'
+                      : 'border-hairline hover:border-brand'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
@@ -556,25 +556,25 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                         <span className="truncate font-semibold">
                           {selectedDestinationAccount.name}
                         </span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-sunken dark:bg-[#232534] text-ink-muted dark:text-[#9ca0ba] font-semibold shrink-0">
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-sunken text-ink-muted font-semibold shrink-0">
                           {ACCOUNT_TYPE_LABELS[selectedDestinationAccount.type] ||
                             selectedDestinationAccount.type}
                         </span>
                       </>
                     ) : (
-                      <span className="truncate text-ink dark:text-[#f3f4f8]">
+                      <span className="truncate text-ink">
                         Pilih Akun Tujuan
                       </span>
                     )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {selectedDestinationAccount && (
-                      <span className="text-xs font-bold tabular-nums text-ink-muted dark:text-[#9ca0ba]">
+                      <span className="text-xs font-bold tabular-nums text-ink-muted">
                         {formatCurrency(selectedDestinationAccount.balance)}
                       </span>
                     )}
                     <ChevronDown
-                      className={`w-4 h-4 text-ink-muted dark:text-[#9ca0ba] shrink-0 transition-transform duration-150 ${
+                      className={`w-4 h-4 text-ink-muted shrink-0 transition-transform duration-150 ${
                         activeDropdown === 'destination' ? 'rotate-180' : ''
                       }`}
                     />
@@ -585,9 +585,9 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                   <div
                     role="listbox"
                     aria-label="Pilih Akun Tujuan"
-                    className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-[14px] bg-white dark:bg-[#16171f] border border-hairline dark:border-[#282937] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                    className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-[14px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
                   >
-                    <div className="p-1.5 max-h-60 overflow-y-auto divide-y divide-[#dedee5]/40 dark:divide-[#282937]/50">
+                    <div className="p-1.5 max-h-60 overflow-y-auto divide-y divide-hairline/40">
                       {availableDestinationAccounts.map((acc) => {
                         const isSelected = destinationAccountId === acc.id;
                         return (
@@ -601,10 +601,10 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                               setFieldError(null);
                               setActiveDropdown(null);
                             }}
-                            className={`w-full min-h-[44px] px-3 py-2 rounded-[10px] text-left flex items-center justify-between gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
+                            className={`w-full min-h-[44px] px-3 py-2 rounded-[10px] text-left flex items-center justify-between gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-brand ${
                               isSelected
                                 ? 'bg-brand text-white font-bold'
-                                : 'text-ink dark:text-[#f3f4f8] hover:bg-surface-sunken dark:hover:bg-[#1e202b] font-medium'
+                                : 'text-ink hover:bg-surface-sunken font-medium'
                             }`}
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
@@ -614,7 +614,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                                 className={`text-[10px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${
                                   isSelected
                                     ? 'bg-black/15 text-current'
-                                    : 'bg-surface-sunken dark:bg-[#232534] text-ink-muted dark:text-[#9ca0ba]'
+                                    : 'bg-surface-sunken text-ink-muted'
                                 }`}
                               >
                                 {ACCOUNT_TYPE_LABELS[acc.type] || acc.type}
@@ -626,8 +626,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                                   isSelected
                                     ? 'text-current font-bold'
                                     : acc.balance < 0
-                                    ? 'text-[#c53030] dark:text-[#f87171] font-semibold'
-                                    : 'text-ink-muted dark:text-[#9ca0ba] font-semibold'
+                                    ? 'text-negative font-semibold'
+                                    : 'text-ink-muted font-semibold'
                                 }`}
                               >
                                 {formatCurrency(acc.balance)}
@@ -646,12 +646,12 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                 <div className="flex items-center justify-between mb-1.5 h-5">
                   <span
                     id="tx-category-label"
-                    className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted dark:text-[#9ca0ba] leading-none"
+                    className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted leading-none"
                   >
                     Kategori
                   </span>
                   {selectedCategory ? (
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-[6px] bg-surface-sunken dark:bg-[#232534] text-[11px] font-semibold text-ink dark:text-[#f3f4f8]">
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-[6px] bg-surface-sunken text-[11px] font-semibold text-ink">
                       <CategoryIcon
                         name={selectedCategory.name}
                         type={type}
@@ -662,7 +662,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                       <span>{selectedCategory.name}</span>
                     </div>
                   ) : fieldError === 'category' ? (
-                    <span className="text-[11px] font-semibold text-[#c53030] dark:text-[#f87171] leading-none">
+                    <span className="text-[11px] font-semibold text-negative leading-none">
                       Pilih kategori terlebih dahulu
                     </span>
                   ) : null}
@@ -675,12 +675,12 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                   aria-expanded={activeDropdown === 'category'}
                   aria-haspopup="listbox"
                   onClick={() => toggleDropdown('category')}
-                  className={`w-full min-h-[42px] px-3.5 py-2.5 rounded-[12px] bg-canvas dark:bg-[#13141c] border text-sm font-medium text-ink dark:text-[#f3f4f8] flex items-center justify-between gap-2 transition-all outline-none focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
+                  className={`w-full min-h-[42px] px-3.5 py-2.5 rounded-[12px] bg-canvas border text-sm font-medium text-ink flex items-center justify-between gap-2 transition-all outline-none focus-visible:outline-2 focus-visible:outline-brand ${
                     activeDropdown === 'category'
-                      ? 'border-brand ring-2 ring-[#855bfb]/15'
+                      ? 'border-brand ring-2 ring-brand/15'
                       : fieldError === 'category'
-                      ? 'border-[#e53e3e] ring-2 ring-[#e53e3e]/15'
-                      : 'border-hairline dark:border-[#282937] hover:border-[#7132f5]/60'
+                      ? 'border-negative ring-2 ring-negative/15'
+                      : 'border-hairline hover:border-brand'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
@@ -696,13 +696,13 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                         <span className="truncate font-semibold">{selectedCategory.name}</span>
                       </>
                     ) : (
-                      <span className="truncate text-ink dark:text-[#f3f4f8]">
+                      <span className="truncate text-ink">
                         Pilih Kategori Transaksi
                       </span>
                     )}
                   </div>
                   <ChevronDown
-                    className={`w-4 h-4 text-ink-muted dark:text-[#9ca0ba] shrink-0 transition-transform duration-150 ${
+                    className={`w-4 h-4 text-ink-muted shrink-0 transition-transform duration-150 ${
                       activeDropdown === 'category' ? 'rotate-180' : ''
                     }`}
                   />
@@ -712,9 +712,9 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                   <div
                     role="listbox"
                     aria-label="Pilih Kategori Transaksi"
-                    className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-[14px] bg-white dark:bg-[#16171f] border border-hairline dark:border-[#282937] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                    className="absolute left-0 right-0 top-full mt-1.5 z-30 rounded-[14px] bg-surface border border-hairline shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
                   >
-                    <div className="p-1.5 max-h-60 overflow-y-auto divide-y divide-[#dedee5]/40 dark:divide-[#282937]/50">
+                    <div className="p-1.5 max-h-60 overflow-y-auto divide-y divide-hairline/40">
                       {filteredCategories.map((cat) => {
                         const isSelected = categoryId === cat.id;
                         return (
@@ -728,10 +728,10 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                               setFieldError(null);
                               setActiveDropdown(null);
                             }}
-                            className={`w-full min-h-[42px] px-3 py-2 rounded-[10px] text-left flex items-center justify-between gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
+                            className={`w-full min-h-[42px] px-3 py-2 rounded-[10px] text-left flex items-center justify-between gap-2.5 transition-colors focus-visible:outline-2 focus-visible:outline-brand ${
                               isSelected
                                 ? 'bg-brand text-white font-bold'
-                                : 'text-ink dark:text-[#f3f4f8] hover:bg-surface-sunken dark:hover:bg-[#1e202b] font-medium'
+                                : 'text-ink hover:bg-surface-sunken font-medium'
                             }`}
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
@@ -739,7 +739,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
                                 className={`w-7 h-7 rounded-[8px] flex items-center justify-center shrink-0 ${
                                   isSelected
                                     ? 'bg-black/15 text-current'
-                                    : 'bg-surface-sunken dark:bg-[#232534]'
+                                    : 'bg-surface-sunken'
                                 }`}
                               >
                                 <CategoryIcon
@@ -769,7 +769,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         <div>
           <label
             htmlFor="tx-date-input"
-            className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted dark:text-[#9ca0ba] block mb-1.5 h-4 leading-4"
+            className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted block mb-1.5 h-4 leading-4"
           >
             Tanggal
           </label>
@@ -780,7 +780,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
             value={date}
             onChange={(e) => setDate(e.target.value)}
             required
-            className="w-full px-3.5 py-2.5 rounded-[12px] bg-canvas dark:bg-[#13141c] border border-hairline dark:border-[#282937] text-sm font-medium text-ink dark:text-[#f3f4f8] outline-none focus:border-brand focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
+            className="w-full px-3.5 py-2.5 rounded-[12px] bg-canvas border border-hairline text-sm font-medium text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 transition-all"
           />
         </div>
 
@@ -788,7 +788,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         <div>
           <label
             htmlFor="tx-notes-input"
-            className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted dark:text-[#9ca0ba] block mb-1.5 h-4 leading-4"
+            className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted block mb-1.5 h-4 leading-4"
           >
             Catatan <span className="text-ink-subtle font-normal lowercase">(opsional)</span>
           </label>
@@ -799,7 +799,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Keterangan transaksi..."
             rows={2}
-            className="w-full px-3.5 py-2.5 rounded-[12px] bg-canvas dark:bg-[#13141c] border border-hairline dark:border-[#282937] text-sm text-ink dark:text-[#f3f4f8] outline-none focus:border-brand focus:ring-2 focus:ring-[#855bfb]/15 transition-all resize-none placeholder:text-ink-subtle"
+            className="w-full px-3.5 py-2.5 rounded-[12px] bg-canvas border border-hairline text-sm text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 transition-all resize-none placeholder:text-ink-subtle"
           />
         </div>
       </div>
@@ -809,26 +809,26 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({
         <div
           role="status"
           aria-live="polite"
-          className="flex items-center gap-2 p-3 bg-[#149e61]/15 border border-[#149e61]/30 text-[#026b3f] rounded-[10px] text-xs font-semibold animate-in fade-in"
+          className="flex items-center gap-2 p-3 bg-positive/15 border border-positive/30 text-positive rounded-[10px] text-xs font-semibold animate-in fade-in"
         >
-          <CheckCircle2 className="w-4 h-4 text-[#149e61] shrink-0" />
+          <CheckCircle2 className="w-4 h-4 text-positive-bright shrink-0" />
           <span>{successMessage}</span>
         </div>
       )}
 
       {/* Save as Template Option */}
       {onSaveAsTemplate && amountDisplay && sourceAccountId && (
-        <div className="flex items-center justify-between p-2.5 rounded-[10px] bg-canvas dark:bg-[#16171f] border border-[#dedee5]/80 dark:border-[#282937]">
+        <div className="flex items-center justify-between p-2.5 rounded-[10px] bg-canvas border border-hairline/80">
           <div className="flex items-center gap-2 min-w-0">
             <BookmarkPlus className="w-4 h-4 text-brand-text shrink-0" />
-            <span className="text-xs text-ink-muted dark:text-[#9ca0ba] truncate">
+            <span className="text-xs text-ink-muted truncate">
               Jadikan transaksi ini sebagai template cepat?
             </span>
           </div>
           <button
             type="button"
             onClick={handleSaveCurrentAsTemplate}
-            className="px-2.5 py-1 rounded-[6px] bg-brand-soft text-brand-text dark:text-[#a78bfa] text-xs font-bold transition-colors shrink-0"
+            className="px-2.5 py-1 rounded-[6px] bg-brand-soft text-brand-text text-xs font-bold transition-colors shrink-0"
           >
             {savedTemplateSuccess ? 'Tersimpan!' : 'Simpan Template'}
           </button>

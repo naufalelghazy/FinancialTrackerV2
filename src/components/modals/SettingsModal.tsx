@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from "react";
 import {
   X,
   CheckCircle2,
@@ -18,15 +18,22 @@ import {
   Check,
   Search,
   Zap,
-} from 'lucide-react';
-import type { Account, Category, QuickTemplate } from '../../types';
-import { formatCurrency } from '../../lib/formatters';
-import { isSupabaseConfigured } from '../../lib/supabase';
-import { AccountAvatar } from '../ui/AccountAvatar';
-import { CategoryIcon } from '../ui/CategoryIcon';
-import { getLogoDevToken, setLogoDevToken } from '../../services/logoService';
-import { DESIGN_SYSTEMS, DESIGN_SYSTEM_ORDER, useTheme } from '../../contexts/themeStore';
-import { resolveTemplateAccount, resolveTemplateCategory } from '../../services/templateService';
+} from "lucide-react";
+import type { Account, Category, QuickTemplate } from "../../types";
+import { formatCurrency } from "../../lib/formatters";
+import { isSupabaseConfigured } from "../../lib/supabase";
+import { AccountAvatar } from "../ui/AccountAvatar";
+import { CategoryIcon } from "../ui/CategoryIcon";
+import { getLogoDevToken, setLogoDevToken } from "../../services/logoService";
+import {
+  DESIGN_SYSTEMS,
+  DESIGN_SYSTEM_ORDER,
+  useTheme,
+} from "../../contexts/themeStore";
+import {
+  resolveTemplateAccount,
+  resolveTemplateCategory,
+} from "../../services/templateService";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -43,11 +50,12 @@ interface SettingsModalProps {
   initialTab?: SettingsTab;
 }
 
-export type SettingsTab = 'akun' | 'kategori' | 'template' | 'tampilan' | 'backend';
+export type SettingsTab =
+  "akun" | "kategori" | "template" | "tampilan" | "backend";
 
 export const SettingsModal: React.FC<SettingsModalProps> = (props) => {
   if (!props.isOpen) return null;
-  return <SettingsModalContent key={props.initialTab || 'akun'} {...props} />;
+  return <SettingsModalContent key={props.initialTab || "akun"} {...props} />;
 };
 
 const SettingsModalContent: React.FC<SettingsModalProps> = ({
@@ -61,18 +69,27 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
   onAddCategory,
   onEditTemplate,
   onAddTemplate,
-  initialTab = 'akun',
+  initialTab = "akun",
 }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
-  const { theme, setTheme, designSystem, setDesignSystem, currentConfig } = useTheme();
+  const {
+    theme,
+    setTheme,
+    designSystem,
+    setDesignSystem,
+    currentConfig,
+    isDark,
+  } = useTheme();
 
   // Category Tab state
-  const [categorySearch, setCategorySearch] = useState('');
-  const [categoryTypeFilter, setCategoryTypeFilter] = useState<'semua' | 'pengeluaran' | 'pemasukan'>('semua');
+  const [categorySearch, setCategorySearch] = useState("");
+  const [categoryTypeFilter, setCategoryTypeFilter] = useState<
+    "semua" | "pengeluaran" | "pemasukan"
+  >("semua");
 
   const filteredCategories = useMemo(() => {
     return categories.filter((c) => {
-      if (categoryTypeFilter !== 'semua' && c.type !== categoryTypeFilter) {
+      if (categoryTypeFilter !== "semua" && c.type !== categoryTypeFilter) {
         return false;
       }
       if (!categorySearch.trim()) return true;
@@ -82,18 +99,17 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
   }, [categories, categoryTypeFilter, categorySearch]);
 
   const expenseCategoryCount = useMemo(
-    () => categories.filter((c) => c.type === 'pengeluaran').length,
-    [categories]
+    () => categories.filter((c) => c.type === "pengeluaran").length,
+    [categories],
   );
   const incomeCategoryCount = useMemo(
-    () => categories.filter((c) => c.type === 'pemasukan').length,
-    [categories]
+    () => categories.filter((c) => c.type === "pemasukan").length,
+    [categories],
   );
 
   // Logo.dev Token State
   const [logoToken, setLogoToken] = useState(() => getLogoDevToken());
   const [saved, setSaved] = useState(false);
-
 
   const designThemes = DESIGN_SYSTEM_ORDER.map((id) => DESIGN_SYSTEMS[id]);
 
@@ -114,39 +130,45 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
     }, 2000);
   };
 
-  const tabs: { id: SettingsTab; label: string; icon: React.FC<{ className?: string }> }[] = [
-    { id: 'akun', label: 'Rekening', icon: Wallet },
-    { id: 'kategori', label: 'Kategori', icon: Layers },
-    { id: 'template', label: 'Template', icon: Zap },
-    { id: 'tampilan', label: 'Tema', icon: Palette },
-    { id: 'backend', label: 'Backend', icon: Server },
+  const tabs: {
+    id: SettingsTab;
+    label: string;
+    icon: React.FC<{ className?: string }>;
+  }[] = [
+    { id: "akun", label: "Rekening", icon: Wallet },
+    { id: "kategori", label: "Kategori", icon: Layers },
+    { id: "template", label: "Template", icon: Zap },
+    { id: "tampilan", label: "Tema", icon: Palette },
+    { id: "backend", label: "Backend", icon: Server },
   ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/55 backdrop-blur-xs animate-in fade-in">
       <div
-        className="bg-white dark:bg-[#16171f] rounded-[16px] w-full max-w-xl overflow-hidden shadow-whisper border border-hairline dark:border-[#282937] flex flex-col max-h-[90vh] transition-colors duration-200"
+        className="bg-surface rounded-[16px] w-full max-w-xl overflow-hidden shadow-whisper border border-hairline flex flex-col max-h-[90vh] transition-colors duration-200"
         role="dialog"
         aria-modal="true"
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-hairline dark:border-[#282937] shrink-0">
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-hairline shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-[9px] bg-brand-soft flex items-center justify-center text-brand-text dark:text-[#a78bfa] shrink-0">
+            <div className="w-8 h-8 rounded-[9px] bg-brand-soft flex items-center justify-center text-brand-text shrink-0">
               <SettingsIcon className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="font-bold text-base text-ink dark:text-[#f3f4f8] tracking-[-0.5px]">
+              <h2 className="font-bold text-base text-ink tracking-[-0.5px]">
                 Pengaturan Aplikasi
               </h2>
-              <p className="text-[11px] text-ink-muted dark:text-[#9ca0ba]">
-                Kelola rekening, kategori, template cepat, tema, dan koneksi backend
+              <p className="text-[11px] text-ink-muted">
+                Kelola rekening, kategori, template cepat, tema, dan koneksi
+                backend
               </p>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-[8px] flex items-center justify-center text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8] hover:bg-surface-sunken dark:hover:bg-[#1e202b] transition-colors"
+            className="w-8 h-8 rounded-[8px] flex items-center justify-center text-ink-muted hover:text-ink hover:bg-surface-sunken transition-colors"
             aria-label="Tutup"
           >
             <X className="w-4 h-4" />
@@ -154,19 +176,20 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* Tab Navigation */}
-        <div className="p-2 sm:px-5 sm:pt-3 border-b border-hairline dark:border-[#282937] bg-canvas dark:bg-[#13141c] shrink-0">
-          <div className="grid grid-cols-5 gap-1 p-1 bg-surface-sunken dark:bg-[#1e202b] rounded-[11px]">
+        <div className="p-2 sm:px-5 sm:pt-3 border-b border-hairline bg-canvas shrink-0">
+          <div className="grid grid-cols-5 gap-1 p-1 bg-surface-sunken rounded-[11px]">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               return (
                 <button
+                  type="button"
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center justify-center gap-1.5 py-2 px-1.5 sm:px-2.5 rounded-[9px] text-[11px] sm:text-xs font-bold transition-all ${
                     isActive
-                      ? 'bg-white dark:bg-[#282937] text-brand-text dark:text-[#a78bfa] shadow-micro'
-                      : 'text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8]'
+                      ? "bg-surface text-brand-text shadow-micro"
+                      : "text-ink-muted hover:text-ink"
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5 shrink-0" />
@@ -180,19 +203,20 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
         {/* Modal Content Area */}
         <div className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-4">
           {/* ================= TAB 1: AKUN & REKENING ================= */}
-          {activeTab === 'akun' && (
+          {activeTab === "akun" && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-bold text-sm text-ink dark:text-[#f3f4f8]">
+                  <h3 className="font-bold text-sm text-ink">
                     Daftar Rekening & Dompet
                   </h3>
-                  <p className="text-xs text-ink-muted dark:text-[#9ca0ba]">
+                  <p className="text-xs text-ink-muted">
                     Total {accounts.length} akun terdaftar
                   </p>
                 </div>
                 {onAddAccount && (
                   <button
+                    type="button"
                     onClick={onAddAccount}
                     className="btn-kraken-primary text-xs py-2 px-3 shadow-micro flex items-center gap-1.5"
                   >
@@ -204,25 +228,25 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
 
               <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
                 {accounts.length === 0 ? (
-                  <div className="text-center py-8 text-xs text-ink-muted dark:text-[#9ca0ba]">
+                  <div className="text-center py-8 text-xs text-ink-muted">
                     Belum ada akun terdaftar
                   </div>
                 ) : (
                   accounts.map((acc) => {
-                    const isCredit = acc.type === 'credit';
+                    const isCredit = acc.type === "credit";
                     const bal = acc.balance ?? 0;
                     return (
                       <div
                         key={acc.id}
-                        className="flex items-center justify-between p-3 rounded-[12px] bg-canvas dark:bg-[#1e202b] border border-hairline dark:border-[#282937] hover:border-[#855bfb]/30 transition-all"
+                        className="flex items-center justify-between p-3 rounded-[12px] bg-canvas border border-hairline hover:border-brand transition-all"
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <AccountAvatar acc={acc} />
                           <div className="min-w-0">
-                            <h4 className="font-bold text-xs text-ink dark:text-[#f3f4f8] truncate">
+                            <h4 className="font-bold text-xs text-ink truncate">
                               {acc.name}
                             </h4>
-                            <span className="text-[10px] font-bold text-ink-muted dark:text-[#9ca0ba] uppercase tracking-wider block">
+                            <span className="text-[10px] font-bold text-ink-muted uppercase tracking-wider block">
                               {acc.type}
                             </span>
                           </div>
@@ -232,18 +256,19 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
                           <span
                             className={`font-mono text-xs font-bold ${
                               isCredit
-                                ? 'text-ink dark:text-[#f3f4f8]'
+                                ? "text-ink"
                                 : bal < 0
-                                ? 'text-[#e53e3e] dark:text-[#f87171]'
-                                : 'text-ink dark:text-[#f3f4f8]'
+                                  ? "text-negative-bright"
+                                  : "text-ink"
                             }`}
                           >
                             {formatCurrency(bal)}
                           </span>
                           {onEditAccount && (
                             <button
+                              type="button"
                               onClick={() => onEditAccount(acc)}
-                              className="w-7 h-7 rounded-[8px] flex items-center justify-center text-ink-muted dark:text-[#9ca0ba] hover:text-brand-text hover:bg-brand-soft transition-colors"
+                              className="w-7 h-7 -m-2 p-2 box-content rounded-[8px] flex items-center justify-center text-ink-muted hover:text-brand-text hover:bg-brand-soft transition-colors"
                               title="Edit Akun"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
@@ -259,15 +284,16 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
           )}
 
           {/* ================= TAB 2: KATEGORI ================= */}
-          {activeTab === 'kategori' && (
+          {activeTab === "kategori" && (
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <h3 className="font-bold text-sm text-ink dark:text-[#f3f4f8]">
+                  <h3 className="font-bold text-sm text-ink">
                     Kategori Transaksi ({categories.length})
                   </h3>
-                  <p className="text-xs text-ink-muted dark:text-[#9ca0ba]">
-                    Kelola kategori transaksi dan kustomisasi ikon sesuai kebutuhan
+                  <p className="text-xs text-ink-muted">
+                    Kelola kategori transaksi dan kustomisasi ikon sesuai
+                    kebutuhan
                   </p>
                 </div>
                 {onAddCategory && (
@@ -291,49 +317,49 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
                     value={categorySearch}
                     onChange={(e) => setCategorySearch(e.target.value)}
                     placeholder="Cari nama kategori..."
-                    className="w-full pl-8.5 pr-3 py-1.5 rounded-[10px] bg-canvas dark:bg-[#13141c] border border-hairline dark:border-[#282937] text-xs text-ink dark:text-[#f3f4f8] placeholder-[#9497a9] outline-none focus:border-brand transition-all"
+                    className="w-full pl-8.5 pr-3 py-1.5 rounded-[10px] bg-canvas border border-hairline text-xs text-ink placeholder-[#9497a9] outline-none focus:border-brand transition-all"
                   />
                   {categorySearch && (
                     <button
                       type="button"
-                      onClick={() => setCategorySearch('')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-ink-subtle hover:text-ink dark:hover:text-[#f3f4f8]"
+                      onClick={() => setCategorySearch("")}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-ink-subtle hover:text-ink"
                     >
                       ×
                     </button>
                   )}
                 </div>
 
-                <div className="flex items-center gap-1 bg-surface-sunken dark:bg-[#13141c] p-1 rounded-[10px] shrink-0">
+                <div className="flex items-center gap-1 bg-surface-sunken p-1 rounded-[10px] shrink-0">
                   <button
                     type="button"
-                    onClick={() => setCategoryTypeFilter('semua')}
+                    onClick={() => setCategoryTypeFilter("semua")}
                     className={`px-2.5 py-1 rounded-[8px] text-[11px] font-bold transition-all ${
-                      categoryTypeFilter === 'semua'
-                        ? 'bg-white dark:bg-[#282937] text-ink dark:text-[#f3f4f8] shadow-micro'
-                        : 'text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8]'
+                      categoryTypeFilter === "semua"
+                        ? "bg-surface text-ink shadow-micro"
+                        : "text-ink-muted hover:text-ink"
                     }`}
                   >
                     Semua ({categories.length})
                   </button>
                   <button
                     type="button"
-                    onClick={() => setCategoryTypeFilter('pengeluaran')}
+                    onClick={() => setCategoryTypeFilter("pengeluaran")}
                     className={`px-2.5 py-1 rounded-[8px] text-[11px] font-bold transition-all ${
-                      categoryTypeFilter === 'pengeluaran'
-                        ? 'bg-white dark:bg-[#282937] text-ink dark:text-[#f3f4f8] shadow-micro'
-                        : 'text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8]'
+                      categoryTypeFilter === "pengeluaran"
+                        ? "bg-surface text-ink shadow-micro"
+                        : "text-ink-muted hover:text-ink"
                     }`}
                   >
                     Keluar ({expenseCategoryCount})
                   </button>
                   <button
                     type="button"
-                    onClick={() => setCategoryTypeFilter('pemasukan')}
+                    onClick={() => setCategoryTypeFilter("pemasukan")}
                     className={`px-2.5 py-1 rounded-[8px] text-[11px] font-bold transition-all ${
-                      categoryTypeFilter === 'pemasukan'
-                        ? 'bg-white dark:bg-[#282937] text-ink dark:text-[#f3f4f8] shadow-micro'
-                        : 'text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8]'
+                      categoryTypeFilter === "pemasukan"
+                        ? "bg-surface text-ink shadow-micro"
+                        : "text-ink-muted hover:text-ink"
                     }`}
                   >
                     Masuk ({incomeCategoryCount})
@@ -344,8 +370,8 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
               {/* Category Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[360px] overflow-y-auto pr-1">
                 {filteredCategories.length === 0 ? (
-                  <div className="col-span-full py-8 text-center bg-canvas dark:bg-[#1e202b]/40 rounded-[12px] border border-dashed border-hairline dark:border-[#282937]">
-                    <p className="text-xs text-ink-muted dark:text-[#9ca0ba]">
+                  <div className="col-span-full py-8 text-center bg-canvas rounded-[12px] border border-dashed border-hairline">
+                    <p className="text-xs text-ink-muted">
                       Tidak ada kategori yang sesuai filter
                     </p>
                   </div>
@@ -354,14 +380,26 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
                     <div
                       key={cat.id}
                       onClick={() => onEditCategory?.(cat)}
-                      className={`flex items-center justify-between p-2.5 rounded-[12px] bg-canvas dark:bg-[#1e202b] border border-hairline dark:border-[#282937] transition-all group ${
+                      role={onEditCategory ? "button" : undefined}
+                      tabIndex={onEditCategory ? 0 : undefined}
+                      onKeyDown={
                         onEditCategory
-                          ? 'hover:border-[#7132f5]/50 hover:bg-white dark:hover:bg-[#232534] cursor-pointer shadow-none hover:shadow-micro'
-                          : ''
+                          ? (e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                onEditCategory(cat);
+                              }
+                            }
+                          : undefined
+                      }
+                      className={`flex items-center justify-between p-2.5 rounded-[12px] bg-canvas border border-hairline transition-all group ${
+                        onEditCategory
+                          ? "hover:border-brand/50 hover:bg-surface cursor-pointer shadow-none hover:shadow-micro focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                          : ""
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-8 h-8 rounded-[8px] bg-white dark:bg-[#282937] border border-hairline dark:border-[#35374d] flex items-center justify-center text-brand-text dark:text-[#a78bfa] shadow-micro shrink-0 group-hover:scale-105 transition-transform">
+                        <div className="w-8 h-8 rounded-[8px] bg-surface border border-hairline dark:border-[#35374d] flex items-center justify-center text-brand-text shadow-micro shrink-0 group-hover:scale-105 transition-transform">
                           <CategoryIcon
                             icon={cat.icon}
                             emoji={cat.emoji}
@@ -370,19 +408,19 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
                             className="w-4 h-4"
                           />
                         </div>
-                        <span className="font-bold text-xs text-ink dark:text-[#f3f4f8] truncate group-hover:text-brand-text transition-colors">
+                        <span className="font-bold text-xs text-ink truncate group-hover:text-brand-text transition-colors">
                           {cat.name}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <span
                           className={`text-[10px] font-bold px-2 py-0.5 rounded-[6px] ${
-                            cat.type === 'pemasukan'
-                              ? 'bg-[#149e61]/12 text-[#026b3f] dark:text-[#34d399]'
-                              : 'bg-[#dedee5]/50 dark:bg-[#282937] text-ink-muted dark:text-[#9ca0ba]'
+                            cat.type === "pemasukan"
+                              ? "bg-positive/12 text-positive"
+                              : "bg-hairline/50 text-ink-muted"
                           }`}
                         >
-                          {cat.type === 'pemasukan' ? 'Masuk' : 'Keluar'}
+                          {cat.type === "pemasukan" ? "Masuk" : "Keluar"}
                         </span>
                         {onEditCategory && (
                           <button
@@ -391,7 +429,7 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
                               e.stopPropagation();
                               onEditCategory(cat);
                             }}
-                            className="p-1 rounded-[6px] text-ink-subtle group-hover:text-brand-text hover:bg-surface-sunken dark:hover:bg-[#282937] transition-colors"
+                            className="p-1 rounded-[6px] text-ink-subtle group-hover:text-brand-text hover:bg-surface-sunken transition-colors"
                             title="Edit Kategori"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
@@ -406,15 +444,16 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
           )}
 
           {/* ================= TAB 2.5: TEMPLATE FAVORIT ================= */}
-          {activeTab === 'template' && (
+          {activeTab === "template" && (
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                 <div>
-                  <h3 className="font-bold text-sm text-ink dark:text-[#f3f4f8]">
+                  <h3 className="font-bold text-sm text-ink">
                     Daftar Template Favorit ({templates.length})
                   </h3>
-                  <p className="text-xs text-ink-muted dark:text-[#9ca0ba]">
-                    Kelola pintasan transaksi untuk pencatatan cepat di Dashboard dan Form
+                  <p className="text-xs text-ink-muted">
+                    Kelola pintasan transaksi untuk pencatatan cepat di
+                    Dashboard dan Form
                   </p>
                 </div>
                 {onAddTemplate && (
@@ -432,15 +471,15 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
               {/* Template List */}
               <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1">
                 {templates.length === 0 ? (
-                  <div className="py-8 text-center bg-canvas dark:bg-[#1e202b]/40 rounded-[12px] border border-dashed border-hairline dark:border-[#282937]">
-                    <p className="text-xs text-ink-muted dark:text-[#9ca0ba]">
+                  <div className="py-8 text-center bg-canvas rounded-[12px] border border-dashed border-hairline">
+                    <p className="text-xs text-ink-muted">
                       Belum ada template transaksi favorit.
                     </p>
                     {onAddTemplate && (
                       <button
                         type="button"
                         onClick={onAddTemplate}
-                        className="mt-2 text-xs font-bold text-brand-text dark:text-[#a78bfa] hover:underline"
+                        className="mt-2 text-xs font-bold text-brand-text hover:underline"
                       >
                         Buat Template Baru
                       </button>
@@ -448,55 +487,71 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
                   </div>
                 ) : (
                   templates.map((tpl) => {
-                    const srcAcc = resolveTemplateAccount(accounts, tpl.sourceAccountId);
+                    const srcAcc = resolveTemplateAccount(
+                      accounts,
+                      tpl.sourceAccountId,
+                    );
                     const dstAcc = tpl.destinationAccountId
-                      ? resolveTemplateAccount(accounts, tpl.destinationAccountId)
+                      ? resolveTemplateAccount(
+                          accounts,
+                          tpl.destinationAccountId,
+                        )
                       : null;
-                    const cat = tpl.categoryId ? resolveTemplateCategory(categories, tpl.categoryId) : null;
+                    const cat = tpl.categoryId
+                      ? resolveTemplateCategory(categories, tpl.categoryId)
+                      : null;
 
                     return (
                       <div
                         key={tpl.id}
-                        className="flex items-center justify-between p-3 rounded-[12px] bg-canvas dark:bg-[#1e202b] border border-hairline dark:border-[#282937] hover:border-brand/40 transition-all group"
+                        className="flex items-center justify-between p-3 rounded-[12px] bg-canvas border border-hairline hover:border-brand/40 transition-all group"
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <span className="text-xl w-9 h-9 rounded-[9px] bg-white dark:bg-[#282937] border border-hairline dark:border-[#35374d] flex items-center justify-center shrink-0 shadow-2xs">
-                            {tpl.emoji || '⚡'}
+                          <span className="text-xl w-9 h-9 rounded-[9px] bg-surface border border-hairline dark:border-[#35374d] flex items-center justify-center shrink-0 shadow-2xs">
+                            {tpl.emoji || "⚡"}
                           </span>
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                              <h4 className="font-bold text-xs sm:text-sm text-ink dark:text-[#f3f4f8] truncate">
+                              <h4 className="font-bold text-xs sm:text-sm text-ink truncate">
                                 {tpl.name}
                               </h4>
                               <span
                                 className={`text-[10px] font-bold px-1.5 py-0.5 rounded-[5px] uppercase ${
-                                  tpl.type === 'pengeluaran'
-                                    ? 'bg-red-500/10 text-red-600 dark:text-red-400'
-                                    : tpl.type === 'transfer'
-                                    ? 'bg-brand-soft text-brand-text dark:text-[#a78bfa]'
-                                    : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                  tpl.type === "pengeluaran"
+                                    ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                                    : tpl.type === "transfer"
+                                      ? "bg-brand-soft text-brand-text"
+                                      : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                                 }`}
                               >
-                                {tpl.type === 'pengeluaran' ? 'Keluar' : tpl.type === 'transfer' ? 'Transfer' : 'Masuk'}
+                                {tpl.type === "pengeluaran"
+                                  ? "Keluar"
+                                  : tpl.type === "transfer"
+                                    ? "Transfer"
+                                    : "Masuk"}
                               </span>
                             </div>
-                            <p className="text-[11px] text-ink-muted dark:text-[#9ca0ba] truncate mt-0.5">
-                              {srcAcc?.name || 'Akun'}
-                              {tpl.type === 'transfer' ? ` → ${dstAcc?.name || 'Tujuan'}` : cat ? ` • ${cat.name}` : ''}
-                              {tpl.notes ? ` (${tpl.notes})` : ''}
+                            <p className="text-[11px] text-ink-muted truncate mt-0.5">
+                              {srcAcc?.name || "Akun"}
+                              {tpl.type === "transfer"
+                                ? ` → ${dstAcc?.name || "Tujuan"}`
+                                : cat
+                                  ? ` • ${cat.name}`
+                                  : ""}
+                              {tpl.notes ? ` (${tpl.notes})` : ""}
                             </p>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0">
-                          <span className="text-xs font-bold text-ink dark:text-[#f3f4f8] tabular-nums whitespace-nowrap">
+                          <span className="text-xs font-bold text-ink tabular-nums whitespace-nowrap">
                             {formatCurrency(tpl.amount)}
                           </span>
                           {onEditTemplate && (
                             <button
                               type="button"
                               onClick={() => onEditTemplate(tpl)}
-                              className="p-1.5 rounded-[8px] text-ink-muted dark:text-[#9ca0ba] hover:text-brand-text hover:bg-white dark:hover:bg-[#282937] transition-colors"
+                              className="p-1.5 rounded-[8px] text-ink-muted hover:text-brand-text hover:bg-surface transition-colors"
                               title="Edit template"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
@@ -512,15 +567,16 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
           )}
 
           {/* ================= TAB 3: TEMA & TAMPILAN ================= */}
-          {activeTab === 'tampilan' && (
+          {activeTab === "tampilan" && (
             <div className="space-y-6">
               {/* Header Tab */}
               <div>
-                <h3 className="font-bold text-sm text-ink dark:text-[#f3f4f8]">
+                <h3 className="font-bold text-sm text-ink">
                   Menu Pilihan Sistem Desain & Tema
                 </h3>
-                <p className="text-xs text-ink-muted dark:text-[#9ca0ba] mt-0.5">
-                  Pilih arsitektur desain yang Anda inginkan sesuai dokumentasi desain resmi platform
+                <p className="text-xs text-ink-muted mt-0.5">
+                  Pilih arsitektur desain yang Anda inginkan sesuai dokumentasi
+                  desain resmi platform
                 </p>
               </div>
 
@@ -532,13 +588,31 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
                     <div
                       key={themeItem.id}
                       onClick={() => setDesignSystem(themeItem.id)}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Gunakan tema ${themeItem.name}`}
+                      aria-pressed={isSelected}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setDesignSystem(themeItem.id);
+                        }
+                      }}
                       data-selected={isSelected ? "true" : "false"}
                       data-theme-id={themeItem.id}
-                      className={`theme-card-container p-4 rounded-[18px] border-2 cursor-pointer transition-all relative ${
+                      className={`theme-card-container p-4 rounded-[18px] border-2 cursor-pointer transition-all relative focus:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
                         isSelected
-                          ? 'bg-canvas dark:bg-[#1a1c26] border-brand dark:border-[#a78bfa] shadow-md'
-                          : 'bg-canvas dark:bg-[#16171f] border-hairline dark:border-[#282937] hover:border-brand/40'
+                          ? "bg-canvas shadow-md"
+                          : "bg-canvas border-hairline hover:border-brand/40"
                       }`}
+                      // The selected border used to come from five
+                      // `!important` rules in index.css. The colour is already
+                      // here in JS, so it can be an inline style instead.
+                      style={
+                        isSelected
+                          ? { borderColor: themeItem.primaryColor }
+                          : undefined
+                      }
                     >
                       {/* Top Header of Card */}
                       <div className="flex items-start justify-between gap-3 mb-2.5">
@@ -547,26 +621,47 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
                           <div
                             className="w-10 h-10 rounded-[12px] flex items-center justify-center shrink-0 shadow-sm"
                             style={{
-                              backgroundColor: themeItem.id === 'theverge' ? '#131313' : themeItem.primaryColor,
-                              border: themeItem.id === 'theverge' ? '2px solid #3cffd0' : 'none',
+                              backgroundColor:
+                                themeItem.id === "theverge"
+                                  ? "#131313"
+                                  : themeItem.primaryColor,
+                              border:
+                                themeItem.id === "theverge"
+                                  ? "2px solid #3cffd0"
+                                  : "none",
                             }}
                           >
                             <span
                               className="w-4 h-4 rounded-full"
-                              style={{ backgroundColor: themeItem.id === 'theverge' ? '#3cffd0' : themeItem.id === 'mongodb' ? '#001e2b' : '#ffffff' }}
+                              style={{
+                                backgroundColor:
+                                  themeItem.id === "theverge"
+                                    ? "#3cffd0"
+                                    : themeItem.id === "mongodb"
+                                      ? "#001e2b"
+                                      : "#ffffff",
+                              }}
                             />
                           </div>
 
                           <div>
                             <div className="flex items-center gap-2">
-                              <h4 className="font-bold text-sm text-ink dark:text-[#f3f4f8]">
+                              <h4 className="font-bold text-sm text-ink">
                                 {themeItem.name}
                               </h4>
-                              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#dedee5]/80 dark:bg-[#282937] text-ink-muted dark:text-[#9ca0ba] font-bold">
+                              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-hairline/80 text-ink-muted font-bold">
                                 {themeItem.badge}
                               </span>
                             </div>
-                            <span className="theme-card-tagline text-xs font-semibold block" data-theme-id={themeItem.id}>
+                            <span
+                              className="theme-card-tagline text-xs font-semibold block"
+                              data-theme-id={themeItem.id}
+                              style={{
+                                color: isDark
+                                  ? themeItem.taglineColor.dark
+                                  : themeItem.taglineColor.light,
+                              }}
+                            >
                               {themeItem.tagline}
                             </span>
                           </div>
@@ -575,7 +670,14 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
                         {/* Selected Indicator */}
                         <div className="shrink-0">
                           {isSelected ? (
-                            <span className="theme-active-badge inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-micro" data-active-theme={designSystem}>
+                            <span
+                              className="theme-active-badge inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-micro"
+                              data-active-theme={designSystem}
+                              style={{
+                                backgroundColor: themeItem.primaryColor,
+                                color: themeItem.onPrimary,
+                              }}
+                            >
                               <Check className="w-3.5 h-3.5 stroke-[3]" />
                               <span>Sedang Digunakan</span>
                             </span>
@@ -586,7 +688,7 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
                                 e.stopPropagation();
                                 setDesignSystem(themeItem.id);
                               }}
-                              className="px-3 py-1 rounded-full border border-hairline dark:border-[#282937] hover:border-brand text-xs font-semibold text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8] transition-colors"
+                              className="px-3 py-1 rounded-full border border-hairline hover:border-brand text-xs font-semibold text-ink-muted hover:text-ink transition-colors"
                             >
                               Gunakan Tema
                             </button>
@@ -595,26 +697,31 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
                       </div>
 
                       {/* Description */}
-                      <p className="text-xs text-ink-muted dark:text-[#9ca0ba] leading-relaxed mb-3">
+                      <p className="text-xs text-ink-muted leading-relaxed mb-3">
                         {themeItem.description}
                       </p>
 
                       {/* Live Mini Preview Bar */}
-                      <div className="pt-3 border-t border-[#dedee5]/70 dark:border-[#282937] flex flex-wrap items-center justify-between gap-3 bg-white/70 dark:bg-[#12131a] -mx-4 -mb-4 p-3.5 rounded-b-[16px]">
+                      <div className="pt-3 border-t border-hairline/70 flex flex-wrap items-center justify-between gap-3 bg-surface/70 -mx-4 -mb-4 p-3.5 rounded-b-[16px]">
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-ink-subtle dark:text-[#767993]">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-ink-subtle">
                             Preview CTA:
                           </span>
                           <button
                             type="button"
                             data-preview-theme={themeItem.id}
                             className={`theme-preview-cta py-1.5 px-4 text-xs font-bold transition-all shadow-micro ${
-                              themeItem.id === 'coinbase' || themeItem.id === 'mongodb'
-                                ? 'rounded-full'
-                                : themeItem.id === 'theverge'
-                                ? 'font-extrabold rounded-full'
-                                : 'rounded-[10px]'
+                              themeItem.id === "coinbase" ||
+                              themeItem.id === "mongodb"
+                                ? "rounded-full"
+                                : themeItem.id === "theverge"
+                                  ? "font-extrabold rounded-full"
+                                  : "rounded-[10px]"
                             }`}
+                            style={{
+                              backgroundColor: themeItem.primaryColor,
+                              color: themeItem.onPrimary,
+                            }}
                           >
                             {themeItem.previewLabel}
                           </button>
@@ -626,13 +733,13 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
               </div>
 
               {/* Mode Tampilan (Light / Dark / Auto) */}
-              <div className="p-4 rounded-[16px] bg-canvas dark:bg-[#1e202b] border border-hairline dark:border-[#282937] space-y-3">
+              <div className="p-4 rounded-[16px] bg-canvas border border-hairline space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="font-bold text-xs text-ink dark:text-[#f3f4f8]">
+                    <h4 className="font-bold text-xs text-ink">
                       Mode Warna Tampilan
                     </h4>
-                    <span className="text-[11px] text-ink-muted dark:text-[#9ca0ba]">
+                    <span className="text-[11px] text-ink-muted">
                       Sesuaikan tingkat keterangan antarmuka
                     </span>
                   </div>
@@ -640,52 +747,55 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
 
                 <div className="grid grid-cols-3 gap-2">
                   <button
-                    onClick={() => setTheme('light')}
+                    type="button"
+                    onClick={() => setTheme("light")}
                     className={`p-3 rounded-[12px] border text-left transition-all ${
-                      theme === 'light'
-                        ? 'bg-white dark:bg-[#282937] border-brand shadow-micro'
-                        : 'border-hairline dark:border-[#282937] hover:border-brand/40'
+                      theme === "light"
+                        ? "bg-surface border-brand shadow-micro"
+                        : "border-hairline hover:border-brand/40"
                     }`}
                   >
-                    <Sun className="w-4 h-4 text-[#f59e0b] mb-1.5" />
-                    <span className="block font-bold text-xs text-ink dark:text-[#f3f4f8]">
+                    <Sun className="w-4 h-4 text-warning-bright mb-1.5" />
+                    <span className="block font-bold text-xs text-ink">
                       Terang
                     </span>
-                    <span className="text-[10px] text-ink-muted dark:text-[#9ca0ba]">
+                    <span className="text-[10px] text-ink-muted">
                       Kanvas putih bersih
                     </span>
                   </button>
 
                   <button
-                    onClick={() => setTheme('dark')}
+                    type="button"
+                    onClick={() => setTheme("dark")}
                     className={`p-3 rounded-[12px] border text-left transition-all ${
-                      theme === 'dark'
-                        ? 'bg-white dark:bg-[#282937] border-brand shadow-micro'
-                        : 'border-hairline dark:border-[#282937] hover:border-brand/40'
+                      theme === "dark"
+                        ? "bg-surface border-brand shadow-micro"
+                        : "border-hairline hover:border-brand/40"
                     }`}
                   >
-                    <Moon className="w-4 h-4 text-brand-text dark:text-[#a78bfa] mb-1.5" />
-                    <span className="block font-bold text-xs text-ink dark:text-[#f3f4f8]">
+                    <Moon className="w-4 h-4 text-brand-text mb-1.5" />
+                    <span className="block font-bold text-xs text-ink">
                       Gelap
                     </span>
-                    <span className="text-[10px] text-ink-muted dark:text-[#9ca0ba]">
+                    <span className="text-[10px] text-ink-muted">
                       Kenyamanan malam hari
                     </span>
                   </button>
 
                   <button
-                    onClick={() => setTheme('system')}
+                    type="button"
+                    onClick={() => setTheme("system")}
                     className={`p-3 rounded-[12px] border text-left transition-all ${
-                      theme === 'system'
-                        ? 'bg-white dark:bg-[#282937] border-brand shadow-micro'
-                        : 'border-hairline dark:border-[#282937] hover:border-brand/40'
+                      theme === "system"
+                        ? "bg-surface border-brand shadow-micro"
+                        : "border-hairline hover:border-brand/40"
                     }`}
                   >
                     <Laptop className="w-4 h-4 text-ink-muted mb-1.5" />
-                    <span className="block font-bold text-xs text-ink dark:text-[#f3f4f8]">
+                    <span className="block font-bold text-xs text-ink">
                       Sistem
                     </span>
-                    <span className="text-[10px] text-ink-muted dark:text-[#9ca0ba]">
+                    <span className="text-[10px] text-ink-muted">
                       Otomatis sistem OS
                     </span>
                   </button>
@@ -693,17 +803,22 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
               </div>
 
               {/* Info Box */}
-              <div className="p-3.5 rounded-[12px] bg-canvas dark:bg-[#1e202b] border border-hairline dark:border-[#282937] space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-ink-subtle dark:text-[#767993] block">
+              <div className="p-3.5 rounded-[12px] bg-canvas border border-hairline space-y-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-ink-subtle block">
                   Informasi Tema Aktif
                 </span>
-                <div className="flex justify-between text-xs text-ink-muted dark:text-[#9ca0ba]">
+                <div className="flex justify-between text-xs text-ink-muted">
                   <span>Sistem Desain Aktif</span>
-                  <span className="font-bold text-ink dark:text-[#f3f4f8]">{currentConfig.badge}</span>
+                  <span className="font-bold text-ink">
+                    {currentConfig.badge}
+                  </span>
                 </div>
-                <div className="flex justify-between text-xs text-ink-muted dark:text-[#9ca0ba]">
+                <div className="flex justify-between text-xs text-ink-muted">
                   <span>Aksen Warna Utama</span>
-                  <span className="font-mono font-bold" style={{ color: currentConfig.primaryColor }}>
+                  <span
+                    className="font-mono font-bold"
+                    style={{ color: currentConfig.primaryColor }}
+                  >
                     {currentConfig.primaryColor}
                   </span>
                 </div>
@@ -712,15 +827,15 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
           )}
 
           {/* ================= TAB 4: BACKEND & INTEGRASI ================= */}
-          {activeTab === 'backend' && (
+          {activeTab === "backend" && (
             <div className="space-y-5">
               {/* Supabase Section */}
               <div className="space-y-3">
                 <div>
-                  <h3 className="font-bold text-sm text-ink dark:text-[#f3f4f8]">
+                  <h3 className="font-bold text-sm text-ink">
                     Integrasi Database Supabase
                   </h3>
-                  <p className="text-xs text-ink-muted dark:text-[#9ca0ba]">
+                  <p className="text-xs text-ink-muted">
                     Koneksi cloud database untuk mutasi dan saldo rekening
                   </p>
                 </div>
@@ -729,25 +844,25 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
                 <div
                   className={`p-3.5 rounded-[12px] flex items-center gap-3 text-xs font-semibold ${
                     isSupabaseConfigured
-                      ? 'bg-[#149e61]/12 text-[#026b3f] dark:text-[#34d399] border border-[#149e61]/25'
-                      : 'bg-[#fee2e2]/60 dark:bg-[#e53e3e]/15 text-[#b91c1c] dark:text-[#fca5a5] border border-[#fee2e2] dark:border-[#e53e3e]/30'
+                      ? "bg-positive/12 text-positive border border-positive/25"
+                      : "bg-negative-soft/60 text-negative border border-negative-soft"
                   }`}
                 >
                   {isSupabaseConfigured ? (
-                    <CheckCircle2 className="w-5 h-5 text-[#149e61] dark:text-[#34d399] shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-positive-bright shrink-0" />
                   ) : (
-                    <ShieldAlert className="w-5 h-5 text-[#e53e3e] dark:text-[#f87171] shrink-0" />
+                    <ShieldAlert className="w-5 h-5 text-negative-bright shrink-0" />
                   )}
                   <div>
                     <span className="block font-bold">
                       {isSupabaseConfigured
-                        ? 'Supabase Cloud Terhubung'
-                        : 'Kredensial Belum Terpasang (Mode Offline)'}
+                        ? "Supabase Cloud Terhubung"
+                        : "Kredensial Belum Terpasang (Mode Offline)"}
                     </span>
                     <span className="text-[11px] font-normal opacity-90 block mt-0.5">
                       {isSupabaseConfigured
-                        ? 'Seluruh mutasi, saldo rekening, dan kategori tersinkronisasi otomatis.'
-                        : 'Data sementara hanya tersimpan di memori browser lokal (localStorage).'}
+                        ? "Seluruh mutasi, saldo rekening, dan kategori tersinkronisasi otomatis."
+                        : "Data sementara hanya tersimpan di memori browser lokal (localStorage)."}
                     </span>
                   </div>
                 </div>
@@ -755,40 +870,42 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
                 <div className="space-y-3">
                   <div className="p-3 rounded-[10px] bg-surface-sunken border border-hairline">
                     <p className="text-[11px] font-semibold text-ink-muted leading-relaxed">
-                      Kredensial Supabase dibaca dari variabel build{' '}
+                      Kredensial Supabase dibaca dari variabel build{" "}
                       <code className="font-mono text-[10px] px-1 py-0.5 rounded bg-surface border border-hairline">
                         VITE_SUPABASE_URL
-                      </code>{' '}
-                      dan{' '}
+                      </code>{" "}
+                      dan{" "}
                       <code className="font-mono text-[10px] px-1 py-0.5 rounded bg-surface border border-hairline">
                         VITE_SUPABASE_ANON_KEY
                       </code>
-                      . Setel keduanya di file <code className="font-mono text-[10px]">.env</code>{' '}
-                      lalu build ulang aplikasi.
+                      . Setel keduanya di file{" "}
+                      <code className="font-mono text-[10px]">.env</code> lalu
+                      build ulang aplikasi.
                     </p>
                   </div>
                 </div>
               </div>
 
               {/* Logo.dev CDN Section */}
-              <div className="space-y-3 pt-3 border-t border-hairline dark:border-[#282937]">
+              <div className="space-y-3 pt-3 border-t border-hairline">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <Image className="w-4 h-4 text-brand-text dark:text-[#a78bfa]" />
-                      <h3 className="font-bold text-sm text-ink dark:text-[#f3f4f8]">
+                      <Image className="w-4 h-4 text-brand-text" />
+                      <h3 className="font-bold text-sm text-ink">
                         Logo Provider CDN (img.logo.dev)
                       </h3>
                     </div>
-                    <p className="text-xs text-ink-muted dark:text-[#9ca0ba] mt-0.5">
-                      Ambil logo bank & e-wallet langsung dari API CDN <code>img.logo.dev</code>
+                    <p className="text-xs text-ink-muted mt-0.5">
+                      Ambil logo bank & e-wallet langsung dari API CDN{" "}
+                      <code>img.logo.dev</code>
                     </p>
                   </div>
                   <a
                     href="https://www.logo.dev"
                     target="_blank"
                     rel="noreferrer"
-                    className="text-[11px] font-bold text-brand-text dark:text-[#a78bfa] hover:underline flex items-center gap-1 shrink-0"
+                    className="text-[11px] font-bold text-brand-text hover:underline flex items-center gap-1 shrink-0"
                   >
                     <span>logo.dev</span>
                     <ExternalLink className="w-3 h-3" />
@@ -799,24 +916,26 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
                 <div
                   className={`p-3 rounded-[10px] flex items-center gap-2.5 text-xs font-medium ${
                     logoToken.trim()
-                      ? 'bg-[#149e61]/12 text-[#026b3f] dark:text-[#34d399] border border-[#149e61]/25'
-                      : 'bg-surface-sunken dark:bg-[#1e202b] text-ink-muted dark:text-[#9ca0ba] border border-hairline dark:border-[#282937]'
+                      ? "bg-positive/12 text-positive border border-positive/25"
+                      : "bg-surface-sunken text-ink-muted border border-hairline"
                   }`}
                 >
                   <CheckCircle2
                     className={`w-4 h-4 shrink-0 ${
-                      logoToken.trim() ? 'text-[#149e61] dark:text-[#34d399]' : 'text-ink-subtle dark:text-[#767993]'
+                      logoToken.trim()
+                        ? "text-positive-bright"
+                        : "text-ink-subtle"
                     }`}
                   />
                   <span>
                     {logoToken.trim()
-                      ? 'Token img.logo.dev terpasang (CDN live aktif).'
-                      : 'Token belum diisi. Menggunakan fallback logo lokal & monogram.'}
+                      ? "Token img.logo.dev terpasang (CDN live aktif)."
+                      : "Token belum diisi. Menggunakan fallback logo lokal & monogram."}
                   </span>
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-ink-muted dark:text-[#9ca0ba] block mb-1">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-ink-muted block mb-1">
                     Logo.dev Publishable Key (Token pk_...)
                   </label>
                   <input
@@ -824,22 +943,27 @@ const SettingsModalContent: React.FC<SettingsModalProps> = ({
                     value={logoToken}
                     onChange={(e) => setLogoToken(e.target.value)}
                     placeholder="pk_xxxxxxxxxxxxxxxxxxxxxxxx"
-                    className="w-full px-3.5 py-2.5 rounded-[12px] bg-canvas dark:bg-[#13141c] border border-hairline dark:border-[#282937] text-xs font-mono text-ink dark:text-[#f3f4f8] outline-none focus:border-brand focus:ring-2 focus:ring-[#855bfb]/15"
+                    className="w-full px-3.5 py-2.5 rounded-[12px] bg-canvas border border-hairline text-xs font-mono text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/15"
                   />
-                  <p className="text-[11px] text-ink-subtle dark:text-[#767993] mt-1.5 leading-relaxed">
-                    Dapat diisi di sini atau diatur melalui <code>.env</code> dengan nama key{' '}
-                    <code className="text-brand-text dark:text-[#a78bfa] font-mono">VITE_LOGODEV_TOKEN</code>.
+                  <p className="text-[11px] text-ink-subtle mt-1.5 leading-relaxed">
+                    Dapat diisi di sini atau diatur melalui <code>.env</code>{" "}
+                    dengan nama key{" "}
+                    <code className="text-brand-text font-mono">
+                      VITE_LOGODEV_TOKEN
+                    </code>
+                    .
                   </p>
                 </div>
               </div>
 
               {saved && (
-                <div className="p-3 rounded-[10px] bg-[#149e61]/15 text-[#026b3f] dark:text-[#34d399] text-xs font-bold text-center border border-[#149e61]/30 animate-in fade-in">
+                <div className="p-3 rounded-[10px] bg-positive/15 text-positive text-xs font-bold text-center border border-positive/30 animate-in fade-in">
                   Konfigurasi berhasil disimpan!
                 </div>
               )}
 
               <button
+                type="button"
                 onClick={handleSaveBackend}
                 className="w-full btn-kraken-primary text-xs py-3 rounded-[12px] shadow-whisper"
               >

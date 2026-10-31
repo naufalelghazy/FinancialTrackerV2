@@ -7,7 +7,7 @@
    --------------------------------------------------------------
    Every design system writes the same set of variables; components
    read them (`bg-surface`, `text-ink`, `bg-brand`). Nothing below
-   needs `[data-theme=x] .bg-\[\#7132f5\]` override blocks any more.
+   needs a per-theme utility override block any more.
 
    `inline` keeps the var() reference in the emitted utility instead
    of baking the value in, which is what lets one declaration follow
@@ -34,6 +34,19 @@
   --color-hairline: var(--border-default);
   --color-hairline-strong: var(--border-strong);
 
+  --color-positive: var(--positive);
+  --color-positive-bright: var(--positive-bright);
+  --color-positive-soft: var(--positive-soft);
+  --color-negative: var(--negative);
+  --color-negative-bright: var(--negative-bright);
+  --color-negative-soft: var(--negative-soft);
+  --color-warning: var(--warning);
+  --color-warning-bright: var(--warning-bright);
+  --color-warning-soft: var(--warning-soft);
+  --color-critical: var(--critical);
+  --color-critical-bright: var(--critical-bright);
+  --color-critical-soft: var(--critical-soft);
+
   --radius-card: var(--card-radius);
   --radius-control: var(--control-radius);
   --radius-pill: var(--pill-radius);
@@ -56,9 +69,8 @@
     --kraken-green-dark: #026b3f;
     --kraken-green-subtle: rgba(20, 158, 97, 0.16);
 
-    /* Kraken baseline tokens. See the "LEGACY COMPATIBILITY BRIDGE"
-       block at the end of this file for how they are applied to the
-       hard-coded utility classes that still exist in the markup. */
+    /* Kraken baseline tokens. Components read these through `@theme inline`
+       above, so the markup never names a colour directly. */
     --brand-primary: #7132f5;
     --brand-primary-hover: #5b1ecf;
     --brand-primary-active: #4a17b0;
@@ -78,6 +90,33 @@
 
     --border-default: #dedee5;
     --border-strong: #9497a9;
+
+    /* Semantic colours: money in / out and warnings. These replaced the two
+       hand-picked shades (`#026b3f` + `#34d399`, `#c53030` + `#f87171`) that
+       every component used to hard-code on its own. Global on purpose: a
+       positive balance must read as positive in every design system. They
+       still need to lighten in dark mode to keep contrast. */
+    --positive: #026b3f;
+    --positive-bright: #149e61;
+    --positive-soft: rgba(20, 158, 97, 0.12);
+    --negative: #c53030;
+    --negative-bright: #e53e3e;
+    --negative-soft: rgba(229, 62, 62, 0.1);
+    --warning: #b45309;
+    --warning-bright: #f59e0b;
+    --warning-soft: rgba(245, 158, 11, 0.14);
+    /* A debt that is actually due reads louder than "a red number". */
+    --critical: #be123c;
+    --critical-bright: #e11d48;
+    --critical-soft: rgba(225, 29, 72, 0.12);
+
+    /* Outstanding-bills card. Every theme inherits the red baseline; a theme
+       that wants a different treatment only overrides these four values
+       instead of re-declaring the whole card with `!important`. */
+    --debt-from: #dc2626;
+    --debt-to: #b91c1c;
+    --debt-border: #ef4444;
+    --debt-shadow: rgba(220, 38, 38, 0.35);
 
     --card-radius: 16px;
     --control-radius: 12px;
@@ -109,6 +148,26 @@
 
     --border-default: #282937;
     --border-strong: #3a3b4d;
+
+    /* #026b3f on #16171f is unreadable, so dark mode brightens the semantics. */
+    --positive: #34d399;
+    --positive-bright: #34d399;
+    --positive-soft: rgba(52, 211, 153, 0.12);
+    --negative: #f87171;
+    --negative-bright: #f87171;
+    --negative-soft: rgba(248, 113, 113, 0.12);
+    --warning: #fbbf24;
+    --warning-bright: #fbbf24;
+    --warning-soft: rgba(251, 191, 36, 0.14);
+
+    --critical: #fb7185;
+    --critical-bright: #f43f5e;
+    --critical-soft: rgba(244, 63, 94, 0.16);
+
+    --debt-from: #b91c1c;
+    --debt-to: #881337;
+    --debt-border: #f87171;
+    --debt-shadow: rgba(239, 68, 68, 0.3);
   }
 
   html {
@@ -190,31 +249,31 @@
 }
 
 /* ==============================================================
-   HERO DEBT / BILLS CARD (KRAKEN BASELINE)
-   Vibrant, high-contrast Red Card for Outstanding Bills & Debt
+   HERO DEBT / BILLS CARD
+   Vibrant, high-contrast red card for outstanding bills & debt.
+
+   The colours come from tokens, so a theme changes the card by
+   overriding four variables — no `!important`, no per-theme block
+   competing with the utility classes in the markup.
    ============================================================== */
 .hero-debt-card {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
-  border: 1px solid #ef4444 !important;
-  color: #ffffff !important;
-  box-shadow: 0 8px 24px -4px rgba(220, 38, 38, 0.35) !important;
+  background: linear-gradient(135deg, var(--debt-from) 0%, var(--debt-to) 100%);
+  border: 1px solid var(--debt-border);
+  color: #ffffff;
+  box-shadow: 0 8px 24px -4px var(--debt-shadow);
 }
 
-.dark .hero-debt-card {
-  background: linear-gradient(135deg, #b91c1c 0%, #881337 100%) !important;
-  border: 1px solid #f87171 !important;
-  box-shadow: 0 8px 28px -4px rgba(239, 68, 68, 0.3) !important;
-}
-
+/* Everything inside the card is on a saturated red background in every theme,
+   so these are fixed white/translucent values rather than theme tokens. */
 .hero-debt-card .debt-card-header,
 .hero-debt-card .debt-card-icon {
-  color: rgba(255, 255, 255, 0.95) !important;
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .hero-debt-card .debt-card-badge {
-  background-color: rgba(0, 0, 0, 0.25) !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  background-color: rgba(0, 0, 0, 0.25);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 
@@ -229,27 +288,27 @@
 }
 
 .hero-debt-card .debt-card-amount {
-  color: #ffffff !important;
+  color: #ffffff;
 }
 
 .hero-debt-card .debt-card-sub {
-  color: rgba(255, 255, 255, 0.85) !important;
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .hero-debt-card .debt-card-divider {
-  border-color: rgba(255, 255, 255, 0.25) !important;
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 .hero-debt-card .debt-card-btn {
-  color: #ffffff !important;
+  color: #ffffff;
 }
 
 .hero-debt-card .debt-card-btn:hover {
-  color: #fee2e2 !important;
+  color: #fee2e2;
 }
 
 .hero-debt-card .debt-card-status {
-  color: rgba(255, 255, 255, 0.9) !important;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 
@@ -333,16 +392,23 @@
 }
 
 /* Coinbase Hero Debt Card: semantic down red, 24px radius. */
+[data-theme=coinbase] {
+  --debt-from: #cf202f;
+  --debt-to: #cf202f;
+  --debt-border: #b01b27;
+  --debt-shadow: rgba(207, 32, 47, 0.3);
+}
+
 [data-theme=coinbase] .hero-debt-card {
-  background-color: #cf202f;
-  border-color: #b01b27;
   border-radius: 24px;
 }
 
-.dark[data-theme=coinbase] .hero-debt-card,
-[data-theme=coinbase].dark .hero-debt-card {
-  background-color: #b51a27;
-  border-color: #ef4444;
+.dark[data-theme=coinbase],
+[data-theme=coinbase].dark {
+  --debt-from: #b51a27;
+  --debt-to: #b51a27;
+  --debt-border: #ef4444;
+  --debt-shadow: rgba(181, 26, 39, 0.32);
 }
 
 /* Coinbase numerical data uses JetBrains Mono everywhere. */
@@ -419,24 +485,29 @@
 }
 
 /* Verge keeps its flat editorial geometry in both modes. */
+[data-theme=theverge] {
+  --debt-from: #ff3b30;
+  --debt-to: #ff3b30;
+  --debt-border: #ff3b30;
+  --debt-shadow: transparent;
+}
+
 [data-theme=theverge] .hero-debt-card {
-  background-color: #ff3b30;
-  border: 1px solid #ff3b30;
   border-radius: 12px;
   box-shadow: none;
 }
 
-.dark[data-theme=theverge] .hero-debt-card,
-[data-theme=theverge].dark .hero-debt-card {
-  background-color: #262626;
-  border-color: #3cffd0;
-  box-shadow: none;
+.dark[data-theme=theverge],
+[data-theme=theverge].dark {
+  --debt-from: #262626;
+  --debt-to: #262626;
+  --debt-border: #3cffd0;
+  --debt-shadow: transparent;
 }
 
-/* Verge focus ring is mint, always. */
-[data-theme=theverge] .focus\:border-\[\#7132f5\]:focus {
-  border-color: var(--brand-text);
-  outline: 2px solid var(--brand-primary);
+/* Focus rings: one rule for every theme, driven by the brand token. */
+.focus-visible\:outline-brand:focus-visible {
+  outline-color: var(--brand-primary);
 }
 
 /* ==============================================================
@@ -496,16 +567,20 @@
   --border-strong: #52483f;
 }
 
-/* Autumn keeps its warm red for the outstanding-bills card. */
-[data-theme=autumn] .hero-debt-card {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-  border-color: #ef4444;
+/* Autumn inherits the red baseline; it only needs its own dark pairing. */
+[data-theme=autumn] {
+  --debt-from: #dc2626;
+  --debt-to: #b91c1c;
+  --debt-border: #ef4444;
+  --debt-shadow: rgba(220, 38, 38, 0.35);
 }
 
-.dark[data-theme=autumn] .hero-debt-card,
-[data-theme=autumn].dark .hero-debt-card {
-  background: linear-gradient(135deg, #b91c1c 0%, #881337 100%);
-  border-color: #f87171;
+.dark[data-theme=autumn],
+[data-theme=autumn].dark {
+  --debt-from: #b91c1c;
+  --debt-to: #881337;
+  --debt-border: #f87171;
+  --debt-shadow: rgba(239, 68, 68, 0.3);
 }
 
 /* ==============================================================
@@ -518,14 +593,20 @@
   --font-display: 'Euclid Circular A', sans-serif;
   --font-mono: 'Source Code Pro', ui-monospace, monospace;
 
-  /* MongoDB green is very light: it needs dark text on top. */
-  --brand-primary: #00ed64;
-  --brand-primary-hover: #00c853;
-  --brand-primary-active: #00a845;
-  --brand-soft: rgba(0, 237, 100, 0.14);
-  --brand-soft-hover: rgba(0, 237, 100, 0.22);
+  /* MongoDB green is light enough that it needs dark text on top, so the hero
+     card keeps `--on-brand`. The *fill* is a deeper MongoDB teal-green: at
+     #00ed64 the card vibrates against the white canvas, and white text on it
+     would fall below 2:1 contrast. */
+  --brand-primary: #00684a;
+  --brand-primary-hover: #00875f;
+  --brand-primary-active: #004d38;
+  --brand-soft: rgba(0, 104, 74, 0.14);
+  --brand-soft-hover: rgba(0, 104, 74, 0.22);
   --brand-text: #00684a;
-  --on-brand: #001e2b;
+  --on-brand: #ffffff;
+
+  /* The loud #00ed64 stays where it belongs: small accents, not big fills. */
+  --accent-vivid: #00ed64;
 
   --bg-canvas: #ffffff;
   --bg-surface: #ffffff;
@@ -546,13 +627,15 @@
 
 .dark[data-theme=mongodb],
 [data-theme=mongodb].dark {
-  --brand-primary: #00ed64;
-  --brand-primary-hover: #3dff8f;
-  --brand-primary-active: #00c853;
+  /* On the dark teal canvas a deep green fill would disappear, so dark mode
+     keeps the signature MongoDB green with white text on it. */
+  --brand-primary: #00a845;
+  --brand-primary-hover: #00c853;
+  --brand-primary-active: #00ed64;
   --brand-soft: rgba(0, 237, 100, 0.16);
   --brand-soft-hover: rgba(0, 237, 100, 0.26);
   --brand-text: #00ed64;
-  --on-brand: #001e2b;
+  --on-brand: #ffffff;
 
   --bg-canvas: #001e2b;
   --bg-surface: #02303f;
@@ -570,235 +653,4 @@
 /* MongoDB keeps its signature green hero card and dark text on it. */
 [data-theme=mongodb] .hero-balance-card {
   color: var(--on-brand);
-}
-
-/* ==============================================================
-   THEME SHOWROOM STYLES (IMMUNE TO ACTIVE THEME OVERRIDES)
-   ============================================================== */
-.theme-card-tagline[data-theme-id="coinbase"] {
-  color: #0052ff !important;
-}
-.theme-card-tagline[data-theme-id="theverge"] {
-  color: #3cffd0 !important;
-}
-.theme-card-tagline[data-theme-id="kraken"] {
-  color: #7132f5 !important;
-}
-.theme-card-tagline[data-theme-id="autumn"] {
-  color: #ea580c !important;
-}
-.theme-card-tagline[data-theme-id="mongodb"] {
-  color: #00684a !important;
-}
-.dark .theme-card-tagline[data-theme-id="mongodb"] {
-  color: #00ed64 !important;
-}
-
-button.theme-preview-cta[data-preview-theme="coinbase"] {
-  background-color: #0052ff !important;
-  color: #ffffff !important;
-}
-button.theme-preview-cta[data-preview-theme="theverge"] {
-  background-color: #3cffd0 !important;
-  color: #000000 !important;
-}
-button.theme-preview-cta[data-preview-theme="kraken"] {
-  background-color: #7132f5 !important;
-  color: #ffffff !important;
-}
-button.theme-preview-cta[data-preview-theme="autumn"] {
-  background-color: #ea580c !important;
-  color: #ffffff !important;
-}
-button.theme-preview-cta[data-preview-theme="mongodb"] {
-  background-color: #00ed64 !important;
-  color: #001e2b !important;
-}
-
-.theme-active-badge[data-active-theme="coinbase"] {
-  background-color: #0052ff !important;
-  color: #ffffff !important;
-}
-.theme-active-badge[data-active-theme="theverge"] {
-  background-color: #3cffd0 !important;
-  color: #000000 !important;
-}
-.theme-active-badge[data-active-theme="kraken"] {
-  background-color: #7132f5 !important;
-  color: #ffffff !important;
-}
-.theme-active-badge[data-active-theme="autumn"] {
-  background-color: #ea580c !important;
-  color: #ffffff !important;
-}
-.theme-active-badge[data-active-theme="mongodb"] {
-  background-color: #00ed64 !important;
-  color: #001e2b !important;
-}
-
-.theme-card-container[data-selected="true"][data-theme-id="coinbase"] {
-  border-color: #0052ff !important;
-}
-.theme-card-container[data-selected="true"][data-theme-id="theverge"] {
-  border-color: #3cffd0 !important;
-}
-.theme-card-container[data-selected="true"][data-theme-id="kraken"] {
-  border-color: #7132f5 !important;
-}
-.theme-card-container[data-selected="true"][data-theme-id="autumn"] {
-  border-color: #ea580c !important;
-}
-.theme-card-container[data-selected="true"][data-theme-id="mongodb"] {
-  border-color: #00ed64 !important;
-}
-
-/* ==============================================================
-   LEGACY COMPATIBILITY BRIDGE
-
-   The markup still contains hard-coded Kraken palette utilities
-   (`bg-[#7132f5]`, `text-[#101114]`, ...) in ~21 files. Rewriting
-   all of them at once is a large, risky visual change, so this block
-   maps the 23 distinct classes onto the theme tokens above.
-
-   Effect: no `[data-theme=x]` override blocks are needed any more, and
-   every theme is driven by one variable set. Points 21-23 of the
-   Sprint 2 plan then delete these utilities from the markup, after
-   which this entire block can be removed.
-
-   `!important` is required because these rules target generated
-   utility classes and must win over the single-class utility.
-   ============================================================== */
-
-/* --- Brand surfaces --------------------------------------------- */
-.bg-\[\#7132f5\] {
-  background-color: var(--brand-primary) !important;
-}
-.hover\:bg-\[\#5741d8\]:hover,
-.bg-\[\#5741d8\] {
-  background-color: var(--brand-primary-hover) !important;
-}
-.hover\:bg-\[\#5b1ecf\]:hover,
-.active\:bg-\[\#5b1ecf\]:active {
-  background-color: var(--brand-primary-active) !important;
-}
-
-/* Hard-coded alpha variants collapse onto the single brand-soft token. */
-.bg-\[\#855bfb\]\/10,
-.bg-\[\#855bfb\]\/15,
-.bg-\[\#855bfb\]\/20,
-.bg-\[\#7132f5\]\/10,
-.bg-\[\#7132f5\]\/12,
-.bg-\[\#7132f5\]\/15,
-.bg-\[\#7132f5\]\/20 {
-  background-color: var(--brand-soft) !important;
-}
-.hover\:bg-\[\#7132f5\]\/10:hover,
-.hover\:bg-\[\#7132f5\]\/20:hover {
-  background-color: var(--brand-soft-hover) !important;
-}
-.bg-\[\#7132f5\]\/20:hover {
-  background-color: var(--brand-soft-hover) !important;
-}
-
-/* --- Brand text -------------------------------------------------- */
-.text-\[\#7132f5\] {
-  color: var(--brand-text) !important;
-}
-.dark .dark\:text-\[\#a78bfa\] {
-  color: var(--brand-text) !important;
-}
-.hover\:text-\[\#7132f5\]:hover {
-  color: var(--brand-text) !important;
-}
-
-/* --- Brand borders ----------------------------------------------- */
-.border-\[\#7132f5\],
-.border-\[\#7132f5\]\/20,
-.border-\[\#7132f5\]\/40 {
-  border-color: var(--brand-primary) !important;
-}
-.hover\:border-\[\#7132f5\]\/40:hover,
-.focus\:border-\[\#7132f5\]:focus {
-  border-color: var(--brand-primary) !important;
-}
-.ring-\[\#7132f5\] {
-  --tw-ring-color: var(--brand-primary) !important;
-}
-
-/* --- Surfaces ---------------------------------------------------- */
-.bg-white {
-  background-color: var(--bg-surface) !important;
-}
-.bg-\[\#fafbfe\],
-.bg-\[\#fafbfe\]\/60 {
-  background-color: var(--bg-canvas) !important;
-}
-.hover\:bg-\[\#fafbfe\]:hover {
-  background-color: var(--bg-surface-sunken) !important;
-}
-.bg-\[\#edeef3\] {
-  background-color: var(--bg-surface-sunken) !important;
-}
-.hover\:bg-\[\#edeef3\]:hover {
-  background-color: var(--bg-surface-sunken) !important;
-}
-.dark\:bg-\[\#16171f\],
-.dark\:bg-\[\#1a1c26\] {
-  background-color: var(--bg-surface) !important;
-}
-.dark\:bg-\[\#1e202b\] {
-  background-color: var(--bg-surface-raised) !important;
-}
-.dark\:bg-\[\#13141c\],
-.dark\:bg-\[\#0d0e12\] {
-  background-color: var(--bg-surface-sunken) !important;
-}
-.dark\:bg-\[\#282937\]\/80 {
-  background-color: var(--bg-surface-sunken) !important;
-}
-.dark\:bg-\[\#282937\] {
-  background-color: var(--border-default) !important;
-}
-.dark\:bg-\[\#232534\] {
-  background-color: var(--bg-surface-raised) !important;
-}
-button.bg-\[\#101114\],
-.dark button.bg-\[\#101114\] {
-  background-color: var(--text-primary) !important;
-  color: var(--bg-surface) !important;
-}
-
-/* --- Text -------------------------------------------------------- */
-.text-\[\#101114\] {
-  color: var(--text-primary) !important;
-}
-.text-\[\#686b82\] {
-  color: var(--text-secondary) !important;
-}
-.text-\[\#9497a9\] {
-  color: var(--text-tertiary) !important;
-}
-.dark\:text-\[\#f3f4f8\] {
-  color: var(--text-primary) !important;
-}
-.dark\:text-\[\#9ca0ba\] {
-  color: var(--text-secondary) !important;
-}
-.dark\:text-\[\#767993\] {
-  color: var(--text-tertiary) !important;
-}
-
-/* --- Borders & dividers ------------------------------------------ */
-.border-\[\#dedee5\] {
-  border-color: var(--border-default) !important;
-}
-.dark\:border-\[\#282937\],
-.dark\:border-\[\#a78bfa\] {
-  border-color: var(--border-default) !important;
-}
-.divide-\[\#dedee5\] > :not([hidden]) ~ :not([hidden]) {
-  border-color: var(--border-default) !important;
-}
-.dark\:divide-\[\#282937\] > :not([hidden]) ~ :not([hidden]) {
-  border-color: var(--border-default) !important;
 }

@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { X, Trash2, AlertTriangle, Layers, Search, Check } from 'lucide-react';
-import type { Category } from '../../types';
-import { CategoryIcon } from '../ui/CategoryIcon';
+import React, { useState, useEffect, useMemo } from "react";
+import { X, Trash2, AlertTriangle, Layers, Search, Check } from "lucide-react";
+import type { Category } from "../../types";
+import { CategoryIcon } from "../ui/CategoryIcon";
 import {
   CATEGORY_ICON_LIST,
   CATEGORY_ICON_GROUPS,
   CATEGORY_ICON_REGISTRY,
-} from '../../lib/categoryIcons';
+} from "../../lib/categoryIcons";
 
 interface EditCategoryModalProps {
   isOpen: boolean;
@@ -15,7 +15,7 @@ interface EditCategoryModalProps {
   onSave: (data: {
     id?: string;
     name: string;
-    type: 'pengeluaran' | 'pemasukan';
+    type: "pengeluaran" | "pemasukan";
     emoji: string;
     icon?: string;
   }) => Promise<void>;
@@ -23,7 +23,7 @@ interface EditCategoryModalProps {
 }
 
 function resolveInitialCategoryIconId(category: Category | null): string {
-  if (!category) return 'ShoppingBag';
+  if (!category) return "ShoppingBag";
   if (category.icon && CATEGORY_ICON_REGISTRY[category.icon]) {
     return category.icon;
   }
@@ -33,47 +33,45 @@ function resolveInitialCategoryIconId(category: Category | null): string {
   const found = CATEGORY_ICON_LIST.find(
     (item) =>
       item.id.toLowerCase() === category.name.toLowerCase() ||
-      category.name.toLowerCase().includes(item.id.toLowerCase())
+      category.name.toLowerCase().includes(item.id.toLowerCase()),
   );
-  return found ? found.id : 'Tag';
+  return found ? found.id : "Tag";
 }
 
-const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>> = ({
-  category,
-  onClose,
-  onSave,
-  onDelete,
-}) => {
+const EditCategoryModalContent: React.FC<
+  Omit<EditCategoryModalProps, "isOpen">
+> = ({ category, onClose, onSave, onDelete }) => {
   const isEditing = Boolean(category);
 
-  const [name, setName] = useState(() => category?.name || '');
-  const [type, setType] = useState<'pengeluaran' | 'pemasukan'>(
-    () => category?.type || 'pengeluaran'
+  const [name, setName] = useState(() => category?.name || "");
+  const [type, setType] = useState<"pengeluaran" | "pemasukan">(
+    () => category?.type || "pengeluaran",
   );
   const [selectedIconId, setSelectedIconId] = useState<string>(() =>
-    resolveInitialCategoryIconId(category)
+    resolveInitialCategoryIconId(category),
   );
-  const [selectedGroup, setSelectedGroup] = useState<string>('Semua');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedGroup, setSelectedGroup] = useState<string>("Semua");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         onClose();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
   const filteredIcons = useMemo(() => {
     return CATEGORY_ICON_LIST.filter((item) => {
-      const matchGroup = selectedGroup === 'Semua' || item.group === selectedGroup;
+      const matchGroup =
+        selectedGroup === "Semua" || item.group === selectedGroup;
       if (!matchGroup) return false;
 
       if (!searchQuery.trim()) return true;
@@ -89,12 +87,12 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      setErrorMsg('Nama kategori tidak boleh kosong.');
+      setErrorMsg("Nama kategori tidak boleh kosong.");
       return;
     }
 
     setIsSubmitting(true);
-    setErrorMsg('');
+    setErrorMsg("");
 
     try {
       await onSave({
@@ -106,7 +104,8 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
       });
       onClose();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Gagal menyimpan kategori.';
+      const msg =
+        err instanceof Error ? err.message : "Gagal menyimpan kategori.";
       setErrorMsg(msg);
     } finally {
       setIsSubmitting(false);
@@ -121,13 +120,14 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
     }
 
     setIsDeleting(true);
-    setErrorMsg('');
+    setErrorMsg("");
 
     try {
       await onDelete(category.id);
       onClose();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Gagal menghapus kategori.';
+      const msg =
+        err instanceof Error ? err.message : "Gagal menghapus kategori.";
       setErrorMsg(msg);
       setConfirmDelete(false);
     } finally {
@@ -138,30 +138,31 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
       <div
-        className="bg-white dark:bg-[#16171f] rounded-[16px] w-full max-w-lg overflow-hidden shadow-whisper border border-hairline dark:border-[#282937] flex flex-col max-h-[92vh] transition-colors duration-200"
+        className="bg-surface rounded-[16px] w-full max-w-lg overflow-hidden shadow-whisper border border-hairline flex flex-col max-h-[92vh] transition-colors duration-200"
         role="dialog"
         aria-modal="true"
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-hairline dark:border-[#282937] shrink-0">
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-hairline shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-[10px] bg-brand-soft flex items-center justify-center text-brand-text dark:text-[#a78bfa] shrink-0">
+            <div className="w-9 h-9 rounded-[10px] bg-brand-soft flex items-center justify-center text-brand-text shrink-0">
               <Layers className="w-4.5 h-4.5" />
             </div>
             <div>
-              <h2 className="font-bold text-base text-ink dark:text-[#f3f4f8] tracking-[-0.5px]">
-                {isEditing ? 'Edit Kategori Transaksi' : 'Tambah Kategori Baru'}
+              <h2 className="font-bold text-base text-ink tracking-[-0.5px]">
+                {isEditing ? "Edit Kategori Transaksi" : "Tambah Kategori Baru"}
               </h2>
-              <p className="text-[11px] text-ink-muted dark:text-[#9ca0ba]">
+              <p className="text-[11px] text-ink-muted">
                 {isEditing
-                  ? 'Sesuaikan nama, tipe, dan icon visual kategori'
-                  : 'Buat pos kategori baru untuk pengeluaran atau pemasukan'}
+                  ? "Sesuaikan nama, tipe, dan icon visual kategori"
+                  : "Buat pos kategori baru untuk pengeluaran atau pemasukan"}
               </p>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-[8px] flex items-center justify-center text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8] hover:bg-surface-sunken dark:hover:bg-[#1e202b] transition-colors"
+            className="w-8 h-8 rounded-[8px] flex items-center justify-center text-ink-muted hover:text-ink hover:bg-surface-sunken transition-colors"
             aria-label="Tutup"
           >
             <X className="w-4 h-4" />
@@ -169,38 +170,46 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
         </div>
 
         {/* Modal Form Body */}
-        <form onSubmit={handleSubmit} className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-4"
+        >
           {errorMsg && (
-            <div className="p-3 rounded-[12px] bg-[#e53e3e]/10 border border-[#e53e3e]/20 text-[#e53e3e] dark:text-[#f87171] text-xs flex items-center gap-2 animate-in fade-in">
+            <div className="p-3 rounded-[12px] bg-negative/10 border border-negative/20 text-negative-bright text-xs flex items-center gap-2 animate-in fade-in">
               <AlertTriangle className="w-4 h-4 shrink-0" />
               <span>{errorMsg}</span>
             </div>
           )}
 
           {/* Live Preview Card */}
-          <div className="p-3.5 rounded-[12px] bg-canvas dark:bg-[#1e202b] border border-hairline dark:border-[#282937] flex items-center justify-between">
+          <div className="p-3.5 rounded-[12px] bg-canvas border border-hairline flex items-center justify-between">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-[10px] bg-white dark:bg-[#282937] border border-hairline dark:border-[#35374d] flex items-center justify-center text-brand-text dark:text-[#a78bfa] shadow-micro shrink-0">
-                <CategoryIcon icon={selectedIconId} name={name} type={type} size="md" />
+              <div className="w-10 h-10 rounded-[10px] bg-surface border border-hairline dark:border-[#35374d] flex items-center justify-center text-brand-text shadow-micro shrink-0">
+                <CategoryIcon
+                  icon={selectedIconId}
+                  name={name}
+                  type={type}
+                  size="md"
+                />
               </div>
               <div className="min-w-0">
                 <span className="text-[10px] uppercase font-bold text-ink-subtle tracking-wider block">
                   Pratinjau Kategori
                 </span>
-                <span className="font-bold text-sm text-ink dark:text-[#f3f4f8] block truncate">
-                  {name.trim() || 'Nama Kategori'}
+                <span className="font-bold text-sm text-ink block truncate">
+                  {name.trim() || "Nama Kategori"}
                 </span>
               </div>
             </div>
 
             <span
               className={`text-[10px] font-bold px-2.5 py-1 rounded-[6px] shrink-0 ${
-                type === 'pemasukan'
-                  ? 'bg-[#149e61]/12 text-[#026b3f] dark:text-[#34d399]'
-                  : 'bg-[#e53e3e]/12 text-[#e53e3e] dark:text-[#f87171]'
+                type === "pemasukan"
+                  ? "bg-positive/12 text-positive"
+                  : "bg-negative/12 text-negative-bright"
               }`}
             >
-              {type === 'pemasukan' ? 'Pemasukan' : 'Pengeluaran'}
+              {type === "pemasukan" ? "Pemasukan" : "Pengeluaran"}
             </span>
           </div>
 
@@ -208,9 +217,9 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
           <div>
             <label
               htmlFor="category-name-input"
-              className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted dark:text-[#9ca0ba] block mb-1.5"
+              className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted block mb-1.5"
             >
-              Nama Kategori <span className="text-[#e53e3e]">*</span>
+              Nama Kategori <span className="text-negative-bright">*</span>
             </label>
             <input
               id="category-name-input"
@@ -219,7 +228,7 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Contoh: Gym & Olahraga, Liburan, Netflix..."
-              className="w-full px-3.5 py-2.5 rounded-[12px] bg-canvas dark:bg-[#13141c] border border-hairline dark:border-[#282937] text-sm font-medium text-ink dark:text-[#f3f4f8] outline-none focus:border-brand focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
+              className="w-full px-3.5 py-2.5 rounded-[12px] bg-canvas border border-hairline text-sm font-medium text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 transition-all"
               required
               autoFocus
             />
@@ -227,28 +236,28 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
 
           {/* Tipe Transaksi: Pengeluaran vs Pemasukan */}
           <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted dark:text-[#9ca0ba] block mb-1.5">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted block mb-1.5">
               Klasifikasi Jenis Transaksi
             </span>
-            <div className="grid grid-cols-2 gap-2 p-1 bg-surface-sunken dark:bg-[#1e202b] rounded-[12px] border border-hairline dark:border-[#282937]">
+            <div className="grid grid-cols-2 gap-2 p-1 bg-surface-sunken rounded-[12px] border border-hairline">
               <button
                 type="button"
-                onClick={() => setType('pengeluaran')}
+                onClick={() => setType("pengeluaran")}
                 className={`py-2 px-3 rounded-[9px] text-xs font-bold transition-all text-center ${
-                  type === 'pengeluaran'
-                    ? 'bg-white dark:bg-[#282937] text-[#e53e3e] dark:text-[#f87171] shadow-micro'
-                    : 'text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8]'
+                  type === "pengeluaran"
+                    ? "bg-surface text-negative-bright shadow-micro"
+                    : "text-ink-muted hover:text-ink"
                 }`}
               >
                 Pengeluaran (Keluar)
               </button>
               <button
                 type="button"
-                onClick={() => setType('pemasukan')}
+                onClick={() => setType("pemasukan")}
                 className={`py-2 px-3 rounded-[9px] text-xs font-bold transition-all text-center ${
-                  type === 'pemasukan'
-                    ? 'bg-white dark:bg-[#282937] text-[#026b3f] dark:text-[#34d399] shadow-micro'
-                    : 'text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8]'
+                  type === "pemasukan"
+                    ? "bg-surface text-positive shadow-micro"
+                    : "text-ink-muted hover:text-ink"
                 }`}
               >
                 Pemasukan (Masuk)
@@ -261,12 +270,12 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
             <div className="flex items-center justify-between">
               <label
                 htmlFor="category-icon-search"
-                className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted dark:text-[#9ca0ba]"
+                className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted"
               >
                 Pilihan Ikon ({CATEGORY_ICON_LIST.length} Tersedia)
               </label>
               {selectedIconId && (
-                <span className="text-[11px] font-semibold text-brand-text dark:text-[#a78bfa]">
+                <span className="text-[11px] font-semibold text-brand-text">
                   Dipilih: {selectedIconId}
                 </span>
               )}
@@ -282,7 +291,7 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari ikon (contoh: kopi, mobil, uang, game)..."
-                className="w-full pl-8 pr-3 py-1.5 rounded-[10px] bg-canvas dark:bg-[#13141c] border border-hairline dark:border-[#282937] text-xs text-ink dark:text-[#f3f4f8] outline-none focus:border-brand transition-all"
+                className="w-full pl-8 pr-3 py-1.5 rounded-[10px] bg-canvas border border-hairline text-xs text-ink outline-none focus:border-brand transition-all"
               />
             </div>
 
@@ -295,8 +304,8 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
                   onClick={() => setSelectedGroup(grp)}
                   className={`shrink-0 px-2.5 py-1 rounded-[8px] text-[11px] font-bold transition-all ${
                     selectedGroup === grp
-                      ? 'bg-brand text-white shadow-micro'
-                      : 'bg-surface-sunken dark:bg-[#1e202b] text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8]'
+                      ? "bg-brand text-white shadow-micro"
+                      : "bg-surface-sunken text-ink-muted hover:text-ink"
                   }`}
                 >
                   {grp}
@@ -305,7 +314,7 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
             </div>
 
             {/* Icon Grid */}
-            <div className="grid grid-cols-6 sm:grid-cols-8 gap-2 p-2 rounded-[12px] bg-canvas dark:bg-[#13141c] border border-hairline dark:border-[#282937] max-h-48 overflow-y-auto">
+            <div className="grid grid-cols-6 sm:grid-cols-8 gap-2 p-2 rounded-[12px] bg-canvas border border-hairline max-h-48 overflow-y-auto">
               {filteredIcons.length === 0 ? (
                 <div className="col-span-full py-8 text-center text-xs text-ink-subtle">
                   Tidak ada ikon yang sesuai dengan pencarian
@@ -322,11 +331,14 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
                       title={`${item.label} (${item.id})`}
                       className={`relative h-10 rounded-[10px] flex items-center justify-center transition-all ${
                         isSelected
-                          ? 'bg-brand-soft text-brand-text dark:text-[#a78bfa] ring-2 ring-brand shadow-micro scale-105'
-                          : 'bg-white dark:bg-[#1e202b] text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8] hover:bg-surface-sunken dark:hover:bg-[#282937] border border-[#dedee5]/70 dark:border-[#282937]'
+                          ? "bg-brand-soft text-brand-text ring-2 ring-brand shadow-micro scale-105"
+                          : "bg-surface text-ink-muted hover:text-ink hover:bg-surface-sunken border border-hairline/70"
                       }`}
                     >
-                      <IconComp className="w-4.5 h-4.5" strokeWidth={isSelected ? 2.5 : 2} />
+                      <IconComp
+                        className="w-4.5 h-4.5"
+                        strokeWidth={isSelected ? 2.5 : 2}
+                      />
                       {isSelected && (
                         <div className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-brand" />
                       )}
@@ -338,7 +350,7 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
           </div>
 
           {/* Action Buttons */}
-          <div className="pt-2 flex items-center justify-between gap-3 border-t border-hairline dark:border-[#282937]">
+          <div className="pt-2 flex items-center justify-between gap-3 border-t border-hairline">
             {isEditing && onDelete ? (
               <button
                 type="button"
@@ -346,12 +358,12 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
                 disabled={isDeleting || isSubmitting}
                 className={`text-xs py-2 px-3 rounded-[10px] font-bold flex items-center gap-1.5 transition-all ${
                   confirmDelete
-                    ? 'bg-[#e53e3e] text-white hover:bg-[#c53030]'
-                    : 'text-[#e53e3e] hover:bg-[#e53e3e]/10 border border-[#e53e3e]/20'
+                    ? "bg-negative text-white hover:bg-negative"
+                    : "text-negative-bright hover:bg-negative/10 border border-negative/20"
                 }`}
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>{confirmDelete ? 'Yakin Hapus?' : 'Hapus'}</span>
+                <span>{confirmDelete ? "Yakin Hapus?" : "Hapus"}</span>
               </button>
             ) : (
               <div />
@@ -362,7 +374,7 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
                 type="button"
                 onClick={onClose}
                 disabled={isSubmitting || isDeleting}
-                className="px-4 py-2 rounded-[10px] text-xs font-bold text-ink-muted dark:text-[#9ca0ba] hover:bg-surface-sunken dark:hover:bg-[#1e202b] transition-all"
+                className="px-4 py-2 rounded-[10px] text-xs font-bold text-ink-muted hover:bg-surface-sunken transition-all"
               >
                 Batal
               </button>
@@ -376,7 +388,9 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
                 ) : (
                   <Check className="w-3.5 h-3.5 stroke-[2.5]" />
                 )}
-                <span>{isEditing ? 'Simpan Perubahan' : 'Tambah Kategori'}</span>
+                <span>
+                  {isEditing ? "Simpan Perubahan" : "Tambah Kategori"}
+                </span>
               </button>
             </div>
           </div>
@@ -397,7 +411,7 @@ export const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
 
   return (
     <EditCategoryModalContent
-      key={category?.id || 'new-category'}
+      key={category?.id || "new-category"}
       category={category}
       onClose={onClose}
       onSave={onSave}

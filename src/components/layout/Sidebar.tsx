@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   LayoutDashboard,
   Wallet,
@@ -10,16 +10,16 @@ import {
   Moon,
   BarChart3,
   Mic,
-} from 'lucide-react';
-import type { NavTab } from './BottomNav';
-import { SyncBadge } from './SyncBadge';
-import { useTheme } from '../../contexts/themeStore';
-import { ThemeMenuDropdown } from './ThemeMenuDropdown';
+} from "lucide-react";
+import type { NavTab } from "./BottomNav";
+import { SyncBadge } from "./SyncBadge";
+import { useTheme } from "../../contexts/themeStore";
+import { ThemeMenuDropdown } from "./ThemeMenuDropdown";
 
 interface SidebarProps {
   activeTab: NavTab;
   onChangeTab: (tab: NavTab) => void;
-  onOpenSettings: (tab?: 'akun' | 'kategori' | 'tampilan' | 'backend') => void;
+  onOpenSettings: (tab?: "akun" | "kategori" | "tampilan" | "backend") => void;
   onOpenVoiceModal?: () => void;
   isRefreshing?: boolean;
   isLoading?: boolean;
@@ -41,39 +41,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { isDark, toggleTheme, currentConfig } = useTheme();
 
-  const navItems: { id: NavTab; label: string; icon: React.FC<{ className?: string }> }[] = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'riwayat', label: 'Riwayat Transaksi', icon: History },
-    { id: 'report', label: 'Laporan & Grafik', icon: BarChart3 },
-    { id: 'saldo', label: 'Saldo & Rekening', icon: Wallet },
-    { id: 'tagihan', label: 'Tagihan & Pinjaman', icon: CreditCard },
+  const navItems: {
+    id: NavTab;
+    label: string;
+    icon: React.FC<{ className?: string }>;
+  }[] = [
+    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { id: "riwayat", label: "Riwayat Transaksi", icon: History },
+    { id: "report", label: "Laporan & Grafik", icon: BarChart3 },
+    { id: "saldo", label: "Saldo & Rekening", icon: Wallet },
+    { id: "tagihan", label: "Tagihan & Pinjaman", icon: CreditCard },
   ];
 
   return (
-    <aside className="hidden md:flex flex-col justify-between w-64 lg:w-72 h-screen sticky top-0 bg-white dark:bg-[#16171f] border-r border-hairline dark:border-[#282937] p-4 lg:p-5 select-none shrink-0 shadow-[1px_0_12px_rgba(0,0,0,0.02)] dark:shadow-[1px_0_12px_rgba(0,0,0,0.3)] z-30 transition-colors duration-200 overflow-y-auto overflow-x-hidden">
+    <aside className="hidden lg:flex flex-col justify-between w-64 xl:w-72 h-screen sticky top-0 bg-surface border-r border-hairline p-4 xl:p-5 select-none shrink-0 shadow-[1px_0_12px_rgba(0,0,0,0.02)] dark:shadow-[1px_0_12px_rgba(0,0,0,0.3)] z-30 transition-colors duration-200 overflow-y-auto overflow-x-hidden">
       {/* Top Portion: Brand, Theme Switcher & Navigation */}
       <div className="space-y-4">
         {/* Brand Header */}
-        <div
-          onClick={() => onChangeTab('dashboard')}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              onChangeTab('dashboard');
-            }
-          }}
-          className="flex items-center gap-3 cursor-pointer group"
-          role="button"
-          tabIndex={0}
-          aria-label="Buka dashboard"
-        >
+        <div className="flex items-center gap-3">
           <div
             className="w-10 h-10 rounded-[12px] flex items-center justify-center shadow-micro transition-colors shrink-0"
             style={{ backgroundColor: currentConfig.primaryColor }}
           >
-            <Wallet className={`w-5 h-5 stroke-[2.2] ${currentConfig.id === 'theverge' ? 'text-black' : 'text-white'}`} />
+            <Wallet
+              className={`w-5 h-5 stroke-[2.2] ${currentConfig.id === "theverge" ? "text-black" : "text-white"}`}
+            />
           </div>
-          <span className="font-bold text-base text-ink dark:text-[#f3f4f8] tracking-[-0.5px] truncate">
+          <span className="font-bold text-base text-ink tracking-[-0.5px] truncate">
             Financial Tracker
           </span>
         </div>
@@ -81,11 +75,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Primary CTA: Catat Transaksi & Voice Button */}
         <div className="flex items-center gap-1.5">
           <button
-            onClick={() => onChangeTab('input')}
+            type="button"
+            onClick={() => onChangeTab("input")}
             className={`flex-1 py-2.5 px-3 rounded-[12px] text-xs font-bold flex items-center justify-center gap-2 shadow-whisper transition-all active:scale-[0.98] btn-kraken-primary ${
-              activeTab === 'input'
-                ? 'ring-2 ring-black/25 dark:ring-white/30 brightness-95'
-                : ''
+              activeTab === "input"
+                ? "ring-2 ring-black/25 dark:ring-white/30 brightness-95"
+                : ""
             }`}
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
@@ -95,7 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <button
               type="button"
               onClick={onOpenVoiceModal}
-              className="w-10 h-10 rounded-[12px] flex items-center justify-center border border-hairline dark:border-[#282937] bg-canvas dark:bg-[#1e202b] text-brand-text dark:text-[#3cffd0] hover:bg-surface-sunken dark:hover:bg-[#282937] transition-all shadow-micro shrink-0 active:scale-95 group"
+              className="w-10 h-10 rounded-[12px] flex items-center justify-center border border-hairline bg-canvas text-brand-text dark:text-[#3cffd0] hover:bg-surface-sunken transition-all shadow-micro shrink-0 active:scale-95 group"
               title="Input Transaksi Pakai Suara"
               aria-label="Input Transaksi Pakai Suara"
             >
@@ -106,7 +101,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Main Navigation Menu */}
         <nav className="space-y-1 pt-1">
-          <span className="text-[10px] uppercase font-bold text-ink-subtle dark:text-[#767993] tracking-wider px-3 mb-1.5 block">
+          <span className="text-[10px] uppercase font-bold text-ink-subtle tracking-wider px-3 mb-1.5 block">
             Menu Utama
           </span>
 
@@ -116,19 +111,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             return (
               <button
+                type="button"
                 key={item.id}
                 onClick={() => onChangeTab(item.id)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-[12px] text-xs font-bold transition-all text-left group ${
                   isActive
-                    ? 'bg-brand-soft text-brand-text dark:text-[#a78bfa] shadow-micro border border-[#855bfb]/20'
-                    : 'text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8] hover:bg-surface-sunken dark:hover:bg-[#1e202b]'
+                    ? "bg-brand-soft text-brand-text shadow-micro border border-brand"
+                    : "text-ink-muted hover:text-ink hover:bg-surface-sunken"
                 }`}
               >
                 <div
                   className={`w-7 h-7 rounded-[8px] flex items-center justify-center transition-colors ${
                     isActive
-                      ? 'bg-brand text-white'
-                      : 'bg-surface-sunken dark:bg-[#232534] text-ink-muted dark:text-[#9ca0ba] group-hover:text-ink dark:group-hover:text-[#f3f4f8] group-hover:bg-[#dedee5] dark:group-hover:bg-[#2d3042]'
+                      ? "bg-brand text-white"
+                      : "bg-surface-sunken text-ink-muted group-hover:text-ink group-hover:bg-hairline"
                   }`}
                 >
                   <Icon className="w-4 h-4 stroke-[2.2]" />
@@ -141,29 +137,35 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Bottom Portion: Theme Dropup, Quick Theme Toggle, Sync & Settings */}
-      <div className="pt-3 border-t border-hairline dark:border-[#282937] space-y-2 mt-4">
+      <div className="pt-3 border-t border-hairline space-y-2 mt-4">
         {/* Dropup Theme Selector (Opens UPWARDS so it is never cut off!) */}
         <div className="w-full">
-          <ThemeMenuDropdown onOpenSettings={onOpenSettings} align="left" variant="sidebar" direction="up" />
+          <ThemeMenuDropdown
+            onOpenSettings={onOpenSettings}
+            align="left"
+            variant="sidebar"
+            direction="up"
+          />
         </div>
 
         {/* Quick Theme Toggle & Sync Row */}
         <div className="flex items-center gap-1.5">
           <button
+            type="button"
             onClick={toggleTheme}
-            className="flex-1 py-2 px-2.5 rounded-[10px] hover:bg-surface-sunken dark:hover:bg-[#1e202b] text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8] text-xs font-semibold flex items-center justify-between border border-hairline dark:border-[#282937] transition-colors"
-            title={isDark ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
+            className="flex-1 py-2 px-2.5 rounded-[10px] hover:bg-surface-sunken text-ink-muted hover:text-ink text-xs font-semibold flex items-center justify-between border border-hairline transition-colors"
+            title={isDark ? "Ganti ke Mode Terang" : "Ganti ke Mode Gelap"}
           >
             <div className="flex items-center gap-1.5">
               {isDark ? (
-                <Sun className="w-3.5 h-3.5 text-[#f59e0b]" />
+                <Sun className="w-3.5 h-3.5 text-warning-bright" />
               ) : (
                 <Moon className="w-3.5 h-3.5 text-brand-text" />
               )}
-              <span className="text-[11px]">{isDark ? 'Terang' : 'Gelap'}</span>
+              <span className="text-[11px]">{isDark ? "Terang" : "Gelap"}</span>
             </div>
-            <span className="text-[9px] font-bold uppercase tracking-wider text-ink-subtle dark:text-[#767993]">
-              {isDark ? 'Dark' : 'Light'}
+            <span className="text-[9px] font-bold uppercase tracking-wider text-ink-subtle">
+              {isDark ? "Dark" : "Light"}
             </span>
           </button>
 
@@ -182,10 +184,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Settings Button */}
         <button
+          type="button"
           onClick={() => onOpenSettings()}
-          className="w-full py-2 px-3 rounded-[10px] hover:bg-surface-sunken dark:hover:bg-[#1e202b] text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8] text-xs font-semibold flex items-center gap-2 transition-colors border border-transparent hover:border-hairline dark:hover:border-[#282937]"
+          className="w-full py-2 px-3 rounded-[10px] hover:bg-surface-sunken text-ink-muted hover:text-ink text-xs font-semibold flex items-center gap-2 transition-colors border border-transparent hover:border-hairline"
         >
-          <Settings className="w-4 h-4 text-ink-muted dark:text-[#9ca0ba]" />
+          <Settings className="w-4 h-4 text-ink-muted" />
           <span>Pengaturan Aplikasi</span>
         </button>
       </div>

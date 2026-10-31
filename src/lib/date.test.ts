@@ -8,6 +8,7 @@ import {
   monthRange,
   parseISODate,
   shiftLocalDays,
+  shiftMonthKey,
   startOfLocalMonth,
   toLocalISODate,
   todayLocalISO,
@@ -171,5 +172,45 @@ describe('monthRange', () => {
     expect(monthRange('2026')).toBeNull();
     expect(monthRange('2026-00')).toBeNull();
     expect(monthRange('2026-13')).toBeNull();
+  });
+});
+
+describe('shiftMonthKey', () => {
+  it('moves forward within a year', () => {
+    expect(shiftMonthKey('2026-03', 1)).toBe('2026-04');
+  });
+
+  it('moves backward within a year', () => {
+    expect(shiftMonthKey('2026-03', -1)).toBe('2026-02');
+  });
+
+  it('rolls the year over going back from January', () => {
+    // Hand-rolled `month - 1` arithmetic produces "2026-00" here.
+    expect(shiftMonthKey('2026-01', -1)).toBe('2025-12');
+  });
+
+  it('rolls the year over going forward from December', () => {
+    expect(shiftMonthKey('2026-12', 1)).toBe('2027-01');
+  });
+
+  it('handles offsets larger than a year', () => {
+    expect(shiftMonthKey('2026-05', 14)).toBe('2027-07');
+    expect(shiftMonthKey('2026-05', -14)).toBe('2025-03');
+  });
+
+  it('pads single-digit months', () => {
+    expect(shiftMonthKey('2026-09', 1)).toBe('2026-10');
+    expect(shiftMonthKey('2026-10', -1)).toBe('2026-09');
+  });
+
+  it('returns a malformed key untouched instead of NaN-NaN', () => {
+    expect(shiftMonthKey('', -1)).toBe('');
+    expect(shiftMonthKey('2026', -1)).toBe('2026');
+    expect(shiftMonthKey('2026-00', -1)).toBe('2026-00');
+    expect(shiftMonthKey('2026-13', 1)).toBe('2026-13');
+  });
+
+  it('round-trips: two opposite shifts land on the original key', () => {
+    expect(shiftMonthKey(shiftMonthKey('2026-01', -1), 1)).toBe('2026-01');
   });
 });

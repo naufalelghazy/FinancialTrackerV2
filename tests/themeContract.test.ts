@@ -35,6 +35,32 @@ const REQUIRED_TOKENS = [
   '--border-strong',
 ];
 
+/**
+ * Tokens that only need to exist once, on `:root` and `.dark`.
+ *
+ * Semantic colours are global on purpose: money in must read as positive in
+ * every design system rather than being re-tuned per theme. The bills-card
+ * gradient works the same way -- a theme that wants a different card overrides
+ * these four values instead of re-declaring the whole gradient. All of them
+ * inherit into every `[data-theme]` scope, so requiring them per theme would
+ * only add copy-paste.
+ */
+const GLOBAL_ONLY_TOKENS = [
+  '--positive',
+  '--positive-bright',
+  '--positive-soft',
+  '--negative',
+  '--negative-bright',
+  '--negative-soft',
+  '--warning',
+  '--warning-bright',
+  '--warning-soft',
+  '--debt-from',
+  '--debt-to',
+  '--debt-border',
+  '--debt-shadow',
+];
+
 /** Extracts the declaration block that follows a selector. */
 function blockFor(selector: string): string {
   const start = css.indexOf(selector);
@@ -55,7 +81,7 @@ describe('theme token contract', () => {
 
   it('defines the full token set on :root (Kraken baseline)', () => {
     const root = blockFor(':root');
-    REQUIRED_TOKENS.forEach((token) => {
+    [...REQUIRED_TOKENS, ...GLOBAL_ONLY_TOKENS].forEach((token) => {
       expect(root, `:root is missing ${token}`).toContain(`${token}:`);
     });
   });
@@ -63,9 +89,11 @@ describe('theme token contract', () => {
   it('overrides every token in the dark baseline', () => {
     const dark = blockFor('.dark {');
     // --on-brand intentionally stays white in dark mode for every system.
-    REQUIRED_TOKENS.filter((token) => token !== '--on-brand').forEach((token) => {
-      expect(dark, `.dark is missing ${token}`).toContain(`${token}:`);
-    });
+    [...REQUIRED_TOKENS, ...GLOBAL_ONLY_TOKENS]
+      .filter((token) => token !== '--on-brand')
+      .forEach((token) => {
+        expect(dark, `.dark is missing ${token}`).toContain(`${token}:`);
+      });
   });
 
   it.each(THEMES)('%s defines the full token set for light mode', (theme) => {
@@ -85,11 +113,22 @@ describe('theme token contract', () => {
   });
 
   it('uses a readable text colour on each brand fill', () => {
-    // Mint and MongoDB green are light fills: white text on them is unreadable.
+    // Mint is a light fill: white text on it is unreadable.
     expect(blockFor('[data-theme=theverge] {')).toContain('--on-brand: #000000');
-    expect(blockFor('[data-theme=mongodb] {')).toContain('--on-brand: #001e2b');
+    // MongoDB's fill is a deep teal-green now, so white text is correct.
+    expect(blockFor('[data-theme=mongodb] {')).toContain('--on-brand: #ffffff');
     // Coinbase blue and Kraken purple are dark fills: white text is correct.
     expect(blockFor('[data-theme=coinbase] {')).toContain('--on-brand: #ffffff');
+  });
+
+  it('keeps MongoDB brand fills dark enough for white text', () => {
+    // Regression: #00ed64 as a large fill glares against a white canvas.
+    const block = blockFor('[data-theme=mongodb] {');
+    expect(block).toContain('--brand-primary: #00684a');
+    expect(block).not.toContain('--brand-primary: #00ed64');
+
+    // Dark mode cannot use such a deep green on a dark canvas.
+    expect(blockFor('[data-theme=mongodb].dark {')).toContain('--brand-primary: #00a845');
   });
 });
 
@@ -108,17 +147,28 @@ describe('legacy override cleanup', () => {
     expect(lines).toBeLessThan(900);
   });
 
-  it('has far fewer !important declarations than before', () => {
+  it('no longer needs !important to beat hard-coded utilities', () => {
+    // The bridge carried ~34 `!important` declarations to force theme tokens
+    // over hex utilities in the markup. Once the markup uses the tokens
+    // directly, none of it is needed. Two remain in explanatory comments.
     const count = (css.match(/!important/g) ?? []).length;
-    expect(count).toBeLessThan(120);
+    expect(count).toBeLessThanOrEqual(2);
   });
 });
 
 describe('compatibility bridge', () => {
-  it('still maps the legacy brand utility onto the token', () => {
-    // Until every hex utility is gone from the markup, this rule is what makes
-    // `bg-[#7132f5]` follow the active theme.
-    expect(css).toContain('.bg-\\[\\#7132f5\\]');
-    expect(css).toContain('background-color: var(--brand-primary) !important');
+  it('is gone: the markup no longer relies on a hex-to-token override layer', () => {
+    // Regression guard in the opposite direction. If a hex utility is ever
+    // reintroduced *and* relied upon for theming, this fails and points at the
+    // block that used to paper over it.
+    const escapedHexSelectors = css.match(/^[^{}\n]*\.(?:bg|text|border|ring|divide|outline|focus)[^{}\n]*\\\[\\#/gm) ?? [];
+    expect(escapedHexSelectors).toEqual([]);
+    expect(css).not.toContain('LEGACY COMPATIBILITY BRIDGE');
+  });
+
+  it('has no per-theme override blocks competing with utilities', () => {
+    // `[data-theme=x] .some-class { … !important }` was the original problem.
+    const overrides = css.match(/\[data-theme=\w+\][^{]*\{[^}]*!important[^}]*\}/g) ?? [];
+    expect(overrides).toHaveLength(0);
   });
 });

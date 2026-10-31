@@ -1,6 +1,7 @@
 import { loadSupabase, isSupabaseConfigured, SUPABASE_SESSION_HINT } from '../lib/supabase';
 import type { Account, AccountType, Category, Transaction, TransactionType } from '../types';
 import { INITIAL_ACCOUNTS, INITIAL_CATEGORIES } from '../lib/constants';
+import { compareAccountsByDisplayOrder } from '../lib/accountOrder';
 import { getLogoDevUrl, getLocalFallback, LOCAL_FALLBACK_ICONS, BANK_DOMAIN_MAP } from './logoService';
 import { classifyWriteError, isBrowserOffline, PermanentWriteError } from '../lib/errors';
 import { isUuid } from '../lib/uuid';
@@ -205,6 +206,9 @@ export function mapAccountRow(row: Record<string, unknown>): Account {
     icon: getAccountIcon(name, website, nullableId(row.icon_url)),
     initialBalance: Number(row.initial_balance ?? 0) || 0,
     balance: Number(row.initial_balance ?? 0) || 0,
+    sortOrder: row.sort_order === null || row.sort_order === undefined
+      ? undefined
+      : Number(row.sort_order),
   };
 }
 
@@ -299,6 +303,13 @@ export async function loadFinancialData(): Promise<FinancialData> {
     const rawAccounts = (accRes.data || []).map((row) =>
       mapAccountRow(row as Record<string, unknown>)
     );
+
+    // A custom order beats the alphabetical one from the query. Both sides are
+    // kept: the server response is still `order('name')` so an older database
+    // without `sort_order` keeps working.
+    const accountsByOrder = [...rawAccounts].sort(compareAccountsByDisplayOrder);
+    rawAccounts.length = 0;
+    rawAccounts.push(...accountsByOrder);
 
     // Remember which ids exist server-side so a later offline edit is queued as
     // an update instead of an insert against a uuid that already exists.
@@ -511,16 +522,40 @@ export interface AccountInput {
   type: AccountType;
   website?: string;
   initialBalance: number;
+  sortOrder?: number;
 }
 
 function accountValues(account: AccountInput): Record<string, unknown> {
-  return {
+  const values: Record<string, unknown> = {
     name: account.name,
     type: account.type,
     website: account.website || null,
     icon_url: getAccountIcon(account.name, account.website),
     initial_balance: account.initialBalance,
   };
+  // Only sent when known, so an older deployment whose `accounts` table has no
+  // `sort_order` column keeps accepting edits instead of rejecting every write.
+  if (account.sortOrder !== undefined) values.sort_order = account.sortOrder;
+  return values;
+}
+
+/**
+ * Persists a new display order for the Saldo list.
+ *
+ * One `update` per account, because that is the shape `performWrite` already
+ * guarantees: each row is either accepted or queued for retry independently.
+ * A partial failure therefore leaves a usable list, never a half-renumbered one
+ * applied to the wrong accounts.
+ */
+export async function reorderAccountsInDatabase(
+  orderedIds: string[]
+): Promise<{ queued: boolean }> {
+  let queued = false;
+  for (const [index, id] of orderedIds.entries()) {
+    const result = await performWrite('accounts', 'update', id, { sort_order: index });
+    queued = queued || result.queued;
+  }
+  return { queued };
 }
 
 export async function addAccountToDatabase(account: AccountInput): Promise<Account> {

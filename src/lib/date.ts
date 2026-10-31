@@ -118,3 +118,23 @@ export function monthRange(monthKey: string): { start: string; end: string } | n
   const end = new Date(year, month, 0);
   return { start: toLocalISODate(start), end: toLocalISODate(end) };
 }
+
+/**
+ * Moves a `YYYY-MM` key by whole months.
+ *
+ * `2026-01` shifted by -1 is `2025-12`: the year has to roll over, which is the
+ * part hand-rolled `month - 1` arithmetic gets wrong. A malformed input is
+ * returned untouched so a bad stored value cannot turn into `NaN-NaN`.
+ */
+export function shiftMonthKey(monthKey: string, deltaMonths: number): string {
+  const parts = monthKey.split('-');
+  if (parts.length !== 2) return monthKey;
+  const year = Number(parts[0]);
+  const month = Number(parts[1]);
+  if (!year || !month || month < 1 || month > 12) return monthKey;
+
+  // Normalise through a Date at local midnight on the 1st: `setMonth` handles
+  // negative and >12 offsets, including the year boundary.
+  const shifted = new Date(year, month - 1 + deltaMonths, 1);
+  return `${shifted.getFullYear()}-${pad2(shifted.getMonth() + 1)}`;
+}

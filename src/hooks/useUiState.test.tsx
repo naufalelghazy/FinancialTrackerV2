@@ -2,10 +2,30 @@ import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useUiState } from './useUiState';
 import { installLocalStorage } from '../test/setup';
+import { markNextLoadAsReload } from '../lib/sessionFlag';
 import type { Account, Category, QuickTemplate, Transaction } from '../types';
+
+function installSessionStorage(): void {
+  const store = new Map<string, string>();
+  Object.defineProperty(globalThis, 'sessionStorage', {
+    value: {
+      getItem: (k: string) => (store.has(k) ? store.get(k)! : null),
+      setItem: (k: string, v: string) => void store.set(k, String(v)),
+      removeItem: (k: string) => void store.delete(k),
+      clear: () => store.clear(),
+      key: (i: number) => Array.from(store.keys())[i] ?? null,
+      get length() {
+        return store.size;
+      },
+    },
+    configurable: true,
+    writable: true,
+  });
+}
 
 beforeEach(() => {
   installLocalStorage();
+  installSessionStorage();
 });
 
 function account(id: string): Account {
@@ -24,7 +44,7 @@ function transaction(id: string): Transaction {
 }
 
 describe('useUiState - navigation', () => {
-  it('starts on the dashboard', () => {
+  it('starts on the dashboard when nothing was visited before', () => {
     const { result } = renderHook(() => useUiState());
     expect(result.current.activeTab).toBe('dashboard');
   });
@@ -38,6 +58,55 @@ describe('useUiState - navigation', () => {
   it('defaults the history filter to all accounts', () => {
     const { result } = renderHook(() => useUiState());
     expect(result.current.historyAccountFilterId).toBe('all');
+  });
+});
+
+describe('useUiState - restores the last visited page', () => {
+  it('remembers a tab that was visited', () => {
+    const first = renderHook(() => useUiState());
+    act(() => first.result.current.setActiveTab('report'));
+
+    // A fresh mount stands in for closing and reopening the app.
+    const second = renderHook(() => useUiState());
+    expect(second.result.current.activeTab).toBe('report');
+    expect(localStorage.getItem('ft_last_tab')).toBe('report');
+  });
+
+  it('does not open on the input tab after a fresh launch', () => {
+    localStorage.setItem('ft_last_tab', 'input');
+    const { result } = renderHook(() => useUiState());
+    expect(result.current.activeTab).toBe('dashboard');
+  });
+
+  it('does restore the input tab after a reload', () => {
+    localStorage.setItem('ft_last_tab', 'input');
+    markNextLoadAsReload();
+
+    const { result } = renderHook(() => useUiState());
+    expect(result.current.activeTab).toBe('input');
+  });
+
+  it('restores any tab after a reload', () => {
+    localStorage.setItem('ft_last_tab', 'tagihan');
+    markNextLoadAsReload();
+
+    const { result } = renderHook(() => useUiState());
+    expect(result.current.activeTab).toBe('tagihan');
+  });
+
+  it('the reload flag is used up, so the next launch starts clean', () => {
+    localStorage.setItem('ft_last_tab', 'input');
+    markNextLoadAsReload();
+    renderHook(() => useUiState());
+
+    const relaunch = renderHook(() => useUiState());
+    expect(relaunch.result.current.activeTab).toBe('dashboard');
+  });
+
+  it('falls back to the dashboard for an unknown tab', () => {
+    localStorage.setItem('ft_last_tab', 'does-not-exist');
+    const { result } = renderHook(() => useUiState());
+    expect(result.current.activeTab).toBe('dashboard');
   });
 });
 

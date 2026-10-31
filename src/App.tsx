@@ -74,7 +74,7 @@ export function App() {
     ui.transactionModal.open({ ...transaction });
 
   return (
-    <div className="min-h-screen bg-canvas text-ink flex flex-col md:flex-row font-sans selection:bg-brand-soft selection:text-brand-text transition-colors duration-200">
+    <div className="min-h-screen bg-canvas text-ink flex flex-col lg:flex-row font-sans selection:bg-brand-soft selection:text-brand-text transition-colors duration-200">
       <Sidebar
         activeTab={ui.activeTab}
         onChangeTab={ui.setActiveTab}
@@ -88,7 +88,7 @@ export function App() {
       />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="md:hidden">
+        <div className="lg:hidden">
           <Header
             activeTab={ui.activeTab}
             onChangeTab={ui.setActiveTab}
@@ -102,7 +102,7 @@ export function App() {
           />
         </div>
 
-        <header className="hidden md:flex items-center justify-between px-6 lg:px-8 h-16 border-b border-hairline bg-surface/80 backdrop-blur-md sticky top-0 z-20">
+        <header className="hidden lg:flex items-center justify-between px-6 lg:px-8 h-16 border-b border-hairline bg-surface/80 backdrop-blur-md sticky top-0 z-20">
           <h1 className="font-bold text-base lg:text-lg text-ink tracking-tight">
             {VIEW_TITLES[ui.activeTab]}
           </h1>
@@ -137,6 +137,10 @@ export function App() {
                   onNavigateTab={ui.setActiveTab}
                   onEditTransaction={openTxEditor}
                   onAddTransaction={() => ui.setActiveTab('input')}
+                  onSelectAccountHistory={(acc) => {
+                    ui.setHistoryAccountFilterId(acc.id);
+                    ui.setActiveTab('riwayat');
+                  }}
                   onUseTemplateDirectly={app.useTemplateDirectly}
                   onEditTemplate={ui.templateModal.open}
                   onAddTemplate={() => ui.templateModal.open(null)}
@@ -166,6 +170,7 @@ export function App() {
                   onToggleHideBalance={ui.toggleHideBalance}
                   onEditAccount={ui.accountModal.open}
                   onAddAccount={() => ui.accountModal.open(null)}
+                  onReorderAccounts={app.reorderAccounts}
                   onSelectAccountHistory={(acc) => {
                     ui.setHistoryAccountFilterId(acc.id);
                     ui.setActiveTab('riwayat');

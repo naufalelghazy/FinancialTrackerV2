@@ -193,6 +193,7 @@ export function useAppState() {
     deleteTransaction: transactions.deleteTransaction,
     saveAccount: accounts.saveAccount,
     deleteAccount: accounts.deleteAccount,
+    reorderAccounts: accounts.reorderAccounts,
     saveCategory: categories.saveCategory,
     deleteCategory: categories.deleteCategory,
 

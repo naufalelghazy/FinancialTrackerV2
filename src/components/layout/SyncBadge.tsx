@@ -37,7 +37,7 @@ export function SyncBadge({
       : 'Sinkronkan data dengan Supabase';
 
   const toneClass = !isOnline
-    ? 'border-[#f59e0b]/40 bg-[#f59e0b]/10 text-[#b45309] dark:text-[#fbbf24]'
+    ? 'border-warning/40 bg-warning-bright/10 text-warning'
     : pendingSyncCount > 0
       ? 'border-brand/40 bg-brand-soft text-brand-text'
       : 'border-hairline hover:border-brand/40 bg-canvas text-ink-muted hover:text-ink';
@@ -53,7 +53,7 @@ export function SyncBadge({
         title={title}
       >
         {!isOnline ? (
-          <WifiOff className="w-3.5 h-3.5 text-[#f59e0b] shrink-0" />
+          <WifiOff className="w-3.5 h-3.5 text-warning-bright shrink-0" />
         ) : (
           <RefreshCw
             className={`w-3.5 h-3.5 shrink-0 ${isRefreshing || isLoading ? 'animate-spin' : ''}`}
@@ -71,7 +71,7 @@ export function SyncBadge({
                 : 'Sinkronkan'}
         </span>
         {pendingSyncCount > 0 && !isOnline && (
-          <span className="w-2 h-2 rounded-full bg-[#f59e0b] animate-pulse" />
+          <span className="w-2 h-2 rounded-full bg-warning-bright animate-pulse" />
         )}
       </button>
     );
@@ -87,7 +87,7 @@ export function SyncBadge({
       className={`relative h-9 px-2.5 sm:px-3 rounded-[10px] border text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50 ${toneClass}`}
     >
       {!isOnline ? (
-        <WifiOff className="w-3.5 h-3.5 text-[#f59e0b] shrink-0" />
+        <WifiOff className="w-3.5 h-3.5 text-warning-bright shrink-0" />
       ) : (
         <RefreshCw
           className={`w-3.5 h-3.5 shrink-0 ${isRefreshing || isLoading ? 'animate-spin' : ''}`}
@@ -101,14 +101,14 @@ export function SyncBadge({
       {pendingSyncCount > 0 ? (
         <span
           data-testid={testId}
-          className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-[#f59e0b] text-white text-[10px] font-bold leading-none tabular-nums shadow-xs"
+          className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-warning-bright text-white text-[10px] font-bold leading-none tabular-nums shadow-xs"
         >
           {pendingSyncCount}
         </span>
       ) : (
         <span
           className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-            isOnline ? 'bg-[#149e61]' : 'bg-[#f59e0b]'
+            isOnline ? 'bg-positive' : 'bg-warning-bright'
           }`}
         />
       )}

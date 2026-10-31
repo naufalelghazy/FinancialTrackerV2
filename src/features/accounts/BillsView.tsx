@@ -28,7 +28,7 @@ export const BillsView: React.FC<BillsViewProps> = ({
   return (
     <div className="space-y-6 pb-24">
       {/* Total Tagihan Card - Red Hero Debt Card */}
-      <div className="hero-debt-card bg-gradient-to-br from-[#dc2626] to-[#b91c1c] text-white rounded-[16px] p-5 sm:p-6 shadow-whisper relative overflow-hidden border border-[#ef4444]/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="hero-debt-card bg-gradient-to-br from-[#dc2626] to-[#b91c1c] text-white rounded-[16px] p-5 sm:p-6 shadow-whisper relative overflow-hidden border border-negative/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="debt-card-header flex items-center gap-2 text-white/90 text-[11px] font-semibold uppercase tracking-wider">
             <CreditCard className="debt-card-icon w-3.5 h-3.5 text-white/90" />
@@ -39,7 +39,7 @@ export const BillsView: React.FC<BillsViewProps> = ({
                 onClick={onToggleHideBalance}
                 title={isBalanceHidden ? 'Tampilkan nominal' : 'Sembunyikan nominal'}
                 aria-label={isBalanceHidden ? 'Tampilkan nominal' : 'Sembunyikan nominal'}
-                className="w-6 h-6 rounded-[6px] bg-white/15 hover:bg-white/25 text-white flex items-center justify-center transition-all cursor-pointer active:scale-95 ml-1"
+                className="w-6 h-6 -m-2.5 p-2.5 box-content rounded-[6px] bg-surface/15 hover:bg-surface/25 text-white flex items-center justify-center transition-all cursor-pointer active:scale-95 ml-1"
               >
                 {isBalanceHidden ? (
                   <EyeOff className="w-3.5 h-3.5" />
@@ -64,7 +64,7 @@ export const BillsView: React.FC<BillsViewProps> = ({
 
       {/* Credit Account Grid */}
       <div className="space-y-3">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-ink-muted dark:text-[#9ca0ba] px-1">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-ink-muted px-1">
           Rincian Kartu Kredit, Paylater & Pinjaman
         </h3>
 
@@ -76,20 +76,20 @@ export const BillsView: React.FC<BillsViewProps> = ({
             return (
               <div
                 key={acc.id}
-                className="group p-4 bg-white dark:bg-[#16171f] rounded-[12px] border border-hairline dark:border-[#282937] shadow-micro transition-all flex items-center justify-between"
+                className="group p-4 bg-surface rounded-[12px] border border-hairline shadow-micro transition-all flex items-center justify-between"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <AccountAvatar acc={acc} />
                   <div className="min-w-0">
-                    <span className="font-bold text-sm text-ink dark:text-[#f3f4f8] block tracking-tight group-hover:text-brand-text transition-colors truncate">
+                    <span className="font-bold text-sm text-ink block tracking-tight group-hover:text-brand-text transition-colors truncate">
                       {acc.name}
                     </span>
-                    <span className="text-[11px] text-ink-muted dark:text-[#9ca0ba] font-medium flex items-center gap-1 mt-0.5">
+                    <span className="text-[11px] text-ink-muted font-medium flex items-center gap-1 mt-0.5">
                       {hasDebt ? (
-                        <span className="text-[#e53e3e] dark:text-[#f87171] font-semibold">Ada Tagihan</span>
+                        <span className="text-negative-bright font-semibold">Ada Tagihan</span>
                       ) : (
-                        <span className="text-[#026b3f] dark:text-[#34d399] flex items-center gap-0.5">
-                          <CheckCircle2 className="w-3 h-3 text-[#149e61] dark:text-[#34d399]" /> Lunas
+                        <span className="text-positive flex items-center gap-0.5">
+                          <CheckCircle2 className="w-3 h-3 text-positive-bright" /> Lunas
                         </span>
                       )}
                     </span>
@@ -100,12 +100,12 @@ export const BillsView: React.FC<BillsViewProps> = ({
                   <div className="text-right">
                     <span
                       className={`font-bold text-sm sm:text-base block tracking-tight tabular-nums ${
-                        hasDebt ? 'text-[#e53e3e] dark:text-[#f87171]' : 'text-[#026b3f] dark:text-[#34d399]'
+                        hasDebt ? 'text-negative-bright' : 'text-positive'
                       }`}
                     >
                       {hasDebt ? maskAmount(debtAmount, '-') : 'Rp 0'}
                     </span>
-                    <span className="text-[10px] text-ink-subtle dark:text-[#7d8299] uppercase font-semibold">
+                    <span className="text-[10px] text-ink-subtle uppercase font-semibold">
                       {hasDebt ? 'Belum Dibayar' : 'Lunas'}
                     </span>
                   </div>
@@ -115,7 +115,7 @@ export const BillsView: React.FC<BillsViewProps> = ({
                       e.stopPropagation();
                       onEditAccount?.(acc);
                     }}
-                    className="w-8 h-8 rounded-[8px] flex items-center justify-center text-ink-subtle hover:text-brand-text hover:bg-brand-soft transition-all cursor-pointer active:scale-95 border border-transparent hover:border-[#855bfb]/30"
+                    className="w-8 h-8 rounded-[8px] flex items-center justify-center text-ink-subtle hover:text-brand-text hover:bg-brand-soft transition-all cursor-pointer active:scale-95 border border-transparent hover:border-brand"
                     title="Ubah Tagihan / Akun"
                     aria-label="Ubah Tagihan / Akun"
                   >

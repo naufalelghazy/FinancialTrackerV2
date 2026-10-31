@@ -11,6 +11,18 @@ export interface ThemeConfig {
   description: string;
   primaryColor: string;
   accentColor: string;
+  /**
+   * Ink colour that stays readable on top of `primaryColor`.
+   * MongoDB green and Verge mint are both very light, so white text on them
+   * would be illegible; these used to be hard-coded in `index.css`.
+   */
+  onPrimary: string;
+  /**
+   * Text colour for the tagline under each theme card, per light/dark mode.
+   * The light value is usually a darker shade than the brand colour so it
+   * passes contrast on a white card.
+   */
+  taglineColor: { light: string; dark: string };
   canvasBg: { light: string; dark: string };
   pillShape: boolean;
   fontDisplay: string;
@@ -38,6 +50,8 @@ export const DESIGN_SYSTEMS: Record<DesignSystem, ThemeConfig> = {
     description: 'Tampilan sederhana, bersih, dan profesional dengan nuansa hijau khas MongoDB.',
     primaryColor: '#00ed64',
     accentColor: '#00684a',
+    onPrimary: '#001e2b',
+    taglineColor: { light: '#00684a', dark: '#00ed64' },
     canvasBg: { light: '#ffffff', dark: '#001e2b' },
     pillShape: true,
     fontDisplay: 'Euclid Circular A',
@@ -55,6 +69,8 @@ export const DESIGN_SYSTEMS: Record<DesignSystem, ThemeConfig> = {
     description: 'Tampilan bersih, tenang, dan profesional dengan nuansa biru khas finansial modern.',
     primaryColor: '#0052ff',
     accentColor: '#003ecc',
+    onPrimary: '#ffffff',
+    taglineColor: { light: '#0052ff', dark: '#0052ff' },
     canvasBg: { light: '#ffffff', dark: '#0a0b0d' },
     pillShape: true,
     fontDisplay: 'Inter',
@@ -72,6 +88,8 @@ export const DESIGN_SYSTEMS: Record<DesignSystem, ThemeConfig> = {
     description: 'Tampilan editorial tegas: kanvas gelap, aksen neon mint, headline Anton.',
     primaryColor: '#3cffd0',
     accentColor: '#5200ff',
+    onPrimary: '#000000',
+    taglineColor: { light: '#3cffd0', dark: '#3cffd0' },
     canvasBg: { light: '#f7f7f9', dark: '#131313' },
     pillShape: true,
     fontDisplay: 'Anton',
@@ -89,6 +107,8 @@ export const DESIGN_SYSTEMS: Record<DesignSystem, ThemeConfig> = {
     description: 'Tampilan modern dan elegan dengan nuansa ungu yang nyaman di mata.',
     primaryColor: '#7132f5',
     accentColor: '#5741d8',
+    onPrimary: '#ffffff',
+    taglineColor: { light: '#7132f5', dark: '#7132f5' },
     canvasBg: { light: '#fafbfe', dark: '#0d0e12' },
     pillShape: false,
     fontDisplay: 'IBM Plex Sans',
@@ -106,6 +126,8 @@ export const DESIGN_SYSTEMS: Record<DesignSystem, ThemeConfig> = {
     description: 'Tampilan hangat dengan nuansa warna oat dan aksen oranye musim gugur yang nyaman.',
     primaryColor: '#ea580c',
     accentColor: '#c2410c',
+    onPrimary: '#ffffff',
+    taglineColor: { light: '#ea580c', dark: '#ea580c' },
     canvasBg: { light: '#f4efea', dark: '#1c1917' },
     pillShape: false,
     fontDisplay: 'Plus Jakarta Sans',
