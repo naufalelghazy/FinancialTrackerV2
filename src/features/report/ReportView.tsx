@@ -12,7 +12,6 @@ import {
   formatPercent,
 } from "../../lib/formatters";
 import { isInternalTransfer } from "../../lib/transactions";
-import { usePieTouchAim } from "../../hooks/usePieTouchAim";
 import { CategoryIcon } from "../../components/ui/CategoryIcon";
 import { AccountAvatar } from "../../components/ui/AccountAvatar";
 import {
@@ -595,46 +594,6 @@ export const ReportView: React.FC<ReportViewProps> = ({
   const selectedIncomeIdx =
     activeIncomeIndex !== null ? activeIncomeIndex : expandedIncomeIndex;
 
-  // Recharts only speaks mouse, so on a touch screen the centre readout used to
-  // flash for an instant and never follow a sliding finger. These handlers
-  // treat the finger as a cursor: holding it down aims at the slice beneath it.
-  // A callback ref instead of a plain ref, because the chart only mounts once
-  // there is data (see the hook for why that matters).
-  const {
-    attach: attachExpenseChart,
-    isLocked: expenseAimLocked,
-    lockedRef: expenseLockedRef,
-  } = usePieTouchAim({
-    values: expenseByCategory.map((slice) => slice.amount),
-    sizing: {
-      innerRadius: chartRadius.inner,
-      outerRadius: chartRadius.outer,
-      paddingAngle: 3,
-    },
-    onAim: setActiveExpenseIndex,
-  });
-
-  const {
-    attach: attachIncomeChart,
-    isLocked: incomeAimLocked,
-    lockedRef: incomeLockedRef,
-  } = usePieTouchAim({
-    values: incomeByCategory.map((slice) => slice.amount),
-    sizing: {
-      innerRadius: chartRadius.inner,
-      outerRadius: chartRadius.outer,
-      paddingAngle: 3,
-    },
-    onAim: setActiveIncomeIndex,
-  });
-
-  // After a finger lifts, Chrome replays the gesture as synthetic mouse events.
-  // `mouseenter` does not bubble, so Recharts' own hover handler cannot be
-  // intercepted — the only way to keep the readout neutral is to ignore its
-  // hover state until a real mouse move proves the user switched input.
-  const expenseSelectedIdx = expenseAimLocked ? null : selectedExpenseIdx;
-  const incomeSelectedIdx = incomeAimLocked ? null : selectedIncomeIdx;
-
   return (
     <div className="space-y-6 pb-24 min-w-0 max-w-full">
       {/* Header & Period Filter Controls */}
@@ -977,7 +936,6 @@ export const ReportView: React.FC<ReportViewProps> = ({
                   // the chart is described rather than presented as interactive.
                   role="img"
                   aria-label="Grafik donut pengeluaran per kategori. Rincian lengkap tersedia pada daftar di bawah."
-                  ref={attachExpenseChart}
                 >
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -990,21 +948,14 @@ export const ReportView: React.FC<ReportViewProps> = ({
                         innerRadius={chartRadius.inner}
                         outerRadius={chartRadius.outer}
                         paddingAngle={3}
-                        onMouseEnter={(_, index) => {
-                          // Chrome replays a touch as `mouseenter` after the
-                          // lift; that must not re-open the readout.
-                          if (expenseLockedRef.current) return;
-                          setActiveExpenseIndex(index);
-                        }}
-                        onMouseLeave={() => {
-                          if (expenseLockedRef.current) return;
-                          setActiveExpenseIndex(null);
-                        }}
+                        onMouseEnter={(_, index) =>
+                          setActiveExpenseIndex(index)
+                        }
+                        onMouseLeave={() => setActiveExpenseIndex(null)}
                         onClick={(_, index) => {
                           setExpandedExpenseIndex((prev) =>
                             prev === index ? null : index,
                           );
-                          if (expenseLockedRef.current) return;
                           setActiveExpenseIndex(index);
                         }}
                       >
@@ -1013,16 +964,16 @@ export const ReportView: React.FC<ReportViewProps> = ({
                             key={`cell-${index}`}
                             fill={entry.color}
                             stroke={
-                              expenseSelectedIdx === index
+                              selectedExpenseIdx === index
                                 ? isDark
                                   ? "#ffffff"
                                   : "#101114"
                                 : "transparent"
                             }
-                            strokeWidth={expenseSelectedIdx === index ? 2.5 : 0}
+                            strokeWidth={selectedExpenseIdx === index ? 2.5 : 0}
                             opacity={
-                              expenseSelectedIdx === null ||
-                              expenseSelectedIdx === index
+                              selectedExpenseIdx === null ||
+                              selectedExpenseIdx === index
                                 ? 1
                                 : 0.4
                             }
@@ -1035,35 +986,35 @@ export const ReportView: React.FC<ReportViewProps> = ({
                   </ResponsiveContainer>
                   {/* Center Dynamic Label in Donut */}
                   <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-4 text-center select-none">
-                    {expenseSelectedIdx !== null &&
-                    expenseByCategory[expenseSelectedIdx] ? (
+                    {selectedExpenseIdx !== null &&
+                    expenseByCategory[selectedExpenseIdx] ? (
                       <div className="flex flex-col items-center justify-center transition-all duration-200">
                         <div className="flex items-center gap-1.5 max-w-[150px] sm:max-w-[190px] mb-0.5">
                           <span
                             className="w-2 h-2 rounded-full shrink-0 shadow-xs"
                             style={{
                               backgroundColor:
-                                expenseByCategory[expenseSelectedIdx].color,
+                                expenseByCategory[selectedExpenseIdx].color,
                             }}
                           />
                           <span
                             className="text-[11px] sm:text-xs font-bold uppercase tracking-wider truncate"
                             style={{
                               color:
-                                expenseByCategory[expenseSelectedIdx].color,
+                                expenseByCategory[selectedExpenseIdx].color,
                             }}
                           >
-                            {expenseByCategory[expenseSelectedIdx].name}
+                            {expenseByCategory[selectedExpenseIdx].name}
                           </span>
                         </div>
                         <span className="text-sm sm:text-lg lg:text-2xl font-bold text-ink tabular-nums tracking-tight">
                           {formatCurrency(
-                            expenseByCategory[expenseSelectedIdx].amount,
+                            expenseByCategory[selectedExpenseIdx].amount,
                           )}
                         </span>
                         <span className="text-[10px] sm:text-xs font-semibold text-ink-muted mt-0.5">
                           {formatPercent(
-                            expenseByCategory[expenseSelectedIdx].percentage,
+                            expenseByCategory[selectedExpenseIdx].percentage,
                           )} dari total
                         </span>
                       </div>
@@ -1532,7 +1483,6 @@ export const ReportView: React.FC<ReportViewProps> = ({
                   className="h-64 sm:h-72 lg:h-[350px] xl:h-[400px] w-full relative flex items-center justify-center"
                   role="img"
                   aria-label="Grafik donut sumber pemasukan per kategori. Rincian lengkap tersedia pada daftar di bawah."
-                  ref={attachIncomeChart}
                 >
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -1545,21 +1495,12 @@ export const ReportView: React.FC<ReportViewProps> = ({
                         innerRadius={chartRadius.inner}
                         outerRadius={chartRadius.outer}
                         paddingAngle={3}
-                        onMouseEnter={(_, index) => {
-                          // Chrome replays a touch as `mouseenter` after the
-                          // lift; that must not re-open the readout.
-                          if (incomeLockedRef.current) return;
-                          setActiveIncomeIndex(index);
-                        }}
-                        onMouseLeave={() => {
-                          if (incomeLockedRef.current) return;
-                          setActiveIncomeIndex(null);
-                        }}
+                        onMouseEnter={(_, index) => setActiveIncomeIndex(index)}
+                        onMouseLeave={() => setActiveIncomeIndex(null)}
                         onClick={(_, index) => {
                           setExpandedIncomeIndex((prev) =>
                             prev === index ? null : index,
                           );
-                          if (incomeLockedRef.current) return;
                           setActiveIncomeIndex(index);
                         }}
                       >
@@ -1568,16 +1509,16 @@ export const ReportView: React.FC<ReportViewProps> = ({
                             key={`cell-income-${index}`}
                             fill={entry.color}
                             stroke={
-                              incomeSelectedIdx === index
+                              selectedIncomeIdx === index
                                 ? isDark
                                   ? "#ffffff"
                                   : "#101114"
                                 : "transparent"
                             }
-                            strokeWidth={incomeSelectedIdx === index ? 2.5 : 0}
+                            strokeWidth={selectedIncomeIdx === index ? 2.5 : 0}
                             opacity={
-                              incomeSelectedIdx === null ||
-                              incomeSelectedIdx === index
+                              selectedIncomeIdx === null ||
+                              selectedIncomeIdx === index
                                 ? 1
                                 : 0.4
                             }
@@ -1590,35 +1531,35 @@ export const ReportView: React.FC<ReportViewProps> = ({
                   </ResponsiveContainer>
                   {/* Center Dynamic Label in Donut */}
                   <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-4 text-center select-none">
-                    {incomeSelectedIdx !== null &&
-                    incomeByCategory[incomeSelectedIdx] ? (
+                    {selectedIncomeIdx !== null &&
+                    incomeByCategory[selectedIncomeIdx] ? (
                       <div className="flex flex-col items-center justify-center transition-all duration-200">
                         <div className="flex items-center gap-1.5 max-w-[150px] sm:max-w-[190px] mb-0.5">
                           <span
                             className="w-2 h-2 rounded-full shrink-0 shadow-xs"
                             style={{
                               backgroundColor:
-                                incomeByCategory[incomeSelectedIdx].color,
+                                incomeByCategory[selectedIncomeIdx].color,
                             }}
                           />
                           <span
                             className="text-[11px] sm:text-xs font-bold uppercase tracking-wider truncate"
                             style={{
-                              color: incomeByCategory[incomeSelectedIdx].color,
+                              color: incomeByCategory[selectedIncomeIdx].color,
                             }}
                           >
-                            {incomeByCategory[incomeSelectedIdx].name}
+                            {incomeByCategory[selectedIncomeIdx].name}
                           </span>
                         </div>
                         <span className="text-sm sm:text-lg lg:text-2xl font-bold text-positive tabular-nums tracking-tight">
                           +
                           {formatCurrency(
-                            incomeByCategory[incomeSelectedIdx].amount,
+                            incomeByCategory[selectedIncomeIdx].amount,
                           )}
                         </span>
                         <span className="text-[10px] sm:text-xs font-semibold text-ink-muted mt-0.5">
                           {formatPercent(
-                            incomeByCategory[incomeSelectedIdx].percentage,
+                            incomeByCategory[selectedIncomeIdx].percentage,
                           )} dari total
                         </span>
                       </div>
