@@ -1,7 +1,20 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { supabase, isSupabaseConfigured, SUPABASE_SESSION_HINT } from '../lib/supabase';
 import type { Account, AccountType, Category, Transaction, TransactionType } from '../types';
 import { INITIAL_ACCOUNTS, INITIAL_CATEGORIES } from '../lib/constants';
 import { getLogoDevUrl, getLocalFallback, LOCAL_FALLBACK_ICONS, BANK_DOMAIN_MAP } from './logoService';
+import { classifyWriteError, isBrowserOffline, PermanentWriteError } from '../lib/errors';
+import {
+  enqueueDelete,
+  enqueueUpsert,
+  flushOutbox,
+  getPendingRowIds,
+  getPendingSyncCount,
+  markPendingRows,
+  markRowDeleted,
+  markRowSynced,
+  markRowsSynced,
+  type OutboxTable,
+} from './outbox';
 
 export interface FinancialData {
   accounts: Account[];
@@ -12,241 +25,77 @@ export interface FinancialData {
 export { BANK_DOMAIN_MAP };
 export const BANK_ICON_MAP = LOCAL_FALLBACK_ICONS;
 
-const OFFLINE_SYNC_QUEUE_KEY = 'ft_pending_sync';
-
-type OfflineSyncAction =
-  | {
-      action: 'add_transaction';
-      payload: {
-        id: string;
-        date: string;
-        type: TransactionType;
-        amount: number;
-        sourceAccountId: string;
-        destinationAccountId?: string;
-        categoryId?: string;
-        notes: string;
-        createdAt: string;
-      };
-    }
-  | {
-      action: 'update_transaction';
-      payload: {
-        id: string;
-        date: string;
-        type: TransactionType;
-        amount: number;
-        sourceAccountId: string;
-        destinationAccountId?: string;
-        categoryId?: string;
-        notes: string;
-      };
-    }
-  | {
-      action: 'delete_transaction';
-      payload: { id: string };
-    }
-  | {
-      action: 'add_account';
-      payload: {
-        id: string;
-        name: string;
-        type: AccountType;
-        website?: string;
-        iconUrl: string;
-        initialBalance: number;
-      };
-    }
-  | {
-      action: 'update_account';
-      payload: {
-        id: string;
-        name: string;
-        type: AccountType;
-        website?: string;
-        iconUrl: string;
-        initialBalance?: number;
-      };
-    }
-  | {
-      action: 'delete_account';
-      payload: { id: string };
-    }
-  | {
-      action: 'add_category';
-      payload: {
-        id: string;
-        name: string;
-        type: 'pengeluaran' | 'pemasukan';
-        emoji: string;
-      };
-    }
-  | {
-      action: 'update_category';
-      payload: {
-        id: string;
-        name: string;
-        type: 'pengeluaran' | 'pemasukan';
-        emoji: string;
-      };
-    }
-  | {
-      action: 'delete_category';
-      payload: { id: string };
-    };
-
-export type OfflineSyncItem = OfflineSyncAction & {
-  queueId: string;
-  timestamp: string;
-};
-
-function loadSyncQueue(): OfflineSyncItem[] {
-  try {
-    const raw = localStorage.getItem(OFFLINE_SYNC_QUEUE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveSyncQueue(queue: OfflineSyncItem[]): void {
-  try {
-    localStorage.setItem(OFFLINE_SYNC_QUEUE_KEY, JSON.stringify(queue));
-  } catch (err) {
-    console.error('Failed to save offline sync queue:', err);
-  }
-}
-
-function enqueueOfflineSync(item: OfflineSyncAction): void {
-  const queue = loadSyncQueue();
-  queue.push({
-    ...item,
-    queueId: crypto.randomUUID(),
-    timestamp: new Date().toISOString(),
-  });
-  saveSyncQueue(queue);
-}
-
-export function getPendingSyncCount(): number {
-  return loadSyncQueue().length;
-}
+export { getPendingSyncCount, getPendingRowIds, markPendingRows };
 
 /**
- * Flushes pending offline mutations to Supabase in chronological order.
- * Returns the number of successfully synced operations.
+ * @deprecated Use `flushOutbox()` from `services/outbox`. Kept as a thin alias so
+ * older call sites keep working.
  */
 export async function flushOfflineSyncQueue(): Promise<number> {
-  if (!isSupabaseConfigured || !supabase) return 0;
-  if (typeof navigator !== 'undefined' && navigator.onLine === false) return 0;
+  const result = await flushOutbox();
+  return result.synced;
+}
 
-  const queue = loadSyncQueue();
-  if (queue.length === 0) return 0;
+export interface WriteResult<T> {
+  data: T;
+  /** True when the row only exists locally and is queued for the server. */
+  queued: boolean;
+  /** Present when the write failed permanently; the row was NOT kept. */
+  warning?: string;
+}
 
-  const remaining: OfflineSyncItem[] = [];
-  let syncedCount = 0;
+/* ------------------------------------------------------------------ *
+ * localStorage snapshots
+ * ------------------------------------------------------------------ */
 
-  for (const item of queue) {
-    try {
-      if (item.action === 'add_transaction') {
-        const { error } = await supabase.from('transactions').upsert({
-          id: item.payload.id,
-          date: item.payload.date,
-          type: item.payload.type,
-          amount: item.payload.amount,
-          source_account_id: item.payload.sourceAccountId,
-          destination_account_id: item.payload.destinationAccountId || null,
-          category_id: item.payload.categoryId || null,
-          notes: item.payload.notes,
-        });
-        if (error) throw error;
-      } else if (item.action === 'update_transaction') {
-        const { error } = await supabase
-          .from('transactions')
-          .update({
-            date: item.payload.date,
-            type: item.payload.type,
-            amount: item.payload.amount,
-            source_account_id: item.payload.sourceAccountId,
-            destination_account_id: item.payload.destinationAccountId || null,
-            category_id: item.payload.categoryId || null,
-            notes: item.payload.notes,
-          })
-          .eq('id', item.payload.id);
-        if (error) throw error;
-      } else if (item.action === 'delete_transaction') {
-        const { error } = await supabase
-          .from('transactions')
-          .delete()
-          .eq('id', item.payload.id);
-        if (error) throw error;
-      } else if (item.action === 'add_account') {
-        const { error } = await supabase.from('accounts').upsert({
-          id: item.payload.id,
-          name: item.payload.name,
-          type: item.payload.type,
-          website: item.payload.website || null,
-          icon_url: item.payload.iconUrl,
-          initial_balance: item.payload.initialBalance,
-        });
-        if (error) throw error;
-      } else if (item.action === 'update_account') {
-        const updatePayload: Record<string, unknown> = {
-          name: item.payload.name,
-          type: item.payload.type,
-          website: item.payload.website || null,
-          icon_url: item.payload.iconUrl,
-        };
-        if (item.payload.initialBalance !== undefined) {
-          updatePayload.initial_balance = item.payload.initialBalance;
-        }
-        const { error } = await supabase
-          .from('accounts')
-          .update(updatePayload)
-          .eq('id', item.payload.id);
-        if (error) throw error;
-      } else if (item.action === 'delete_account') {
-        const { error } = await supabase
-          .from('accounts')
-          .delete()
-          .eq('id', item.payload.id);
-        if (error) throw error;
-      } else if (item.action === 'add_category') {
-        const { error } = await supabase.from('categories').upsert({
-          id: item.payload.id,
-          name: item.payload.name,
-          type: item.payload.type,
-          emoji: item.payload.emoji,
-        });
-        if (error) throw error;
-      } else if (item.action === 'update_category') {
-        const { error } = await supabase
-          .from('categories')
-          .update({
-            name: item.payload.name,
-            type: item.payload.type,
-            emoji: item.payload.emoji,
-          })
-          .eq('id', item.payload.id);
-        if (error) throw error;
-      } else if (item.action === 'delete_category') {
-        const { error } = await supabase
-          .from('categories')
-          .delete()
-          .eq('id', item.payload.id);
-        if (error) throw error;
-      }
+interface LocalSnapshot {
+  accounts: Account[];
+  categories: Category[];
+  transactions: Transaction[];
+}
 
-      syncedCount += 1;
-    } catch (err) {
-      console.warn('Failed to flush offline sync item, keeping in queue:', item.action, err);
-      remaining.push(item);
-    }
+function readJsonArray<T>(key: string, fallback: T[]): T[] {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as T[]) : fallback;
+  } catch {
+    return fallback;
   }
+}
 
-  saveSyncQueue(remaining);
-  return syncedCount;
+function writeJson(key: string, value: unknown): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (err) {
+    console.error(`Failed to persist ${key}:`, err);
+  }
+}
+
+/** Reads the offline snapshot, repairing rows that would otherwise produce NaN. */
+export function readLocalSnapshot(): LocalSnapshot {
+  const accounts = readJsonArray<Account>('ft_accounts', INITIAL_ACCOUNTS).filter(
+    (acc) => acc && typeof acc.id === 'string' && acc.id.length > 0
+  );
+  const categories = readJsonArray<Category>('ft_categories', INITIAL_CATEGORIES).filter(
+    (cat) => cat && typeof cat.id === 'string' && cat.id.length > 0
+  );
+  const transactions = readJsonArray<Transaction>('ft_transactions', []).filter(
+    (tx) => tx && typeof tx.id === 'string' && tx.id.length > 0 && Number.isFinite(Number(tx.amount))
+  );
+  return { accounts, categories, transactions };
+}
+
+/** Persists a full snapshot so the next cold start renders instantly. */
+export function writeLocalSnapshot(snapshot: {
+  accounts: Account[];
+  categories: Category[];
+  transactions: Transaction[];
+}): void {
+  writeJson('ft_accounts', snapshot.accounts);
+  writeJson('ft_transactions', snapshot.transactions);
+  writeJson('ft_categories', snapshot.categories);
 }
 
 export function getAccountIcon(name: string, website?: string, fallbackUrl?: string): string {
@@ -259,6 +108,7 @@ export function getAccountIcon(name: string, website?: string, fallbackUrl?: str
 
 /**
  * Calculates current running balance for all accounts based on initial_balance and transaction history.
+ * Non-finite amounts are ignored so one corrupt row cannot poison every balance.
  */
 export function calculateAccountBalances(
   rawAccounts: Account[],
@@ -267,11 +117,14 @@ export function calculateAccountBalances(
   const balanceMap: Record<string, number> = {};
 
   rawAccounts.forEach((acc) => {
-    balanceMap[acc.id] = Number(acc.initialBalance || 0);
+    const initial = Number(acc.initialBalance ?? 0);
+    balanceMap[acc.id] = Number.isFinite(initial) ? initial : 0;
   });
 
   transactions.forEach((tx) => {
-    const amt = Number(tx.amount) || 0;
+    const amt = Number(tx.amount);
+    if (!Number.isFinite(amt)) return;
+
     if (tx.type === 'pemasukan') {
       if (tx.sourceAccountId && balanceMap[tx.sourceAccountId] !== undefined) {
         balanceMap[tx.sourceAccountId] += amt;
@@ -281,6 +134,11 @@ export function calculateAccountBalances(
         balanceMap[tx.sourceAccountId] -= amt;
       }
     } else if (tx.type === 'transfer') {
+      // Same account on both sides is a no-op, not a double count.
+      if (tx.destinationAccountId && tx.destinationAccountId === tx.sourceAccountId) return;
+      // A transfer with no destination would debit the source and credit
+      // nobody, silently destroying money. Skip it instead of half-applying.
+      if (!tx.destinationAccountId) return;
       if (tx.sourceAccountId && balanceMap[tx.sourceAccountId] !== undefined) {
         balanceMap[tx.sourceAccountId] -= amt;
       }
@@ -290,136 +148,262 @@ export function calculateAccountBalances(
     }
   });
 
-  return rawAccounts.map((acc) => ({
-    ...acc,
-    balance: balanceMap[acc.id] ?? 0,
-  }));
+  const pendingIds = getPendingRowIds();
+  return rawAccounts.map((acc) => {
+    const next: Account = { ...acc, balance: balanceMap[acc.id] ?? 0 };
+    if (pendingIds.has(acc.id)) next.pendingSync = true;
+    else delete next.pendingSync;
+    return next;
+  });
+}
+
+/* ------------------------------------------------------------------ *
+ * Row <-> model mappers
+ * ------------------------------------------------------------------ */
+
+const TRANSACTION_TYPES: TransactionType[] = ['pengeluaran', 'pemasukan', 'transfer'];
+const ACCOUNT_TYPES: AccountType[] = ['bank', 'ewallet', 'credit', 'cash'];
+
+function coerceTransactionType(value: unknown): TransactionType {
+  return TRANSACTION_TYPES.includes(value as TransactionType)
+    ? (value as TransactionType)
+    : 'pengeluaran';
+}
+
+function coerceAccountType(value: unknown): AccountType {
+  return ACCOUNT_TYPES.includes(value as AccountType) ? (value as AccountType) : 'cash';
+}
+
+function nullableId(value: unknown): string | undefined {
+  if (value === null || value === undefined || value === '') return undefined;
+  return String(value);
+}
+
+export function mapTransactionRow(row: Record<string, unknown>): Transaction {
+  return {
+    id: String(row.id),
+    date: String(row.date ?? '').slice(0, 10),
+    type: coerceTransactionType(row.type),
+    amount: Number(row.amount) || 0,
+    sourceAccountId: String(row.source_account_id ?? ''),
+    destinationAccountId: nullableId(row.destination_account_id),
+    categoryId: nullableId(row.category_id),
+    notes: row.notes ? String(row.notes) : '',
+    createdAt: row.created_at ? String(row.created_at) : new Date().toISOString(),
+  };
+}
+
+export function mapAccountRow(row: Record<string, unknown>): Account {
+  const name = String(row.name ?? '');
+  const website = nullableId(row.website);
+  return {
+    id: String(row.id),
+    name,
+    type: coerceAccountType(row.type),
+    website,
+    icon: getAccountIcon(name, website, nullableId(row.icon_url)),
+    initialBalance: Number(row.initial_balance ?? 0) || 0,
+    balance: Number(row.initial_balance ?? 0) || 0,
+  };
+}
+
+export function mapCategoryRow(row: Record<string, unknown>): Category {
+  const emoji = String(row.emoji || '🏷️');
+  return {
+    id: String(row.id),
+    name: String(row.name ?? ''),
+    type: row.type === 'pemasukan' ? 'pemasukan' : 'pengeluaran',
+    emoji,
+    icon: emoji,
+  };
+}
+
+/* ------------------------------------------------------------------ *
+ * Loading
+ * ------------------------------------------------------------------ */
+
+function localFinancialData(): FinancialData {
+  const snapshot = readLocalSnapshot();
+  return {
+    accounts: calculateAccountBalances(snapshot.accounts, snapshot.transactions),
+    categories: snapshot.categories,
+    transactions: snapshot.transactions,
+  };
+}
+
+/** Clears the cached snapshot so a stale device cannot resurrect old rows. */
+export function clearLocalSnapshot(): void {
+  try {
+    localStorage.removeItem('ft_accounts');
+    localStorage.removeItem('ft_transactions');
+    localStorage.removeItem('ft_categories');
+    localStorage.removeItem('ft_quick_templates');
+  } catch {
+    /* ignore */
+  }
 }
 
 /**
  * Loads accounts, categories, and all transactions from Supabase.
- * Flushes any pending offline mutations before fetching.
- * Falls back to localStorage/initial state if Supabase is unconfigured or unreachable.
+ * Flushes any queued mutations first, then falls back to the local snapshot if
+ * Supabase is unconfigured, unreachable, or slow.
  */
 export async function loadFinancialData(): Promise<FinancialData> {
   if (!isSupabaseConfigured || !supabase) {
-    const savedAcc = localStorage.getItem('ft_accounts');
-    const savedTx = localStorage.getItem('ft_transactions');
-    const savedCat = localStorage.getItem('ft_categories');
-    const localAccounts = savedAcc ? JSON.parse(savedAcc) : INITIAL_ACCOUNTS;
-    const localTx = savedTx ? JSON.parse(savedTx) : [];
-    const localCat = savedCat ? JSON.parse(savedCat) : INITIAL_CATEGORIES;
-    return {
-      accounts: calculateAccountBalances(localAccounts, localTx),
-      categories: localCat,
-      transactions: localTx,
-    };
+    return localFinancialData();
+  }
+
+  // Never fetch while the user is offline: the snapshot already has the truth,
+  // and a failed fetch would only overwrite it with itself.
+  if (isBrowserOffline()) {
+    return localFinancialData();
   }
 
   try {
-    await flushOfflineSyncQueue();
+    await flushOutbox();
 
-    // 1. Fetch Accounts
-    const { data: accData, error: accErr } = await supabase
-      .from('accounts')
-      .select('*')
-      .order('name');
-    if (accErr) throw accErr;
+    const [accRes, catRes] = await Promise.all([
+      supabase.from('accounts').select('*').order('name'),
+      supabase.from('categories').select('*').order('name'),
+    ]);
 
-    // 2. Fetch Categories
-    const { data: catData, error: catErr } = await supabase
-      .from('categories')
-      .select('*')
-      .order('name');
-    if (catErr) throw catErr;
+    if (accRes.error) throw accRes.error;
+    if (catRes.error) throw catRes.error;
 
-    // 3. Fetch Transactions with pagination loop
-    let allTxs: Record<string, unknown>[] = [];
-    let from = 0;
+    // Paginate transactions deterministically by created_at + id. Ordering by a
+    // non-unique column alone can repeat or skip rows across pages.
     const pageSize = 1000;
-    while (true) {
-      const { data: pageData, error: txErr } = await supabase
+    const rows: Record<string, unknown>[] = [];
+    for (let page = 0; ; page += 1) {
+      const from = page * pageSize;
+      const { data, error } = await supabase
         .from('transactions')
         .select('*')
-        .range(from, from + pageSize - 1)
         .order('date', { ascending: false })
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: true })
+        .range(from, from + pageSize - 1);
 
-      if (txErr) throw txErr;
-      if (!pageData || pageData.length === 0) break;
-      allTxs = allTxs.concat(pageData);
-      if (pageData.length < pageSize) break;
-      from += pageSize;
+      if (error) throw error;
+      if (!data || data.length === 0) break;
+      rows.push(...(data as Record<string, unknown>[]));
+      if (data.length < pageSize) break;
     }
 
-    const categories: Category[] = (catData || []).map((c: Record<string, unknown>) => ({
-      id: String(c.id),
-      name: String(c.name),
-      type: c.type as 'pengeluaran' | 'pemasukan',
-      emoji: String(c.emoji || '🏷️'),
-      icon: c.emoji ? String(c.emoji) : undefined,
-    }));
-
-    const transactions: Transaction[] = allTxs.map((t: Record<string, unknown>) => ({
-      id: String(t.id),
-      date: String(t.date),
-      type: t.type as TransactionType,
-      amount: Number(t.amount),
-      sourceAccountId: String(t.source_account_id),
-      destinationAccountId: t.destination_account_id ? String(t.destination_account_id) : undefined,
-      categoryId: t.category_id ? String(t.category_id) : undefined,
-      notes: String(t.notes || ''),
-      createdAt: t.created_at ? String(t.created_at) : new Date().toISOString(),
-    }));
-
-    const rawAccounts: Account[] = (accData || []).map((a: Record<string, unknown>) => ({
-      id: String(a.id),
-      name: String(a.name),
-      type: a.type as AccountType,
-      website: a.website ? String(a.website) : undefined,
-      icon: getAccountIcon(
-        String(a.name),
-        a.website ? String(a.website) : undefined,
-        a.icon_url ? String(a.icon_url) : undefined
-      ),
-      initialBalance: Number(a.initial_balance || 0),
-      balance: Number(a.initial_balance || 0),
-    }));
-
-    const accountsWithBalances = calculateAccountBalances(rawAccounts, transactions);
-
-    localStorage.setItem('ft_accounts', JSON.stringify(accountsWithBalances));
-    localStorage.setItem('ft_transactions', JSON.stringify(transactions));
-    localStorage.setItem(
-      'ft_categories',
-      JSON.stringify(categories.length > 0 ? categories : INITIAL_CATEGORIES)
+    const transactions = rows.map(mapTransactionRow);
+    const categories = (catRes.data || []).map((row) =>
+      mapCategoryRow(row as Record<string, unknown>)
+    );
+    const rawAccounts = (accRes.data || []).map((row) =>
+      mapAccountRow(row as Record<string, unknown>)
     );
 
-    return {
-      accounts: accountsWithBalances,
-      categories: categories.length > 0 ? categories : INITIAL_CATEGORIES,
-      transactions,
-    };
+    // Remember which ids exist server-side so a later offline edit is queued as
+    // an update instead of an insert against a uuid that already exists.
+    markRowsSynced(transactions);
+    markRowsSynced(categories);
+    markRowsSynced(rawAccounts);
+
+    const accounts = calculateAccountBalances(rawAccounts, transactions);
+
+    const resolvedCategories = categories.length > 0 ? categories : INITIAL_CATEGORIES;
+    writeLocalSnapshot({ accounts, categories: resolvedCategories, transactions });
+
+    return { accounts, categories: resolvedCategories, transactions };
   } catch (err) {
-    console.error('Failed to load from Supabase:', err);
-    const savedAcc = localStorage.getItem('ft_accounts');
-    const savedTx = localStorage.getItem('ft_transactions');
-    const savedCat = localStorage.getItem('ft_categories');
-    const localAccounts = savedAcc ? JSON.parse(savedAcc) : INITIAL_ACCOUNTS;
-    const localTx = savedTx ? JSON.parse(savedTx) : [];
-    const localCat = savedCat ? JSON.parse(savedCat) : INITIAL_CATEGORIES;
-    return {
-      accounts: calculateAccountBalances(localAccounts, localTx),
-      categories: localCat,
-      transactions: localTx,
-    };
+    const classification = classifyWriteError(err);
+    console.warn(`Falling back to the local snapshot (${classification.reason}):`, err);
+    return localFinancialData();
   }
 }
 
+/* ------------------------------------------------------------------ *
+ * Write helpers
+ * ------------------------------------------------------------------ */
+
+async function upsertRemote(
+  table: OutboxTable,
+  rowId: string,
+  values: Record<string, unknown>
+): Promise<void> {
+  if (!supabase) throw new Error('Supabase client is not configured');
+  if (isBrowserOffline()) {
+    throw new Error('Perangkat sedang offline');
+  }
+  const { error } = await supabase.from(table).upsert({ id: rowId, ...values }, { onConflict: 'id' });
+  if (error) throw error;
+}
+
+async function updateRemote(
+  table: OutboxTable,
+  rowId: string,
+  values: Record<string, unknown>
+): Promise<void> {
+  if (!supabase) throw new Error('Supabase client is not configured');
+  if (isBrowserOffline()) {
+    throw new Error('Perangkat sedang offline');
+  }
+  const { error } = await supabase.from(table).update(values).eq('id', rowId);
+  if (error) throw error;
+}
+
+async function deleteRemote(table: OutboxTable, rowId: string): Promise<void> {
+  if (!supabase) throw new Error('Supabase client is not configured');
+  if (isBrowserOffline()) {
+    throw new Error('Perangkat sedang offline');
+  }
+  const { error } = await supabase.from(table).delete().eq('id', rowId);
+  if (error) throw error;
+}
+
 /**
- * Creates a new transaction in Supabase, or queues it in the offline sync outbox if offline/unreachable.
+ * Runs a remote write and decides what the caller should believe.
+ * Retryable failures queue the mutation; permanent failures throw.
  */
-export async function addTransactionToDatabase(txData: {
+async function performWrite(
+  table: OutboxTable,
+  action: 'upsert' | 'update' | 'delete',
+  rowId: string,
+  values: Record<string, unknown>
+): Promise<{ queued: boolean }> {
+  if (!isSupabaseConfigured || !supabase) {
+    return { queued: false };
+  }
+
+  try {
+    if (action === 'upsert') await upsertRemote(table, rowId, values);
+    else if (action === 'update') await updateRemote(table, rowId, values);
+    else await deleteRemote(table, rowId);
+
+    // The server now owns this id (or no longer has it). Recording that is what
+    // keeps a later offline edit an `update` rather than a re-insert.
+    if (action === 'delete') markRowDeleted(rowId);
+    else markRowSynced(rowId);
+
+    return { queued: false };
+  } catch (err) {
+    const classification = classifyWriteError(err);
+
+    if (classification.retryable) {
+      if (action === 'delete') enqueueDelete(table, rowId);
+      else enqueueUpsert(table, rowId, values);
+      console.warn(`Queued ${action} ${table} for offline sync (${classification.reason}):`, err);
+      return { queued: true };
+    }
+
+    throw new PermanentWriteError(
+      classification.userMessage,
+      classification.reason,
+      classification.detail
+    );
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Transactions
+ * ------------------------------------------------------------------ */
+
+export interface TransactionInput {
   date: string;
   type: TransactionType;
   amount: number;
@@ -427,265 +411,95 @@ export async function addTransactionToDatabase(txData: {
   destinationAccountId?: string;
   categoryId?: string;
   notes: string;
-}): Promise<Transaction> {
-  const tempId = crypto.randomUUID();
+}
+
+function transactionValues(txData: TransactionInput): Record<string, unknown> {
+  return {
+    date: txData.date,
+    type: txData.type,
+    amount: txData.amount,
+    source_account_id: txData.sourceAccountId,
+    destination_account_id: txData.destinationAccountId || null,
+    category_id: txData.categoryId || null,
+    notes: txData.notes ?? '',
+  };
+}
+
+/**
+ * Creates a transaction.
+ *
+ * The id is generated once, on the client, and is the id the server row will
+ * have. That is what makes the optimistic insert safe: a queued write and the
+ * local record share a single identity, so the caller never has to guess.
+ *
+ * @param rowId Optional pre-generated id reuse when the caller retries.
+ */
+export async function addTransactionToDatabase(
+  txData: TransactionInput,
+  rowId?: string
+): Promise<Transaction> {
+  const id = rowId || crypto.randomUUID();
   const createdAt = new Date().toISOString();
+  const values = transactionValues(txData);
 
-  if (isSupabaseConfigured && supabase) {
-    try {
-      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-        throw new Error('Browser is offline');
-      }
-      const { data, error } = await supabase
-        .from('transactions')
-        .insert({
-          id: tempId,
-          date: txData.date,
-          type: txData.type,
-          amount: txData.amount,
-          source_account_id: txData.sourceAccountId,
-          destination_account_id: txData.destinationAccountId || null,
-          category_id: txData.categoryId || null,
-          notes: txData.notes,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      if (data) {
-        return {
-          id: data.id,
-          date: data.date,
-          type: data.type,
-          amount: Number(data.amount),
-          sourceAccountId: data.source_account_id,
-          destinationAccountId: data.destination_account_id || undefined,
-          categoryId: data.category_id || undefined,
-          notes: data.notes || '',
-          createdAt: data.created_at,
-        };
-      }
-    } catch (err) {
-      console.warn('Queued add_transaction for offline sync:', err);
-      enqueueOfflineSync({
-        action: 'add_transaction',
-        payload: {
-          id: tempId,
-          date: txData.date,
-          type: txData.type,
-          amount: txData.amount,
-          sourceAccountId: txData.sourceAccountId,
-          destinationAccountId: txData.destinationAccountId,
-          categoryId: txData.categoryId,
-          notes: txData.notes,
-          createdAt,
-        },
-      });
-    }
-  }
+  await performWrite('transactions', 'upsert', id, values);
 
   return {
-    id: tempId,
+    id,
     date: txData.date,
     type: txData.type,
     amount: txData.amount,
     sourceAccountId: txData.sourceAccountId,
     destinationAccountId: txData.destinationAccountId,
     categoryId: txData.categoryId,
-    notes: txData.notes,
+    notes: txData.notes ?? '',
     createdAt,
   };
 }
 
-/**
- * Updates an existing transaction in Supabase, or queues the update when offline.
- */
+/** Updates a transaction. Non-retryable failures throw `PermanentWriteError`. */
 export async function updateTransactionInDatabase(
   id: string,
-  txData: {
-    date: string;
-    type: TransactionType;
-    amount: number;
-    sourceAccountId: string;
-    destinationAccountId?: string;
-    categoryId?: string;
-    notes: string;
-  }
-): Promise<void> {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-        throw new Error('Browser is offline');
-      }
-      const { error } = await supabase
-        .from('transactions')
-        .update({
-          date: txData.date,
-          type: txData.type,
-          amount: txData.amount,
-          source_account_id: txData.sourceAccountId,
-          destination_account_id: txData.destinationAccountId || null,
-          category_id: txData.categoryId || null,
-          notes: txData.notes,
-        })
-        .eq('id', id);
-
-      if (error) throw error;
-    } catch (err) {
-      console.warn('Queued update_transaction for offline sync:', err);
-      enqueueOfflineSync({
-        action: 'update_transaction',
-        payload: {
-          id,
-          date: txData.date,
-          type: txData.type,
-          amount: txData.amount,
-          sourceAccountId: txData.sourceAccountId,
-          destinationAccountId: txData.destinationAccountId,
-          categoryId: txData.categoryId,
-          notes: txData.notes,
-        },
-      });
-    }
-  }
+  txData: TransactionInput
+): Promise<{ queued: boolean }> {
+  return performWrite('transactions', 'update', id, transactionValues(txData));
 }
 
-/**
- * Deletes a transaction from Supabase, or queues the deletion when offline.
- */
-export async function deleteTransactionFromDatabase(id: string): Promise<void> {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-        throw new Error('Browser is offline');
-      }
-      const { error } = await supabase
-        .from('transactions')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-    } catch (err) {
-      console.warn('Queued delete_transaction for offline sync:', err);
-      enqueueOfflineSync({
-        action: 'delete_transaction',
-        payload: { id },
-      });
-    }
-  }
+/** Deletes a transaction. Non-retryable failures throw `PermanentWriteError`. */
+export async function deleteTransactionFromDatabase(id: string): Promise<{ queued: boolean }> {
+  return performWrite('transactions', 'delete', id, {});
 }
 
-/**
- * Updates an account in Supabase (name, type, initial_balance), or queues the update when offline.
- */
-export async function updateAccountInDatabase(
-  id: string,
-  updates: {
-    name: string;
-    type: AccountType;
-    website?: string;
-    initialBalance?: number;
-  }
-): Promise<void> {
-  const iconUrl = getAccountIcon(updates.name, updates.website);
-  if (isSupabaseConfigured && supabase) {
-    try {
-      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-        throw new Error('Browser is offline');
-      }
-      const payload: Record<string, unknown> = {
-        name: updates.name,
-        type: updates.type,
-        website: updates.website || null,
-        icon_url: iconUrl,
-      };
-      if (updates.initialBalance !== undefined) {
-        payload.initial_balance = updates.initialBalance;
-      }
+/* ------------------------------------------------------------------ *
+ * Accounts
+ * ------------------------------------------------------------------ */
 
-      const { error } = await supabase
-        .from('accounts')
-        .update(payload)
-        .eq('id', id);
-
-      if (error) throw error;
-    } catch (err) {
-      console.warn('Queued update_account for offline sync:', err);
-      enqueueOfflineSync({
-        action: 'update_account',
-        payload: {
-          id,
-          name: updates.name,
-          type: updates.type,
-          website: updates.website,
-          iconUrl,
-          initialBalance: updates.initialBalance,
-        },
-      });
-    }
-  }
-}
-
-/**
- * Creates a new account in Supabase, or queues the creation when offline.
- */
-export async function addAccountToDatabase(account: {
+export interface AccountInput {
   name: string;
   type: AccountType;
   website?: string;
   initialBalance: number;
-}): Promise<Account> {
-  const tempId = crypto.randomUUID();
+}
+
+function accountValues(account: AccountInput): Record<string, unknown> {
+  return {
+    name: account.name,
+    type: account.type,
+    website: account.website || null,
+    icon_url: getAccountIcon(account.name, account.website),
+    initial_balance: account.initialBalance,
+  };
+}
+
+export async function addAccountToDatabase(account: AccountInput): Promise<Account> {
+  const id = crypto.randomUUID();
   const iconUrl = getAccountIcon(account.name, account.website);
-  if (isSupabaseConfigured && supabase) {
-    try {
-      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-        throw new Error('Browser is offline');
-      }
-      const { data, error } = await supabase
-        .from('accounts')
-        .insert({
-          id: tempId,
-          name: account.name,
-          type: account.type,
-          website: account.website || null,
-          icon_url: iconUrl,
-          initial_balance: account.initialBalance,
-        })
-        .select()
-        .single();
+  const values = { ...accountValues(account), icon_url: iconUrl };
 
-      if (error) throw error;
-
-      if (data) {
-        return {
-          id: data.id,
-          name: data.name,
-          type: data.type,
-          website: data.website || undefined,
-          icon: iconUrl,
-          initialBalance: Number(data.initial_balance || 0),
-          balance: Number(data.initial_balance || 0),
-        };
-      }
-    } catch (err) {
-      console.warn('Queued add_account for offline sync:', err);
-      enqueueOfflineSync({
-        action: 'add_account',
-        payload: {
-          id: tempId,
-          name: account.name,
-          type: account.type,
-          website: account.website,
-          iconUrl,
-          initialBalance: account.initialBalance,
-        },
-      });
-    }
-  }
+  await performWrite('accounts', 'upsert', id, values);
 
   return {
-    id: tempId,
+    id,
     name: account.name,
     type: account.type,
     website: account.website,
@@ -695,85 +509,45 @@ export async function addAccountToDatabase(account: {
   };
 }
 
-/**
- * Deletes an account from Supabase, or queues the deletion when offline.
- */
-export async function deleteAccountFromDatabase(id: string): Promise<void> {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-        throw new Error('Browser is offline');
-      }
-      const { error } = await supabase
-        .from('accounts')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-    } catch (err) {
-      console.warn('Queued delete_account for offline sync:', err);
-      enqueueOfflineSync({
-        action: 'delete_account',
-        payload: { id },
-      });
-    }
-  }
+export async function updateAccountInDatabase(
+  id: string,
+  updates: AccountInput
+): Promise<{ queued: boolean }> {
+  return performWrite('accounts', 'update', id, accountValues(updates));
 }
 
-/**
- * Creates a new category in Supabase, or queues the creation when offline.
- */
-export async function addCategoryToDatabase(catData: {
+export async function deleteAccountFromDatabase(id: string): Promise<{ queued: boolean }> {
+  return performWrite('accounts', 'delete', id, {});
+}
+
+/* ------------------------------------------------------------------ *
+ * Categories
+ * ------------------------------------------------------------------ */
+
+export interface CategoryInput {
   name: string;
   type: 'pengeluaran' | 'pemasukan';
   emoji: string;
   icon?: string;
-}): Promise<Category> {
-  const tempId = crypto.randomUUID();
+}
+
+function categoryValues(catData: CategoryInput): Record<string, unknown> {
+  return {
+    name: catData.name,
+    type: catData.type,
+    emoji: catData.icon || catData.emoji,
+  };
+}
+
+export async function addCategoryToDatabase(catData: CategoryInput): Promise<Category> {
+  const id = crypto.randomUUID();
   const storedIcon = catData.icon || catData.emoji;
+  const values = { ...categoryValues(catData), emoji: storedIcon };
 
-  if (isSupabaseConfigured && supabase) {
-    try {
-      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-        throw new Error('Browser is offline');
-      }
-      const { data, error } = await supabase
-        .from('categories')
-        .insert({
-          id: tempId,
-          name: catData.name,
-          type: catData.type,
-          emoji: storedIcon,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      if (data) {
-        return {
-          id: data.id,
-          name: data.name,
-          type: data.type,
-          emoji: data.emoji || storedIcon,
-          icon: data.emoji || storedIcon,
-        };
-      }
-    } catch (err) {
-      console.warn('Queued add_category for offline sync:', err);
-      enqueueOfflineSync({
-        action: 'add_category',
-        payload: {
-          id: tempId,
-          name: catData.name,
-          type: catData.type,
-          emoji: storedIcon,
-        },
-      });
-    }
-  }
+  await performWrite('categories', 'upsert', id, values);
 
   return {
-    id: tempId,
+    id,
     name: catData.name,
     type: catData.type,
     emoji: storedIcon,
@@ -781,70 +555,15 @@ export async function addCategoryToDatabase(catData: {
   };
 }
 
-/**
- * Updates an existing category in Supabase, or queues the update when offline.
- */
 export async function updateCategoryInDatabase(
   id: string,
-  updates: {
-    name: string;
-    type: 'pengeluaran' | 'pemasukan';
-    emoji: string;
-    icon?: string;
-  }
-): Promise<void> {
-  const storedIcon = updates.icon || updates.emoji;
-  if (isSupabaseConfigured && supabase) {
-    try {
-      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-        throw new Error('Browser is offline');
-      }
-      const { error } = await supabase
-        .from('categories')
-        .update({
-          name: updates.name,
-          type: updates.type,
-          emoji: storedIcon,
-        })
-        .eq('id', id);
-
-      if (error) throw error;
-    } catch (err) {
-      console.warn('Queued update_category for offline sync:', err);
-      enqueueOfflineSync({
-        action: 'update_category',
-        payload: {
-          id,
-          name: updates.name,
-          type: updates.type,
-          emoji: storedIcon,
-        },
-      });
-    }
-  }
+  updates: CategoryInput
+): Promise<{ queued: boolean }> {
+  return performWrite('categories', 'update', id, categoryValues(updates));
 }
 
-/**
- * Deletes a category from Supabase, or queues the deletion when offline.
- */
-export async function deleteCategoryFromDatabase(id: string): Promise<void> {
-  if (isSupabaseConfigured && supabase) {
-    try {
-      if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-        throw new Error('Browser is offline');
-      }
-      const { error } = await supabase
-        .from('categories')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-    } catch (err) {
-      console.warn('Queued delete_category for offline sync:', err);
-      enqueueOfflineSync({
-        action: 'delete_category',
-        payload: { id },
-      });
-    }
-  }
+export async function deleteCategoryFromDatabase(id: string): Promise<{ queued: boolean }> {
+  return performWrite('categories', 'delete', id, {});
 }
+
+export { SUPABASE_SESSION_HINT };

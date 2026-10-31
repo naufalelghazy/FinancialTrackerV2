@@ -10,6 +10,12 @@ export interface Account {
   website?: string;
   initialBalance?: number;
   balance: number;
+  /**
+   * True when this record only exists on this device because the server has not
+   * acknowledged it yet (offline outbox). It is replaced in place once the
+   * queued mutation is flushed, so the id never changes.
+   */
+  pendingSync?: boolean;
 }
 
 export interface Category {
@@ -18,6 +24,7 @@ export interface Category {
   type: 'pengeluaran' | 'pemasukan';
   emoji: string;
   icon?: string;
+  pendingSync?: boolean;
 }
 
 export interface Transaction {
@@ -30,6 +37,7 @@ export interface Transaction {
   categoryId?: string;
   notes?: string;
   createdAt: string;
+  pendingSync?: boolean;
 }
 
 export interface QuickTemplate {

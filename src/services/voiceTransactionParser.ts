@@ -1,4 +1,5 @@
 import type { Account, Category, QuickTemplate, Transaction, TransactionType } from '../types';
+import { shiftLocalDays, todayLocalISO } from '../lib/date';
 
 export interface ParsedVoiceTransaction {
   rawTranscript: string;
@@ -622,12 +623,10 @@ export function parseVoiceTransaction(
     }
   }
 
-  // 5. Ekstraksi Tanggal
-  let date = new Date().toISOString().slice(0, 10);
+  // 5. Ekstraksi Tanggal (local calendar, never UTC — see lib/date.ts)
+  let date = todayLocalISO();
   if (clean.includes('kemarin')) {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    date = yesterday.toISOString().slice(0, 10);
+    date = shiftLocalDays(-1);
   }
 
   // 6. Ekstraksi Catatan (Bersihkan kata-kata akun, nominal, dan kata hubung)

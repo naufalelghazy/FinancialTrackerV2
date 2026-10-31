@@ -2,12 +2,11 @@ import { ReloadPrompt } from './components/layout/ReloadPrompt';
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
-import { BottomNav } from './components/layout/BottomNav';
-import type { NavTab } from './components/layout/BottomNav';
+import { BottomNav, type NavTab } from './components/layout/BottomNav';
 import { DashboardView } from './features/dashboard/DashboardView';
 import { TransactionForm } from './components/forms/TransactionForm';
 import type { SettingsTab } from './components/modals/SettingsModal';
-import { Toast, type ToastItem } from './components/ui/Toast';
+import { Toast, type ToastItem, type ToastVariant } from './components/ui/Toast';
 import { INITIAL_ACCOUNTS, INITIAL_CATEGORIES } from './lib/constants';
 import {
   loadFinancialData,
@@ -22,9 +21,13 @@ import {
   deleteCategoryFromDatabase,
   calculateAccountBalances,
   getAccountIcon,
-  flushOfflineSyncQueue,
+  readLocalSnapshot,
+  writeLocalSnapshot,
   getPendingSyncCount,
 } from './services/financialService';
+import { flushOutbox } from './services/outbox';
+import { isPermanentWriteError } from './lib/errors';
+import { todayLocalISO } from './lib/date';
 import {
   loadCachedQuickTemplates,
   loadQuickTemplates,
@@ -71,8 +74,8 @@ const VoiceTransactionModal = lazy(() =>
 function ViewFallback() {
   return (
     <div className="py-20 flex flex-col items-center justify-center text-center space-y-2.5">
-      <div className="w-8 h-8 border-2 border-[#7132f5]/20 border-t-[#7132f5] rounded-full animate-spin" />
-      <p className="text-xs font-medium text-[#686b82] dark:text-[#9ea2b8]">Memuat tampilan...</p>
+      <div className="w-8 h-8 border-2 border-brand/20 border-t-[#7132f5] rounded-full animate-spin" />
+      <p className="text-xs font-medium text-ink-muted dark:text-[#9ea2b8]">Memuat tampilan...</p>
     </div>
   );
 }
@@ -142,69 +145,74 @@ export function App() {
   } | null>(null);
   const [activeToast, setActiveToast] = useState<ToastItem | null>(null);
 
-  const showToast = useCallback((title: string, subtitle?: string) => {
+  const showToast = useCallback((title: string, subtitle?: string, variant: ToastVariant = 'success') => {
     setActiveToast({
       id: crypto.randomUUID(),
       title,
       subtitle,
+      variant,
     });
   }, []);
 
   // Quick Templates state
   const [templates, setTemplates] = useState<QuickTemplate[]>(() => loadCachedQuickTemplates());
 
-  // Accounts state
+  // Accounts state — hydrated synchronously from the offline snapshot so a cold
+  // start renders real data instead of the seeded placeholders.
   const [accounts, setAccounts] = useState<Account[]>(() => {
-    try {
-      const saved = localStorage.getItem('ft_accounts');
-      return saved ? JSON.parse(saved) : INITIAL_ACCOUNTS;
-    } catch {
-      return INITIAL_ACCOUNTS;
-    }
+    const snapshot = readLocalSnapshot();
+    return snapshot.accounts.length > 0 ? snapshot.accounts : INITIAL_ACCOUNTS;
   });
 
   // Transactions state
-  const [transactions, setTransactions] = useState<Transaction[]>(() => {
-    try {
-      const saved = localStorage.getItem('ft_transactions');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [transactions, setTransactions] = useState<Transaction[]>(() => readLocalSnapshot().transactions);
 
   // Categories state
   const [categories, setCategories] = useState<Category[]>(() => {
-    try {
-      const saved = localStorage.getItem('ft_categories');
-      return saved ? JSON.parse(saved) : INITIAL_CATEGORIES;
-    } catch {
-      return INITIAL_CATEGORIES;
-    }
+    const snapshot = readLocalSnapshot();
+    return snapshot.categories.length > 0 ? snapshot.categories : INITIAL_CATEGORIES;
   });
+
+  // Persist every committed slice so the next visit starts from the same state.
+  const persistData = useCallback(
+    (next: { accounts: Account[]; categories: Category[]; transactions: Transaction[] }) => {
+      setAccounts(next.accounts);
+      setCategories(next.categories);
+      setTransactions(next.transactions);
+      writeLocalSnapshot(next);
+    },
+    []
+  );
 
   // Load from Supabase on mount
   useEffect(() => {
+    let cancelled = false;
+
     async function init() {
       setIsLoading(true);
       try {
-        const [data, tpls] = await Promise.all([
-          loadFinancialData(),
-          loadQuickTemplates(),
-        ]);
+        const [data, tpls] = await Promise.all([loadFinancialData(), loadQuickTemplates()]);
+        if (cancelled) return;
         setAccounts(data.accounts);
         setCategories(data.categories);
         setTransactions(data.transactions);
         setTemplates(tpls);
       } catch (err) {
         console.error('Failed to initialize data:', err);
+        if (!cancelled) showToast('Gagal memuat data', 'Menampilkan data tersimpan di perangkat', 'error');
       } finally {
-        setIsLoading(false);
-        setPendingSyncCount(getPendingSyncCount());
+        if (!cancelled) {
+          setIsLoading(false);
+          setPendingSyncCount(getPendingSyncCount());
+        }
       }
     }
-    init();
-  }, []);
+
+    void init();
+    return () => {
+      cancelled = true;
+    };
+  }, [showToast]);
 
   // Sync / Refresh data
   const handleRefresh = useCallback(async () => {
@@ -212,10 +220,7 @@ export function App() {
     setIsRefreshing(true);
     try {
       const pendingBefore = getPendingSyncCount();
-      const [data, tpls] = await Promise.all([
-        loadFinancialData(),
-        loadQuickTemplates(),
-      ]);
+      const [data, tpls] = await Promise.all([loadFinancialData(), loadQuickTemplates()]);
       setAccounts(data.accounts);
       setCategories(data.categories);
       setTransactions(data.transactions);
@@ -223,35 +228,45 @@ export function App() {
       const pendingAfter = getPendingSyncCount();
       setPendingSyncCount(pendingAfter);
       if (pendingBefore > 0 && pendingAfter < pendingBefore) {
-        const synced = pendingBefore - pendingAfter;
         showToast(
-          `${synced} perubahan offline berhasil disinkronkan!`,
+          `${pendingBefore - pendingAfter} perubahan offline berhasil disinkronkan!`,
           'Data telah diperbarui ke penyimpanan awan'
+        );
+      } else if (pendingAfter > 0) {
+        showToast(
+          `${pendingAfter} perubahan belum terkirim`,
+          'Akan dicoba lagi otomatis saat koneksi tersedia',
+          'info'
         );
       }
     } catch (err) {
       console.error('Refresh failed:', err);
+      showToast('Sinkronisasi gagal', 'Data lokal tetap aman di perangkat ini', 'error');
     } finally {
       setIsRefreshing(false);
       refreshSyncStatus();
     }
   }, [isRefreshing, refreshSyncStatus, showToast]);
 
-  // Automatically flush offline outbox when network connection returns, and track online/offline status
+  // Automatically flush the outbox when the network returns, and keep online state in sync.
   useEffect(() => {
     const handleOnline = async () => {
       setIsOnline(true);
-      const pending = getPendingSyncCount();
-      if (pending > 0) {
-        const synced = await flushOfflineSyncQueue();
-        refreshSyncStatus();
-        if (synced > 0) {
-          showToast(
-            `${synced} antrean offline berhasil disinkronkan!`,
-            'Koneksi kembali stabil'
-          );
-          handleRefresh();
-        }
+      if (getPendingSyncCount() === 0) return;
+
+      const result = await flushOutbox();
+      refreshSyncStatus();
+
+      if (result.synced > 0) {
+        showToast(`${result.synced} antrean offline berhasil disinkronkan!`, 'Koneksi kembali stabil');
+        void handleRefresh();
+      }
+      if (result.stuck > 0) {
+        showToast(
+          `${result.stuck} perubahan ditolak server`,
+          'Buka Pengaturan untuk meninjau dan membersihkannya',
+          'error'
+        );
       }
     };
 
@@ -268,28 +283,27 @@ export function App() {
     };
   }, [handleRefresh, refreshSyncStatus, showToast]);
 
-  // Handle create transaction
-  const handleAddTransaction = async (data: {
-    type: TransactionType;
-    amount: number;
-    sourceAccountId: string;
-    destinationAccountId?: string;
-    categoryId?: string;
-    date: string;
-    notes: string;
-  }) => {
-    try {
-      const newTx = await addTransactionToDatabase(data);
-      const nextTransactions = [newTx, ...transactions];
-      const nextAccounts = calculateAccountBalances(accounts, nextTransactions);
-      setTransactions(nextTransactions);
-      setAccounts(nextAccounts);
-      localStorage.setItem('ft_transactions', JSON.stringify(nextTransactions));
-      localStorage.setItem('ft_accounts', JSON.stringify(nextAccounts));
-    } catch (err) {
-      console.error('Error adding transaction:', err);
-      const fallbackTx: Transaction = {
-        id: crypto.randomUUID(),
+  /**
+   * Single funnel for a local-first transaction write.
+   *
+   * The row id is generated here and reused by the service, so an optimistic
+   * insert and its queued server mutation always share one identity — the old
+   * code could mint a second uuid on failure and duplicate the transaction.
+   */
+  const commitNewTransaction = useCallback(
+    async (data: {
+      type: TransactionType;
+      amount: number;
+      sourceAccountId: string;
+      destinationAccountId?: string;
+      categoryId?: string;
+      date: string;
+      notes: string;
+    }): Promise<{ ok: boolean; tx?: Transaction; queued: boolean }> => {
+      const rowId = crypto.randomUUID();
+
+      const optimistic: Transaction = {
+        id: rowId,
         type: data.type,
         amount: data.amount,
         sourceAccountId: data.sourceAccountId,
@@ -298,17 +312,58 @@ export function App() {
         notes: data.notes,
         date: data.date,
         createdAt: new Date().toISOString(),
+        pendingSync: true,
       };
-      const nextTransactions = [fallbackTx, ...transactions];
-      const nextAccounts = calculateAccountBalances(accounts, nextTransactions);
-      setTransactions(nextTransactions);
-      setAccounts(nextAccounts);
-      localStorage.setItem('ft_transactions', JSON.stringify(nextTransactions));
-      localStorage.setItem('ft_accounts', JSON.stringify(nextAccounts));
-    } finally {
-      refreshSyncStatus();
-    }
-  };
+
+      // Apply locally first: the user's entry is never lost to a slow network.
+      const withOptimistic = [optimistic, ...transactions];
+      const optimisticAccounts = calculateAccountBalances(accounts, withOptimistic);
+      persistData({
+        accounts: optimisticAccounts,
+        categories,
+        transactions: withOptimistic,
+      });
+
+      try {
+        const saved = await addTransactionToDatabase(data, rowId);
+        const reconciled = withOptimistic.map((t) => (t.id === rowId ? saved : t));
+        persistData({
+          accounts: calculateAccountBalances(accounts, reconciled),
+          categories,
+          transactions: reconciled,
+        });
+        refreshSyncStatus();
+        return { ok: true, tx: saved, queued: false };
+      } catch (err) {
+        if (isPermanentWriteError(err)) {
+          // Roll the optimistic row back: it will never exist on the server.
+          persistData({ accounts, categories, transactions });
+          showToast('Transaksi gagal disimpan', err.message, 'error');
+          return { ok: false, queued: false };
+        }
+        // Unknown failure: keep the local row and queue it for retry.
+        refreshSyncStatus();
+        return { ok: true, tx: optimistic, queued: true };
+      }
+    },
+    [accounts, categories, transactions, persistData, refreshSyncStatus, showToast]
+  );
+
+  // Handle create transaction
+  const handleAddTransaction = useCallback(
+    async (data: {
+      type: TransactionType;
+      amount: number;
+      sourceAccountId: string;
+      destinationAccountId?: string;
+      categoryId?: string;
+      date: string;
+      notes: string;
+    }) => {
+      return commitNewTransaction(data);
+    },
+    [commitNewTransaction]
+  );
 
   // Handle edit transaction
   const handleSaveTransaction = async (updated: {
@@ -321,6 +376,7 @@ export function App() {
     date: string;
     notes: string;
   }) => {
+    const previous = { accounts, categories, transactions };
     const nextTransactions = transactions.map((t) =>
       t.id === updated.id
         ? {
@@ -336,33 +392,53 @@ export function App() {
         : t
     );
 
-    const nextAccounts = calculateAccountBalances(accounts, nextTransactions);
-    setTransactions(nextTransactions);
-    setAccounts(nextAccounts);
-    localStorage.setItem('ft_transactions', JSON.stringify(nextTransactions));
-    localStorage.setItem('ft_accounts', JSON.stringify(nextAccounts));
+    persistData({
+      accounts: calculateAccountBalances(accounts, nextTransactions),
+      categories,
+      transactions: nextTransactions,
+    });
 
-    await updateTransactionInDatabase(updated.id, updated);
-    refreshSyncStatus();
+    try {
+      await updateTransactionInDatabase(updated.id, updated);
+    } catch (err) {
+      if (isPermanentWriteError(err)) {
+        persistData(previous);
+        showToast('Perubahan gagal disimpan', err.message, 'error');
+        return;
+      }
+      console.error('Unexpected edit failure:', err);
+    } finally {
+      refreshSyncStatus();
+    }
   };
 
   // Handle delete transaction
   const handleDeleteTransaction = async (id: string) => {
+    const previous = { accounts, categories, transactions };
     const nextTransactions = transactions.filter((t) => t.id !== id);
-    const nextAccounts = calculateAccountBalances(accounts, nextTransactions);
 
-    setTransactions(nextTransactions);
-    setAccounts(nextAccounts);
-    localStorage.setItem('ft_transactions', JSON.stringify(nextTransactions));
-    localStorage.setItem('ft_accounts', JSON.stringify(nextAccounts));
+    persistData({
+      accounts: calculateAccountBalances(accounts, nextTransactions),
+      categories,
+      transactions: nextTransactions,
+    });
 
-    await deleteTransactionFromDatabase(id);
-    refreshSyncStatus();
+    try {
+      await deleteTransactionFromDatabase(id);
+    } catch (err) {
+      if (isPermanentWriteError(err)) {
+        persistData(previous);
+        showToast('Transaksi gagal dihapus', err.message, 'error');
+        return;
+      }
+      console.error('Unexpected delete failure:', err);
+    } finally {
+      refreshSyncStatus();
+    }
   };
 
   // Handle direct execution of template from Dashboard
   const handleUseTemplateDirectly = async (tpl: QuickTemplate) => {
-    const today = new Date().toISOString().slice(0, 10);
     const resolvedSrc = resolveTemplateAccount(accounts, tpl.sourceAccountId) || accounts[0];
     const resolvedDst = tpl.destinationAccountId
       ? resolveTemplateAccount(accounts, tpl.destinationAccountId)
@@ -371,62 +447,31 @@ export function App() {
       ? resolveTemplateCategory(categories, tpl.categoryId)
       : undefined;
 
-    const txData = {
+    const result = await commitNewTransaction({
       type: tpl.type,
       amount: tpl.amount,
       sourceAccountId: resolvedSrc?.id || tpl.sourceAccountId,
       destinationAccountId: resolvedDst?.id,
       categoryId: resolvedCat?.id,
-      date: today,
+      date: todayLocalISO(),
       notes: tpl.notes || tpl.name,
-    };
+    });
 
-    let createdId = '';
-    try {
-      const newTx = await addTransactionToDatabase(txData);
-      createdId = newTx.id;
-      const nextTransactions = [newTx, ...transactions];
-      const nextAccounts = calculateAccountBalances(accounts, nextTransactions);
-      setTransactions(nextTransactions);
-      setAccounts(nextAccounts);
-      localStorage.setItem('ft_transactions', JSON.stringify(nextTransactions));
-      localStorage.setItem('ft_accounts', JSON.stringify(nextAccounts));
-    } catch (err) {
-      console.error('Error adding transaction from template:', err);
-      const fallbackTx: Transaction = {
-        id: crypto.randomUUID(),
-        type: txData.type,
-        amount: txData.amount,
-        sourceAccountId: txData.sourceAccountId,
-        destinationAccountId: txData.destinationAccountId,
-        categoryId: txData.categoryId,
-        notes: txData.notes,
-        date: txData.date,
-        createdAt: new Date().toISOString(),
-      };
-      createdId = fallbackTx.id;
-      const nextTransactions = [fallbackTx, ...transactions];
-      const nextAccounts = calculateAccountBalances(accounts, nextTransactions);
-      setTransactions(nextTransactions);
-      setAccounts(nextAccounts);
-      localStorage.setItem('ft_transactions', JSON.stringify(nextTransactions));
-      localStorage.setItem('ft_accounts', JSON.stringify(nextAccounts));
-    } finally {
-      refreshSyncStatus();
-    }
+    if (!result.ok || !result.tx) return;
 
     if (navigator.vibrate) {
       navigator.vibrate([35, 35]);
     }
 
+    const createdId = result.tx.id;
     setActiveToast({
       id: String(Date.now()),
       title: `${tpl.emoji || '⚡'} ${tpl.name} (${formatCurrency(tpl.amount)}) berhasil dicatat!`,
-      subtitle: `${resolvedSrc?.name || 'Akun'} • ${resolvedCat?.name || (tpl.type === 'transfer' ? 'Transfer' : 'Transaksi')}`,
+      subtitle: result.queued
+        ? `${resolvedSrc?.name || 'Akun'} • Tersimpan offline, akan disinkronkan`
+        : `${resolvedSrc?.name || 'Akun'} • ${resolvedCat?.name || (tpl.type === 'transfer' ? 'Transfer' : 'Transaksi')}`,
       onUndo: () => {
-        if (createdId) {
-          handleDeleteTransaction(createdId);
-        }
+        void handleDeleteTransaction(createdId);
       },
     });
   };
@@ -467,8 +512,9 @@ export function App() {
     website?: string;
     initialBalance: number;
   }) => {
+    const previous = { accounts, categories, transactions };
+
     if (data.id) {
-      // Update existing
       const nextAccounts = accounts.map((a) =>
         a.id === data.id
           ? {
@@ -481,40 +527,67 @@ export function App() {
             }
           : a
       );
-      const recomputed = calculateAccountBalances(nextAccounts, transactions);
-      setAccounts(recomputed);
-      localStorage.setItem('ft_accounts', JSON.stringify(recomputed));
-
-      await updateAccountInDatabase(data.id, {
-        name: data.name,
-        type: data.type,
-        website: data.website,
-        initialBalance: data.initialBalance,
+      persistData({
+        accounts: calculateAccountBalances(nextAccounts, transactions),
+        categories,
+        transactions,
       });
+
+      try {
+        await updateAccountInDatabase(data.id, data);
+      } catch (err) {
+        if (isPermanentWriteError(err)) {
+          persistData(previous);
+          showToast('Akun gagal diperbarui', err.message, 'error');
+          return;
+        }
+        console.error('Unexpected account update failure:', err);
+      }
     } else {
-      // Add new
-      const created = await addAccountToDatabase({
-        name: data.name,
-        type: data.type,
-        website: data.website,
-        initialBalance: data.initialBalance,
-      });
-
-      const nextAccounts = [...accounts, created];
-      const recomputed = calculateAccountBalances(nextAccounts, transactions);
-      setAccounts(recomputed);
-      localStorage.setItem('ft_accounts', JSON.stringify(recomputed));
+      try {
+        const created = await addAccountToDatabase({
+          name: data.name,
+          type: data.type,
+          website: data.website,
+          initialBalance: data.initialBalance,
+        });
+        persistData({
+          accounts: calculateAccountBalances([...accounts, created], transactions),
+          categories,
+          transactions,
+        });
+      } catch (err) {
+        if (isPermanentWriteError(err)) {
+          showToast('Akun gagal ditambahkan', err.message, 'error');
+          return;
+        }
+        console.error('Unexpected account create failure:', err);
+      }
     }
     refreshSyncStatus();
   };
 
   // Handle delete account
   const handleDeleteAccount = async (id: string) => {
-    const nextAccounts = accounts.filter((a) => a.id !== id);
-    setAccounts(nextAccounts);
-    localStorage.setItem('ft_accounts', JSON.stringify(nextAccounts));
-    await deleteAccountFromDatabase(id);
-    refreshSyncStatus();
+    const previous = { accounts, categories, transactions };
+    persistData({
+      accounts: accounts.filter((a) => a.id !== id),
+      categories,
+      transactions,
+    });
+
+    try {
+      await deleteAccountFromDatabase(id);
+    } catch (err) {
+      if (isPermanentWriteError(err)) {
+        persistData(previous);
+        showToast('Akun gagal dihapus', err.message, 'error');
+        return;
+      }
+      console.error('Unexpected account delete failure:', err);
+    } finally {
+      refreshSyncStatus();
+    }
   };
 
   // Handle edit or add category
@@ -525,29 +598,37 @@ export function App() {
     emoji: string;
     icon?: string;
   }) => {
+    const previous = { accounts, categories, transactions };
+
     if (data.id) {
-      // Update existing
       const nextCategories = categories.map((c) =>
         c.id === data.id
-          ? {
-              ...c,
-              name: data.name,
-              type: data.type,
-              emoji: data.emoji,
-              icon: data.icon,
-            }
+          ? { ...c, name: data.name, type: data.type, emoji: data.emoji, icon: data.icon }
           : c
       );
-      setCategories(nextCategories);
-      localStorage.setItem('ft_categories', JSON.stringify(nextCategories));
+      persistData({ accounts, categories: nextCategories, transactions });
 
-      await updateCategoryInDatabase(data.id, data);
+      try {
+        await updateCategoryInDatabase(data.id, data);
+      } catch (err) {
+        if (isPermanentWriteError(err)) {
+          persistData(previous);
+          showToast('Kategori gagal diperbarui', err.message, 'error');
+          return;
+        }
+        console.error('Unexpected category update failure:', err);
+      }
     } else {
-      // Add new
-      const created = await addCategoryToDatabase(data);
-      const nextCategories = [...categories, created];
-      setCategories(nextCategories);
-      localStorage.setItem('ft_categories', JSON.stringify(nextCategories));
+      try {
+        const created = await addCategoryToDatabase(data);
+        persistData({ accounts, categories: [...categories, created], transactions });
+      } catch (err) {
+        if (isPermanentWriteError(err)) {
+          showToast('Kategori gagal ditambahkan', err.message, 'error');
+          return;
+        }
+        console.error('Unexpected category create failure:', err);
+      }
     }
     setIsCategoryModalOpen(false);
     refreshSyncStatus();
@@ -555,16 +636,30 @@ export function App() {
 
   // Handle delete category
   const handleDeleteCategory = async (id: string) => {
-    const nextCategories = categories.filter((c) => c.id !== id);
-    setCategories(nextCategories);
-    localStorage.setItem('ft_categories', JSON.stringify(nextCategories));
-    await deleteCategoryFromDatabase(id);
+    const previous = { accounts, categories, transactions };
+    persistData({
+      accounts,
+      categories: categories.filter((c) => c.id !== id),
+      transactions,
+    });
     setIsCategoryModalOpen(false);
-    refreshSyncStatus();
+
+    try {
+      await deleteCategoryFromDatabase(id);
+    } catch (err) {
+      if (isPermanentWriteError(err)) {
+        persistData(previous);
+        showToast('Kategori gagal dihapus', err.message, 'error');
+        return;
+      }
+      console.error('Unexpected category delete failure:', err);
+    } finally {
+      refreshSyncStatus();
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#fafbfe] dark:bg-[#0d0e12] text-[#101114] dark:text-[#f3f4f8] flex flex-col md:flex-row font-sans selection:bg-[#855bfb]/20 selection:text-[#7132f5] transition-colors duration-200">
+    <div className="min-h-screen bg-canvas dark:bg-[#0d0e12] text-ink dark:text-[#f3f4f8] flex flex-col md:flex-row font-sans selection:bg-brand-soft selection:text-brand-text transition-colors duration-200">
       {/* Desktop Left Sidebar (Visible on md and above) */}
       <Sidebar
         activeTab={activeTab}
@@ -596,9 +691,9 @@ export function App() {
         </div>
 
         {/* Desktop Top Header Bar with Sync Outbox Status (Visible on md and above) */}
-        <header className="hidden md:flex items-center justify-between px-6 lg:px-8 h-16 border-b border-[#dedee5] dark:border-[#282937] bg-white/80 dark:bg-[#16171f]/80 backdrop-blur-md sticky top-0 z-20">
+        <header className="hidden md:flex items-center justify-between px-6 lg:px-8 h-16 border-b border-hairline dark:border-[#282937] bg-white/80 dark:bg-[#16171f]/80 backdrop-blur-md sticky top-0 z-20">
           <div>
-            <h1 className="font-bold text-base lg:text-lg text-[#101114] dark:text-[#f3f4f8] tracking-tight">
+            <h1 className="font-bold text-base lg:text-lg text-ink dark:text-[#f3f4f8] tracking-tight">
               {activeTab === 'dashboard' && 'Dashboard Overview'}
               {activeTab === 'riwayat' && 'Riwayat Transaksi'}
               {activeTab === 'report' && 'Laporan & Grafik Keuangan'}
@@ -617,7 +712,7 @@ export function App() {
                 className={`px-3 py-1.5 rounded-[10px] border text-xs font-bold inline-flex items-center gap-2 transition-colors cursor-pointer ${
                   !isOnline
                     ? 'border-[#f59e0b]/40 bg-[#f59e0b]/10 text-[#b45309] dark:text-[#fbbf24]'
-                    : 'border-[#7132f5]/40 bg-[#7132f5]/10 text-[#7132f5] dark:text-[#a78bfa]'
+                    : 'border-brand/40 bg-brand-soft text-brand-text dark:text-[#a78bfa]'
                 }`}
               >
                 <span className="w-2 h-2 rounded-full bg-[#f59e0b] animate-pulse" />
@@ -637,11 +732,11 @@ export function App() {
         <main className="w-full max-w-7xl 2xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 py-6 2xl:py-8 flex-1">
           {isLoading && accounts.length === 0 ? (
             <div className="py-24 flex flex-col items-center justify-center text-center space-y-3">
-              <div className="w-10 h-10 border-3 border-[#7132f5]/20 border-t-[#7132f5] rounded-full animate-spin" />
-              <p className="text-sm font-semibold text-[#101114]">
+              <div className="w-10 h-10 border-3 border-brand/20 border-t-[#7132f5] rounded-full animate-spin" />
+              <p className="text-sm font-semibold text-ink">
                 Menghubungkan ke Supabase...
               </p>
-              <p className="text-xs text-[#686b82]">
+              <p className="text-xs text-ink-muted">
                 Menghitung saldo dari seluruh riwayat transaksi
               </p>
             </div>
@@ -792,7 +887,6 @@ export function App() {
               setSelectedTemplate(null);
               setIsTemplateModalOpen(true);
             }}
-            onDeleteTemplate={handleDeleteTemplate}
           />
         )}
 
@@ -855,8 +949,15 @@ export function App() {
               showToast('Data ucapan diterapkan ke formulir!', 'Tinjau detail sebelum menyimpan');
             }}
             onDirectSave={async (data) => {
-              await handleAddTransaction(data);
-              showToast('Transaksi berhasil disimpan via suara!', data.notes);
+              const result = await handleAddTransaction(data);
+              if (!result.ok) return;
+              showToast(
+                result.queued
+                  ? 'Transaksi suara tersimpan di perangkat'
+                  : 'Transaksi berhasil disimpan via suara!',
+                result.queued ? 'Akan disinkronkan saat koneksi tersedia' : data.notes,
+                result.queued ? 'info' : 'success'
+              );
             }}
           />
         )}

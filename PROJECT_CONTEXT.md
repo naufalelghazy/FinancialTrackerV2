@@ -77,21 +77,30 @@ f:\project\FinancialTrackerV2\
 │   ├── lib/
 │   │   ├── categoryIcons.ts    # Mapping ikon kategori
 │   │   ├── constants.ts        # Akun & kategori default awal (fallback)
+│   │   ├── date.ts             # Helper tanggal lokal (hindari bug geser UTC)
+│   │   ├── errors.ts           # Klasifikasi error offline vs permanen
 │   │   ├── formatters.ts       # Formatter mata uang & angka
-│   │   └── supabase.ts         # Inisialisasi Supabase client & environment checks
+│   │   ├── supabase.ts         # Inisialisasi Supabase client & environment checks
+│   │   └── transactions.ts     # Aturan tunggal transfer internal / pemasukan / pengeluaran
 │   ├── services/
-│   │   ├── financialService.ts # Service utama data (CRUD, kalkulasi saldo, Offline Outbox, Supabase + LocalStorage)
+│   │   ├── financialService.ts # Service utama data (CRUD, kalkulasi saldo, Supabase + LocalStorage)
 │   │   ├── logoService.ts      # Service resolver logo bank/ewallet
+│   │   ├── outbox.ts           # Offline outbox: antrean mutasi, dedup, lock antar-tab
 │   │   ├── templateService.ts  # Service CRUD template transaksi cepat
 │   │   └── voiceTransactionParser.ts # Parser NLP transaksi suara bahasa Indonesia
 │   ├── types/
 │   │   └── index.ts            # Definisi tipe TypeScript (Account, Transaction, Category, dll.)
+│   ├── test/
+│   │   └── setup.ts            # Harness test (localStorage & navigator.onLine tiruan)
 │   ├── App.tsx                 # Root layout, lazy routing, state sinkronisasi & mode privasi
 │   ├── index.css               # Design tokens, CSS custom variables per tema, font styling
 │   └── main.tsx                # Entry point React
+├── tests/
+│   └── themeContract.test.ts   # Guard kontrak token tema (berjalan di konteks Node)
 ├── AGENTS.md                   # Instruksi agent & referensi context
 ├── PROJECT_CONTEXT.md          # Dokumen ini
 ├── README.md                   # Dokumentasi publik repositori
+├── vitest.config.ts            # Konfigurasi test runner
 └── vite.config.ts              # Konfigurasi Vite, code splitting, Tailwind v4, dan PWA
 ```
 
@@ -162,18 +171,51 @@ export interface Transaction {
 
 ## 6. Sistem Desain & Multi-Tema (`ThemeContext.tsx`)
 
-Aplikasi memiliki 4 tema desain terintegrasi:
-1. **Coinbase Edition** (`coinbase`):
+Aplikasi memiliki 5 tema desain terintegrasi. Sumber kebenaran tunggalnya adalah
+`DESIGN_SYSTEMS` di `src/contexts/themeStore.ts` — jangan menyalin data tema di
+tempat lain.
+
+1. **MongoDB Edition** (`mongodb`):
+   * Aksen hijau MongoDB `#00ed64`, kanvas deep-teal `#001e2b`, tombol pill, Euclid Circular A.
+2. **Coinbase Edition** (`coinbase`):
    * Estetika institusional modern: Biru `#0052ff`, tombol pill rounded, font Inter & JetBrains Mono, canvas clean.
-2. **The Verge Edition** (`theverge`):
+3. **The Verge Edition** (`theverge`):
    * Estetika editorial cyber-dark: Latar `#131313`, aksen neon Jelly Mint `#3cffd0`, headline Anton, body Space Grotesk.
-3. **Kraken Edition** (`kraken`):
-   * Estetika crypto rounded: Ungu Kraken `#7132f5`, sudut 12px, font IBM Plex Sans, kartu kontras.
-4. **Autumn Edition** (`autumn`):
-   * Estetika earth-warm: Amber `#d97706` / Oranye musim gugur `#ea580c`, kanvas hangat (krem pada light mode, cokelat gelap `#1c1917` pada dark mode).
+4. **Kraken Edition** (`kraken`):
+   * Estetika crypto rounded: Ungu Kraken `#7132f5`, sudut 12px, font IBM Plex Sans, kartu kontras. **Ini baseline default.**
+5. **Autumn Edition** (`autumn`):
+   * Estetika earth-warm: Oranye musim gugur `#ea580c`, kanvas hangat (krem pada light mode, cokelat gelap `#1c1917` pada dark mode).
+
+### Token Tema (`src/index.css`)
+
+Setiap tema hanya mendefinisikan **satu set variabel CSS**. Tidak ada lagi blok
+override `[data-theme=x] .bg-\[\#…\]  !important`.
+
+| Token | Utility Tailwind | Kegunaan |
+|---|---|---|
+| `--brand-primary` | `bg-brand`, `border-brand` | Isi utama brand |
+| `--brand-primary-hover` / `-active` | `hover:bg-brand-hover` | Status interaktif |
+| `--brand-soft` | `bg-brand-soft` | Chip/badge berlatar brand |
+| `--brand-text` | `text-brand-text` | Teks berwarna brand |
+| `--on-brand` | `text-on-brand` | Teks **di atas** isi brand |
+| `--bg-canvas` | `bg-canvas` | Latar halaman |
+| `--bg-surface` | `bg-surface` | Kartu, modal |
+| `--bg-surface-raised` / `-sunken` | `bg-surface-raised` | Panel bertingkat |
+| `--text-primary` / `-secondary` / `-tertiary` | `text-ink`, `text-ink-muted`, `text-ink-subtle` | Hierarki teks |
+| `--border-default` / `-strong` | `border-hairline` | Garis pemisah |
+| `--card-radius` / `--control-radius` | `rounded-card`, `rounded-control` | Geometri tema |
+
+> **Penting:** selalu pakai utility token di atas, **jangan** `bg-[#7132f5]` atau
+> hex lain. Isi `--on-brand` berbeda per tema (mint & hijau MongoDB butuh teks
+> gelap), jadi memakai `text-white` di atas `bg-brand` akan tidak terbaca.
 
 ### Konvensi Penerapan Gaya:
-* Selalu gunakan CSS variables yang terdefinisi di `src/index.css` (`--brand-primary`, `--canvas-bg`, `--surface-card`, dll.) daripada hardcode warna agar tampilan otomatis konsisten di semua tema dan dark mode.
+* Warna dan tipografi wajib berasal dari token di `src/index.css`, bukan hardcode.
+* Menambah tema berarti: tambah entri di `DESIGN_SYSTEMS` (`themeStore.ts`) +
+  blok `[data-theme=<id>]` dan `.dark[data-theme=<id>]` berisi **seluruh** token
+  di atas. `tests/themeContract.test.ts` akan gagal jika ada token yang terlewat.
+* Font tiap tema dimuat sesuai permintaan oleh `ThemeContext` (`THEME_FONTS`);
+  hanya font Kraken yang render-blocking di `index.html`.
 
 ---
 
@@ -198,9 +240,21 @@ npm run dev
 # Memeriksa linting kode (Oxlint)
 npm run lint
 
+# Menjalankan seluruh unit test (Vitest)
+npm run test
+
+# Mode watch saat mengembangkan
+npm run test:watch
+
+# Laporan cakupan test (butuh vitest --coverage)
+npm run test:coverage
+
 # Build production bundle (TypeScript + Vite)
 npm run build
 
 # Menjalankan preview hasil build
 npm run preview
+
+# Gerbang lengkap sebelum commit: lint + typecheck + test + build
+npm run check
 ```

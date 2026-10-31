@@ -114,21 +114,21 @@ const EditAccountModalContent: React.FC<Omit<EditAccountModalProps, 'isOpen'>> =
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/45 backdrop-blur-xs animate-in fade-in">
       <div
-        className="bg-white dark:bg-[#16171f] rounded-[16px] w-full max-w-sm overflow-hidden shadow-whisper border border-[#dedee5] dark:border-[#282937] transition-colors duration-200"
+        className="bg-white dark:bg-[#16171f] rounded-[16px] w-full max-w-sm overflow-hidden shadow-whisper border border-hairline dark:border-[#282937] transition-colors duration-200"
         role="dialog"
         aria-modal="true"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[#dedee5] dark:border-[#282937]">
+        <div className="flex items-center justify-between p-4 border-b border-hairline dark:border-[#282937]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-[8px] bg-[#855bfb]/15 flex items-center justify-center text-[#7132f5]">
+            <div className="w-8 h-8 rounded-[8px] bg-brand-soft flex items-center justify-center text-brand-text">
               <Landmark className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="font-bold text-base text-[#101114] dark:text-[#f3f4f8] tracking-[-0.5px]">
+              <h2 className="font-bold text-base text-ink dark:text-[#f3f4f8] tracking-[-0.5px]">
                 {isEditing ? 'Kelola Akun & Saldo' : 'Tambah Akun Baru'}
               </h2>
-              <p className="text-[11px] text-[#686b82] dark:text-[#9ca0ba]">
+              <p className="text-[11px] text-ink-muted dark:text-[#9ca0ba]">
                 {isEditing
                   ? 'Perbarui informasi atau koreksi saldo'
                   : 'Daftarkan rekening atau dompet baru'}
@@ -137,7 +137,7 @@ const EditAccountModalContent: React.FC<Omit<EditAccountModalProps, 'isOpen'>> =
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-[8px] flex items-center justify-center text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8] hover:bg-[#edeef3] dark:hover:bg-[#1e202b] transition-colors"
+            className="w-8 h-8 rounded-[8px] flex items-center justify-center text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8] hover:bg-surface-sunken dark:hover:bg-[#1e202b] transition-colors"
             aria-label="Tutup"
           >
             <X className="w-4 h-4" />
@@ -155,19 +155,19 @@ const EditAccountModalContent: React.FC<Omit<EditAccountModalProps, 'isOpen'>> =
 
           {/* Current Balance Display (if editing) */}
           {isEditing && account && (
-            <div className="p-3.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#1e202b] border border-[#dedee5] dark:border-[#282937] flex items-center justify-between">
+            <div className="p-3.5 rounded-[12px] bg-canvas dark:bg-[#1e202b] border border-hairline dark:border-[#282937] flex items-center justify-between">
               <div>
-                <span className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] block font-medium uppercase tracking-wider">
+                <span className="text-[11px] text-ink-muted dark:text-[#9ca0ba] block font-medium uppercase tracking-wider">
                   Saldo Berjalan Saat Ini
                 </span>
-                <span className="text-base font-bold text-[#101114] dark:text-[#f3f4f8]">
+                <span className="text-base font-bold text-ink dark:text-[#f3f4f8]">
                   {formatCurrency(account.balance)}
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setIsAdjustMode(!isAdjustMode)}
-                className="text-xs text-[#7132f5] hover:text-[#5741d8] font-semibold flex items-center gap-1 py-1 px-2.5 rounded-[8px] bg-[#855bfb]/10 hover:bg-[#855bfb]/20 transition-all"
+                className="text-xs text-brand-text hover:text-[#5741d8] font-semibold flex items-center gap-1 py-1 px-2.5 rounded-[8px] bg-brand-soft transition-all"
               >
                 <ArrowRightLeft className="w-3 h-3" />
                 {isAdjustMode ? 'Set Saldo Awal' : 'Koreksi Saldo'}
@@ -179,7 +179,7 @@ const EditAccountModalContent: React.FC<Omit<EditAccountModalProps, 'isOpen'>> =
           <div>
             <label
               htmlFor="account-name-input"
-              className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1"
+              className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted dark:text-[#9ca0ba] block mb-1"
             >
               Nama Akun
             </label>
@@ -194,7 +194,7 @@ const EditAccountModalContent: React.FC<Omit<EditAccountModalProps, 'isOpen'>> =
                 setPreviewFailed(false);
               }}
               placeholder="Contoh: BCA Utama, Dompet Saku"
-              className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
+              className="w-full px-3.5 py-2.5 rounded-[12px] bg-canvas dark:bg-[#13141c] border border-hairline dark:border-[#282937] text-sm font-medium text-ink dark:text-[#f3f4f8] outline-none focus:border-brand focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
             />
           </div>
 
@@ -203,12 +203,12 @@ const EditAccountModalContent: React.FC<Omit<EditAccountModalProps, 'isOpen'>> =
             <div className="flex items-center justify-between mb-1">
               <label
                 htmlFor="account-website-input"
-                className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] flex items-center gap-1.5"
+                className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted flex items-center gap-1.5"
               >
-                <Globe className="w-3.5 h-3.5 text-[#7132f5]" />
+                <Globe className="w-3.5 h-3.5 text-brand-text" />
                 <span>Website / Domain Akun</span>
               </label>
-              <span className="text-[10px] text-[#9497a9]">Untuk Logo.dev</span>
+              <span className="text-[10px] text-ink-subtle">Untuk Logo.dev</span>
             </div>
             <div className="relative flex items-center">
               <input
@@ -221,11 +221,11 @@ const EditAccountModalContent: React.FC<Omit<EditAccountModalProps, 'isOpen'>> =
                   setPreviewFailed(false);
                 }}
                 placeholder="Contoh: doku.com atau bca.co.id"
-                className="w-full pl-3.5 pr-11 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
+                className="w-full pl-3.5 pr-11 py-2.5 rounded-[12px] bg-canvas dark:bg-[#13141c] border border-hairline dark:border-[#282937] text-sm font-medium text-ink dark:text-[#f3f4f8] outline-none focus:border-brand focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
               />
               {/* Live Logo Preview icon */}
               <div
-                className="absolute right-2.5 w-7 h-7 rounded-[7px] bg-white dark:bg-[#1e202b] border border-[#dedee5] dark:border-[#35374d] p-0.5 flex items-center justify-center shadow-micro overflow-hidden"
+                className="absolute right-2.5 w-7 h-7 rounded-[7px] bg-white dark:bg-[#1e202b] border border-hairline dark:border-[#35374d] p-0.5 flex items-center justify-center shadow-micro overflow-hidden"
                 title={previewLogoSrc ? 'Preview Logo CDN' : 'Logo Default'}
               >
                 {previewLogoSrc ? (
@@ -236,11 +236,11 @@ const EditAccountModalContent: React.FC<Omit<EditAccountModalProps, 'isOpen'>> =
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <Globe className="w-3.5 h-3.5 text-[#9497a9]" />
+                  <Globe className="w-3.5 h-3.5 text-ink-subtle" />
                 )}
               </div>
             </div>
-            <p className="text-[11px] text-[#686b82] mt-1.5 leading-snug">
+            <p className="text-[11px] text-ink-muted mt-1.5 leading-snug">
               <code>img.logo.dev</code> akan mencari logo resmi berdasarkan domain ini jika nama
               akun belum terdeteksi.
             </p>
@@ -250,7 +250,7 @@ const EditAccountModalContent: React.FC<Omit<EditAccountModalProps, 'isOpen'>> =
           <div>
             <label
               htmlFor="account-type-select"
-              className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1"
+              className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted dark:text-[#9ca0ba] block mb-1"
             >
               Tipe Akun
             </label>
@@ -259,7 +259,7 @@ const EditAccountModalContent: React.FC<Omit<EditAccountModalProps, 'isOpen'>> =
               name="type"
               value={type}
               onChange={(e) => setType(e.target.value as AccountType)}
-              className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
+              className="w-full px-3.5 py-2.5 rounded-[12px] bg-canvas dark:bg-[#13141c] border border-hairline dark:border-[#282937] text-sm font-medium text-ink dark:text-[#f3f4f8] outline-none focus:border-brand focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
             >
               <option value="bank">Bank (Tabungan / Giro)</option>
               <option value="ewallet">E-Wallet (Gopay, Dana, OVO, dll)</option>
@@ -274,11 +274,11 @@ const EditAccountModalContent: React.FC<Omit<EditAccountModalProps, 'isOpen'>> =
               <div className="flex items-center justify-between mb-1">
                 <label
                   htmlFor="account-target-balance"
-                  className="text-[11px] font-semibold uppercase tracking-wider text-[#7132f5]"
+                  className="text-[11px] font-semibold uppercase tracking-wider text-brand-text"
                 >
                   Saldo Riil yang Diinginkan (Rp)
                 </label>
-                <span className="text-[10px] text-[#686b82]">Koreksi otomatis</span>
+                <span className="text-[10px] text-ink-muted">Koreksi otomatis</span>
               </div>
               <input
                 id="account-target-balance"
@@ -287,9 +287,9 @@ const EditAccountModalContent: React.FC<Omit<EditAccountModalProps, 'isOpen'>> =
                 value={targetBalanceDisplay}
                 onChange={(e) => setTargetBalanceDisplay(formatNumberInput(e.target.value))}
                 placeholder="0"
-                className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fbf9fe] border-2 border-[#7132f5] text-base font-bold text-[#101114] outline-none focus:ring-2 focus:ring-[#855bfb]/25 transition-all"
+                className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fbf9fe] border-2 border-brand text-base font-bold text-ink outline-none focus:ring-2 focus:ring-[#855bfb]/25 transition-all"
               />
-              <p className="text-[11px] text-[#686b82] mt-1.5 leading-snug">
+              <p className="text-[11px] text-ink-muted mt-1.5 leading-snug">
                 Sistem akan menghitung selisih dan menyesuaikan saldo awal agar saldo akhir sama
                 persis dengan angka di atas.
               </p>
@@ -298,7 +298,7 @@ const EditAccountModalContent: React.FC<Omit<EditAccountModalProps, 'isOpen'>> =
             <div>
               <label
                 htmlFor="account-initial-balance"
-                className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1"
+                className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted dark:text-[#9ca0ba] block mb-1"
               >
                 Saldo Awal Rekening (Rp)
               </label>
@@ -309,7 +309,7 @@ const EditAccountModalContent: React.FC<Omit<EditAccountModalProps, 'isOpen'>> =
                 value={initialBalanceDisplay}
                 onChange={(e) => setInitialBalanceDisplay(formatNumberInput(e.target.value))}
                 placeholder="0"
-                className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-bold text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
+                className="w-full px-3.5 py-2.5 rounded-[12px] bg-canvas dark:bg-[#13141c] border border-hairline dark:border-[#282937] text-sm font-bold text-ink dark:text-[#f3f4f8] outline-none focus:border-brand focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
               />
             </div>
           )}
@@ -319,7 +319,7 @@ const EditAccountModalContent: React.FC<Omit<EditAccountModalProps, 'isOpen'>> =
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 rounded-[12px] bg-[#7132f5] hover:bg-[#5741d8] active:bg-[#5b1ecf] text-white font-bold text-sm shadow-whisper transition-all disabled:opacity-50"
+              className="w-full py-3 rounded-[12px] bg-brand hover:bg-brand-hover active:bg-brand-active text-white font-bold text-sm shadow-whisper transition-all disabled:opacity-50"
             >
               {isSubmitting ? 'Menyimpan...' : 'Simpan Akun'}
             </button>

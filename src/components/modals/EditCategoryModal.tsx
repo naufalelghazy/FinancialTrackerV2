@@ -138,21 +138,21 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
       <div
-        className="bg-white dark:bg-[#16171f] rounded-[16px] w-full max-w-lg overflow-hidden shadow-whisper border border-[#dedee5] dark:border-[#282937] flex flex-col max-h-[92vh] transition-colors duration-200"
+        className="bg-white dark:bg-[#16171f] rounded-[16px] w-full max-w-lg overflow-hidden shadow-whisper border border-hairline dark:border-[#282937] flex flex-col max-h-[92vh] transition-colors duration-200"
         role="dialog"
         aria-modal="true"
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[#dedee5] dark:border-[#282937] shrink-0">
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-hairline dark:border-[#282937] shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-[10px] bg-[#855bfb]/15 flex items-center justify-center text-[#7132f5] dark:text-[#a78bfa] shrink-0">
+            <div className="w-9 h-9 rounded-[10px] bg-brand-soft flex items-center justify-center text-brand-text dark:text-[#a78bfa] shrink-0">
               <Layers className="w-4.5 h-4.5" />
             </div>
             <div>
-              <h2 className="font-bold text-base text-[#101114] dark:text-[#f3f4f8] tracking-[-0.5px]">
+              <h2 className="font-bold text-base text-ink dark:text-[#f3f4f8] tracking-[-0.5px]">
                 {isEditing ? 'Edit Kategori Transaksi' : 'Tambah Kategori Baru'}
               </h2>
-              <p className="text-[11px] text-[#686b82] dark:text-[#9ca0ba]">
+              <p className="text-[11px] text-ink-muted dark:text-[#9ca0ba]">
                 {isEditing
                   ? 'Sesuaikan nama, tipe, dan icon visual kategori'
                   : 'Buat pos kategori baru untuk pengeluaran atau pemasukan'}
@@ -161,7 +161,7 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-[8px] flex items-center justify-center text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8] hover:bg-[#edeef3] dark:hover:bg-[#1e202b] transition-colors"
+            className="w-8 h-8 rounded-[8px] flex items-center justify-center text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8] hover:bg-surface-sunken dark:hover:bg-[#1e202b] transition-colors"
             aria-label="Tutup"
           >
             <X className="w-4 h-4" />
@@ -178,16 +178,16 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
           )}
 
           {/* Live Preview Card */}
-          <div className="p-3.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#1e202b] border border-[#dedee5] dark:border-[#282937] flex items-center justify-between">
+          <div className="p-3.5 rounded-[12px] bg-canvas dark:bg-[#1e202b] border border-hairline dark:border-[#282937] flex items-center justify-between">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-[10px] bg-white dark:bg-[#282937] border border-[#dedee5] dark:border-[#35374d] flex items-center justify-center text-[#7132f5] dark:text-[#a78bfa] shadow-micro shrink-0">
+              <div className="w-10 h-10 rounded-[10px] bg-white dark:bg-[#282937] border border-hairline dark:border-[#35374d] flex items-center justify-center text-brand-text dark:text-[#a78bfa] shadow-micro shrink-0">
                 <CategoryIcon icon={selectedIconId} name={name} type={type} size="md" />
               </div>
               <div className="min-w-0">
-                <span className="text-[10px] uppercase font-bold text-[#9497a9] tracking-wider block">
+                <span className="text-[10px] uppercase font-bold text-ink-subtle tracking-wider block">
                   Pratinjau Kategori
                 </span>
-                <span className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8] block truncate">
+                <span className="font-bold text-sm text-ink dark:text-[#f3f4f8] block truncate">
                   {name.trim() || 'Nama Kategori'}
                 </span>
               </div>
@@ -208,7 +208,7 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
           <div>
             <label
               htmlFor="category-name-input"
-              className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1.5"
+              className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted dark:text-[#9ca0ba] block mb-1.5"
             >
               Nama Kategori <span className="text-[#e53e3e]">*</span>
             </label>
@@ -219,7 +219,7 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Contoh: Gym & Olahraga, Liburan, Netflix..."
-              className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm font-medium text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
+              className="w-full px-3.5 py-2.5 rounded-[12px] bg-canvas dark:bg-[#13141c] border border-hairline dark:border-[#282937] text-sm font-medium text-ink dark:text-[#f3f4f8] outline-none focus:border-brand focus:ring-2 focus:ring-[#855bfb]/15 transition-all"
               required
               autoFocus
             />
@@ -227,17 +227,17 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
 
           {/* Tipe Transaksi: Pengeluaran vs Pemasukan */}
           <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] block mb-1.5">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted dark:text-[#9ca0ba] block mb-1.5">
               Klasifikasi Jenis Transaksi
             </span>
-            <div className="grid grid-cols-2 gap-2 p-1 bg-[#edeef3] dark:bg-[#1e202b] rounded-[12px] border border-[#dedee5] dark:border-[#282937]">
+            <div className="grid grid-cols-2 gap-2 p-1 bg-surface-sunken dark:bg-[#1e202b] rounded-[12px] border border-hairline dark:border-[#282937]">
               <button
                 type="button"
                 onClick={() => setType('pengeluaran')}
                 className={`py-2 px-3 rounded-[9px] text-xs font-bold transition-all text-center ${
                   type === 'pengeluaran'
                     ? 'bg-white dark:bg-[#282937] text-[#e53e3e] dark:text-[#f87171] shadow-micro'
-                    : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
+                    : 'text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8]'
                 }`}
               >
                 Pengeluaran (Keluar)
@@ -248,7 +248,7 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
                 className={`py-2 px-3 rounded-[9px] text-xs font-bold transition-all text-center ${
                   type === 'pemasukan'
                     ? 'bg-white dark:bg-[#282937] text-[#026b3f] dark:text-[#34d399] shadow-micro'
-                    : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
+                    : 'text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8]'
                 }`}
               >
                 Pemasukan (Masuk)
@@ -261,12 +261,12 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
             <div className="flex items-center justify-between">
               <label
                 htmlFor="category-icon-search"
-                className="text-[11px] font-semibold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba]"
+                className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted dark:text-[#9ca0ba]"
               >
                 Pilihan Ikon ({CATEGORY_ICON_LIST.length} Tersedia)
               </label>
               {selectedIconId && (
-                <span className="text-[11px] font-semibold text-[#7132f5] dark:text-[#a78bfa]">
+                <span className="text-[11px] font-semibold text-brand-text dark:text-[#a78bfa]">
                   Dipilih: {selectedIconId}
                 </span>
               )}
@@ -274,7 +274,7 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
 
             {/* Search Input for Icons */}
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-[#9497a9] absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-ink-subtle absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 id="category-icon-search"
                 name="iconSearch"
@@ -282,7 +282,7 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari ikon (contoh: kopi, mobil, uang, game)..."
-                className="w-full pl-8 pr-3 py-1.5 rounded-[10px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-xs text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] transition-all"
+                className="w-full pl-8 pr-3 py-1.5 rounded-[10px] bg-canvas dark:bg-[#13141c] border border-hairline dark:border-[#282937] text-xs text-ink dark:text-[#f3f4f8] outline-none focus:border-brand transition-all"
               />
             </div>
 
@@ -295,8 +295,8 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
                   onClick={() => setSelectedGroup(grp)}
                   className={`shrink-0 px-2.5 py-1 rounded-[8px] text-[11px] font-bold transition-all ${
                     selectedGroup === grp
-                      ? 'bg-[#7132f5] text-white shadow-micro'
-                      : 'bg-[#edeef3] dark:bg-[#1e202b] text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
+                      ? 'bg-brand text-white shadow-micro'
+                      : 'bg-surface-sunken dark:bg-[#1e202b] text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8]'
                   }`}
                 >
                   {grp}
@@ -305,9 +305,9 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
             </div>
 
             {/* Icon Grid */}
-            <div className="grid grid-cols-6 sm:grid-cols-8 gap-2 p-2 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] max-h-48 overflow-y-auto">
+            <div className="grid grid-cols-6 sm:grid-cols-8 gap-2 p-2 rounded-[12px] bg-canvas dark:bg-[#13141c] border border-hairline dark:border-[#282937] max-h-48 overflow-y-auto">
               {filteredIcons.length === 0 ? (
-                <div className="col-span-full py-8 text-center text-xs text-[#9497a9]">
+                <div className="col-span-full py-8 text-center text-xs text-ink-subtle">
                   Tidak ada ikon yang sesuai dengan pencarian
                 </div>
               ) : (
@@ -322,13 +322,13 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
                       title={`${item.label} (${item.id})`}
                       className={`relative h-10 rounded-[10px] flex items-center justify-center transition-all ${
                         isSelected
-                          ? 'bg-[#7132f5]/15 text-[#7132f5] dark:text-[#a78bfa] ring-2 ring-[#7132f5] shadow-micro scale-105'
-                          : 'bg-white dark:bg-[#1e202b] text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8] hover:bg-[#edeef3] dark:hover:bg-[#282937] border border-[#dedee5]/70 dark:border-[#282937]'
+                          ? 'bg-brand-soft text-brand-text dark:text-[#a78bfa] ring-2 ring-brand shadow-micro scale-105'
+                          : 'bg-white dark:bg-[#1e202b] text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8] hover:bg-surface-sunken dark:hover:bg-[#282937] border border-[#dedee5]/70 dark:border-[#282937]'
                       }`}
                     >
                       <IconComp className="w-4.5 h-4.5" strokeWidth={isSelected ? 2.5 : 2} />
                       {isSelected && (
-                        <div className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-[#7132f5]" />
+                        <div className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-brand" />
                       )}
                     </button>
                   );
@@ -338,7 +338,7 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
           </div>
 
           {/* Action Buttons */}
-          <div className="pt-2 flex items-center justify-between gap-3 border-t border-[#dedee5] dark:border-[#282937]">
+          <div className="pt-2 flex items-center justify-between gap-3 border-t border-hairline dark:border-[#282937]">
             {isEditing && onDelete ? (
               <button
                 type="button"
@@ -362,7 +362,7 @@ const EditCategoryModalContent: React.FC<Omit<EditCategoryModalProps, 'isOpen'>>
                 type="button"
                 onClick={onClose}
                 disabled={isSubmitting || isDeleting}
-                className="px-4 py-2 rounded-[10px] text-xs font-bold text-[#686b82] dark:text-[#9ca0ba] hover:bg-[#edeef3] dark:hover:bg-[#1e202b] transition-all"
+                className="px-4 py-2 rounded-[10px] text-xs font-bold text-ink-muted dark:text-[#9ca0ba] hover:bg-surface-sunken dark:hover:bg-[#1e202b] transition-all"
               >
                 Batal
               </button>

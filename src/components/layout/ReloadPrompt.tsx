@@ -55,7 +55,7 @@ export const ReloadPrompt: React.FC = () => {
             </div>
             <button
               onClick={() => updateServiceWorker(true)}
-              className="ml-auto px-2.5 py-1 bg-[#7132f5] hover:bg-[#5741d8] text-white text-[11px] font-bold rounded-lg transition-colors"
+              className="ml-auto px-2.5 py-1 bg-brand hover:bg-brand-hover text-white text-[11px] font-bold rounded-lg transition-colors"
             >
               Segarkan
             </button>

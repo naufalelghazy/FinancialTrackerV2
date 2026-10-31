@@ -151,17 +151,17 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs">
-      <div className="bg-white dark:bg-[#181a20] rounded-[20px] max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-[#dedee5] dark:border-[#282937] max-h-[92vh] overflow-y-auto">
-        <div className="flex items-center justify-between pb-3 border-b border-[#dedee5] dark:border-[#282937]">
+      <div className="bg-white dark:bg-[#181a20] rounded-[20px] max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-hairline dark:border-[#282937] max-h-[92vh] overflow-y-auto">
+        <div className="flex items-center justify-between pb-3 border-b border-hairline dark:border-[#282937]">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-[10px] bg-[#7132f5]/10 text-[#7132f5] flex items-center justify-center font-bold text-sm">
+            <div className="w-8 h-8 rounded-[10px] bg-brand-soft text-brand-text flex items-center justify-center font-bold text-sm">
               <Zap className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-[#101114] dark:text-[#f3f4f8]">
+              <h3 className="font-bold text-base text-ink dark:text-[#f3f4f8]">
                 {isEditing ? 'Edit Template Transaksi' : 'Tambah Template Baru'}
               </h3>
-              <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
+              <p className="text-xs text-ink-muted dark:text-[#9ca0ba]">
                 Pintasan untuk mencatat transaksi harian dalam 1-klik
               </p>
             </div>
@@ -170,7 +170,7 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
             type="button"
             onClick={onClose}
             aria-label="Tutup modal template"
-            className="p-1.5 rounded-full hover:bg-[#edeef3] dark:hover:bg-[#232534] text-[#686b82] dark:text-[#9ca0ba] transition-colors"
+            className="p-1.5 rounded-full hover:bg-surface-sunken dark:hover:bg-[#232534] text-ink-muted dark:text-[#9ca0ba] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -185,10 +185,10 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           {/* Tipe Transaksi */}
           <div>
-            <span className="block text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mb-1.5">
+            <span className="block text-xs font-semibold text-ink-muted dark:text-[#9ca0ba] mb-1.5">
               Tipe Transaksi
             </span>
-            <div className="grid grid-cols-3 p-1 bg-[#edeef3] dark:bg-[#232534] rounded-[12px] gap-1 border border-[#dedee5] dark:border-[#282937]">
+            <div className="grid grid-cols-3 p-1 bg-surface-sunken dark:bg-[#232534] rounded-[12px] gap-1 border border-hairline dark:border-[#282937]">
               <button
                 type="button"
                 onClick={() => {
@@ -200,7 +200,7 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
                 className={`flex items-center justify-center gap-1.5 py-2 rounded-[10px] font-semibold text-xs transition-colors ${
                   type === 'pengeluaran'
                     ? 'bg-[#101114] text-white shadow-micro'
-                    : 'text-[#686b82] dark:text-[#9ca0ba]'
+                    : 'text-ink-muted dark:text-[#9ca0ba]'
                 }`}
               >
                 <ArrowUpRight className="w-3.5 h-3.5" />
@@ -215,8 +215,8 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
                 }}
                 className={`flex items-center justify-center gap-1.5 py-2 rounded-[10px] font-semibold text-xs transition-colors ${
                   type === 'transfer'
-                    ? 'bg-[#7132f5] text-white shadow-micro'
-                    : 'text-[#686b82] dark:text-[#9ca0ba]'
+                    ? 'bg-brand text-white shadow-micro'
+                    : 'text-ink-muted dark:text-[#9ca0ba]'
                 }`}
               >
                 <ArrowLeftRight className="w-3.5 h-3.5" />
@@ -233,7 +233,7 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
                 className={`flex items-center justify-center gap-1.5 py-2 rounded-[10px] font-semibold text-xs transition-colors ${
                   type === 'pemasukan'
                     ? 'bg-[#149e61] text-white shadow-micro'
-                    : 'text-[#686b82] dark:text-[#9ca0ba]'
+                    : 'text-ink-muted dark:text-[#9ca0ba]'
                 }`}
               >
                 <ArrowDownLeft className="w-3.5 h-3.5" />
@@ -247,7 +247,7 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
             <div className="sm:col-span-3">
               <label
                 htmlFor="tpl-name-input"
-                className="block text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mb-1"
+                className="block text-xs font-semibold text-ink-muted dark:text-[#9ca0ba] mb-1"
               >
                 Nama Template
               </label>
@@ -258,13 +258,13 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Contoh: Kopi Pagi, Makan Siang"
-                className="w-full px-3 py-2 rounded-[10px] bg-[#fafbfe] dark:bg-[#12141a] border border-[#dedee5] dark:border-[#282937] text-sm font-medium focus:outline-none focus:border-[#7132f5]"
+                className="w-full px-3 py-2 rounded-[10px] bg-canvas dark:bg-[#12141a] border border-hairline dark:border-[#282937] text-sm font-medium focus:outline-none focus:border-brand"
               />
             </div>
             <div>
               <label
                 htmlFor="tpl-emoji-input"
-                className="block text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mb-1"
+                className="block text-xs font-semibold text-ink-muted dark:text-[#9ca0ba] mb-1"
               >
                 Ikon Emoji
               </label>
@@ -274,7 +274,7 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
                 type="text"
                 value={selectedEmoji}
                 onChange={(e) => setSelectedEmoji(e.target.value)}
-                className="w-full px-3 py-2 text-center rounded-[10px] bg-[#fafbfe] dark:bg-[#12141a] border border-[#dedee5] dark:border-[#282937] text-lg font-medium focus:outline-none focus:border-[#7132f5]"
+                className="w-full px-3 py-2 text-center rounded-[10px] bg-canvas dark:bg-[#12141a] border border-hairline dark:border-[#282937] text-lg font-medium focus:outline-none focus:border-brand"
               />
             </div>
           </div>
@@ -289,8 +289,8 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
                   onClick={() => setSelectedEmoji(em)}
                   className={`w-8 h-8 rounded-[8px] flex items-center justify-center text-sm shrink-0 transition-transform ${
                     selectedEmoji === em
-                      ? 'bg-[#7132f5]/20 ring-2 ring-[#7132f5] scale-110'
-                      : 'hover:bg-[#edeef3] dark:hover:bg-[#232534]'
+                      ? 'bg-brand-soft ring-2 ring-brand scale-110'
+                      : 'hover:bg-surface-sunken dark:hover:bg-[#232534]'
                   }`}
                 >
                   {em}
@@ -303,12 +303,12 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
           <div>
             <label
               htmlFor="tpl-amount-input"
-              className="block text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mb-1"
+              className="block text-xs font-semibold text-ink-muted dark:text-[#9ca0ba] mb-1"
             >
               Nominal Default (Rp)
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-2.5 text-xs font-bold text-[#686b82] dark:text-[#9ca0ba]">
+              <span className="absolute left-3 top-2.5 text-xs font-bold text-ink-muted dark:text-[#9ca0ba]">
                 Rp
               </span>
               <input
@@ -319,7 +319,7 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
                 value={amountDisplay}
                 onChange={(e) => setAmountDisplay(formatNumberWithDots(e.target.value))}
                 placeholder="0"
-                className="w-full pl-9 pr-3 py-2 rounded-[10px] bg-[#fafbfe] dark:bg-[#12141a] border border-[#dedee5] dark:border-[#282937] text-sm font-bold tracking-tight focus:outline-none focus:border-[#7132f5]"
+                className="w-full pl-9 pr-3 py-2 rounded-[10px] bg-canvas dark:bg-[#12141a] border border-hairline dark:border-[#282937] text-sm font-bold tracking-tight focus:outline-none focus:border-brand"
               />
             </div>
           </div>
@@ -330,7 +330,7 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
             <div className="relative">
               <span
                 id="tpl-source-label"
-                className="block text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mb-1"
+                className="block text-xs font-semibold text-ink-muted dark:text-[#9ca0ba] mb-1"
               >
                 Akun Sumber
               </span>
@@ -340,10 +340,10 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
                 aria-expanded={activeDropdown === 'source'}
                 aria-haspopup="listbox"
                 onClick={() => toggleDropdown('source')}
-                className={`w-full min-h-[42px] px-3 py-2 rounded-[10px] bg-[#fafbfe] dark:bg-[#12141a] border text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] flex items-center justify-between gap-2 transition-all focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
+                className={`w-full min-h-[42px] px-3 py-2 rounded-[10px] bg-canvas dark:bg-[#12141a] border text-xs font-semibold text-ink dark:text-[#f3f4f8] flex items-center justify-between gap-2 transition-all focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
                   activeDropdown === 'source'
-                    ? 'border-[#7132f5] ring-2 ring-[#7132f5]/15'
-                    : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/60'
+                    ? 'border-brand ring-2 ring-[#7132f5]/15'
+                    : 'border-hairline dark:border-[#282937] hover:border-[#7132f5]/60'
                 }`}
               >
                 <div className="flex items-center gap-2 min-w-0">
@@ -357,7 +357,7 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
                   )}
                 </div>
                 <ChevronDown
-                  className={`w-3.5 h-3.5 text-[#686b82] dark:text-[#9ca0ba] shrink-0 transition-transform duration-150 ${
+                  className={`w-3.5 h-3.5 text-ink-muted dark:text-[#9ca0ba] shrink-0 transition-transform duration-150 ${
                     activeDropdown === 'source' ? 'rotate-180' : ''
                   }`}
                 />
@@ -367,7 +367,7 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
                 <div
                   role="listbox"
                   aria-label="Pilih Akun Sumber"
-                  className="absolute left-0 right-0 bottom-full mb-1.5 z-30 rounded-[12px] bg-white dark:bg-[#16171f] border border-[#dedee5] dark:border-[#282937] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                  className="absolute left-0 right-0 bottom-full mb-1.5 z-30 rounded-[12px] bg-white dark:bg-[#16171f] border border-hairline dark:border-[#282937] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
                 >
                   <div className="p-1.5 max-h-48 overflow-y-auto divide-y divide-[#dedee5]/40 dark:divide-[#282937]/50">
                     {accounts.map((acc) => {
@@ -387,8 +387,8 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
                           }}
                           className={`w-full min-h-[40px] px-2.5 py-1.5 rounded-[8px] text-left flex items-center justify-between gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
                             isSelected
-                              ? 'bg-[#7132f5] text-white font-bold'
-                              : 'text-[#101114] dark:text-[#f3f4f8] hover:bg-[#edeef3] dark:hover:bg-[#1e202b] font-semibold'
+                              ? 'bg-brand text-white font-bold'
+                              : 'text-ink dark:text-[#f3f4f8] hover:bg-surface-sunken dark:hover:bg-[#1e202b] font-semibold'
                           }`}
                         >
                           <div className="flex items-center gap-2 min-w-0">
@@ -398,7 +398,7 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
                               className={`text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0 ${
                                 isSelected
                                   ? 'bg-black/15 text-current'
-                                  : 'bg-[#edeef3] dark:bg-[#232534] text-[#686b82] dark:text-[#9ca0ba]'
+                                  : 'bg-surface-sunken dark:bg-[#232534] text-ink-muted dark:text-[#9ca0ba]'
                               }`}
                             >
                               {ACCOUNT_TYPE_LABELS[acc.type] || acc.type}
@@ -418,7 +418,7 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
               <div className="relative">
                 <span
                   id="tpl-dest-label"
-                  className="block text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mb-1"
+                  className="block text-xs font-semibold text-ink-muted dark:text-[#9ca0ba] mb-1"
                 >
                   Akun Tujuan
                 </span>
@@ -428,10 +428,10 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
                   aria-expanded={activeDropdown === 'destination'}
                   aria-haspopup="listbox"
                   onClick={() => toggleDropdown('destination')}
-                  className={`w-full min-h-[42px] px-3 py-2 rounded-[10px] bg-[#fafbfe] dark:bg-[#12141a] border text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] flex items-center justify-between gap-2 transition-all focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
+                  className={`w-full min-h-[42px] px-3 py-2 rounded-[10px] bg-canvas dark:bg-[#12141a] border text-xs font-semibold text-ink dark:text-[#f3f4f8] flex items-center justify-between gap-2 transition-all focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
                     activeDropdown === 'destination'
-                      ? 'border-[#7132f5] ring-2 ring-[#7132f5]/15'
-                      : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/60'
+                      ? 'border-brand ring-2 ring-[#7132f5]/15'
+                      : 'border-hairline dark:border-[#282937] hover:border-[#7132f5]/60'
                   }`}
                 >
                   <div className="flex items-center gap-2 min-w-0">
@@ -445,7 +445,7 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
                     )}
                   </div>
                   <ChevronDown
-                    className={`w-3.5 h-3.5 text-[#686b82] dark:text-[#9ca0ba] shrink-0 transition-transform duration-150 ${
+                    className={`w-3.5 h-3.5 text-ink-muted dark:text-[#9ca0ba] shrink-0 transition-transform duration-150 ${
                       activeDropdown === 'destination' ? 'rotate-180' : ''
                     }`}
                   />
@@ -455,7 +455,7 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
                   <div
                     role="listbox"
                     aria-label="Pilih Akun Tujuan"
-                    className="absolute left-0 right-0 bottom-full mb-1.5 z-30 rounded-[12px] bg-white dark:bg-[#16171f] border border-[#dedee5] dark:border-[#282937] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                    className="absolute left-0 right-0 bottom-full mb-1.5 z-30 rounded-[12px] bg-white dark:bg-[#16171f] border border-hairline dark:border-[#282937] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
                   >
                     <div className="p-1.5 max-h-48 overflow-y-auto divide-y divide-[#dedee5]/40 dark:divide-[#282937]/50">
                       {availableDestinationAccounts.map((acc) => {
@@ -472,8 +472,8 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
                             }}
                             className={`w-full min-h-[40px] px-2.5 py-1.5 rounded-[8px] text-left flex items-center justify-between gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
                               isSelected
-                                ? 'bg-[#7132f5] text-white font-bold'
-                                : 'text-[#101114] dark:text-[#f3f4f8] hover:bg-[#edeef3] dark:hover:bg-[#1e202b] font-semibold'
+                                ? 'bg-brand text-white font-bold'
+                                : 'text-ink dark:text-[#f3f4f8] hover:bg-surface-sunken dark:hover:bg-[#1e202b] font-semibold'
                             }`}
                           >
                             <div className="flex items-center gap-2 min-w-0">
@@ -483,7 +483,7 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
                                 className={`text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0 ${
                                   isSelected
                                     ? 'bg-black/15 text-current'
-                                    : 'bg-[#edeef3] dark:bg-[#232534] text-[#686b82] dark:text-[#9ca0ba]'
+                                    : 'bg-surface-sunken dark:bg-[#232534] text-ink-muted dark:text-[#9ca0ba]'
                                 }`}
                               >
                                 {formatCurrency(acc.balance)}
@@ -501,7 +501,7 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
               <div className="relative">
                 <span
                   id="tpl-category-label"
-                  className="block text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mb-1"
+                  className="block text-xs font-semibold text-ink-muted dark:text-[#9ca0ba] mb-1"
                 >
                   Kategori
                 </span>
@@ -511,10 +511,10 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
                   aria-expanded={activeDropdown === 'category'}
                   aria-haspopup="listbox"
                   onClick={() => toggleDropdown('category')}
-                  className={`w-full min-h-[42px] px-3 py-2 rounded-[10px] bg-[#fafbfe] dark:bg-[#12141a] border text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] flex items-center justify-between gap-2 transition-all focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
+                  className={`w-full min-h-[42px] px-3 py-2 rounded-[10px] bg-canvas dark:bg-[#12141a] border text-xs font-semibold text-ink dark:text-[#f3f4f8] flex items-center justify-between gap-2 transition-all focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
                     activeDropdown === 'category'
-                      ? 'border-[#7132f5] ring-2 ring-[#7132f5]/15'
-                      : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/60'
+                      ? 'border-brand ring-2 ring-[#7132f5]/15'
+                      : 'border-hairline dark:border-[#282937] hover:border-[#7132f5]/60'
                   }`}
                 >
                   <div className="flex items-center gap-2 min-w-0">
@@ -534,7 +534,7 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
                     )}
                   </div>
                   <ChevronDown
-                    className={`w-3.5 h-3.5 text-[#686b82] dark:text-[#9ca0ba] shrink-0 transition-transform duration-150 ${
+                    className={`w-3.5 h-3.5 text-ink-muted dark:text-[#9ca0ba] shrink-0 transition-transform duration-150 ${
                       activeDropdown === 'category' ? 'rotate-180' : ''
                     }`}
                   />
@@ -544,7 +544,7 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
                   <div
                     role="listbox"
                     aria-label="Pilih Kategori"
-                    className="absolute left-0 right-0 bottom-full mb-1.5 z-30 rounded-[12px] bg-white dark:bg-[#16171f] border border-[#dedee5] dark:border-[#282937] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                    className="absolute left-0 right-0 bottom-full mb-1.5 z-30 rounded-[12px] bg-white dark:bg-[#16171f] border border-hairline dark:border-[#282937] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
                   >
                     <div className="p-1.5 max-h-48 overflow-y-auto divide-y divide-[#dedee5]/40 dark:divide-[#282937]/50">
                       {filteredCategories.map((cat) => {
@@ -561,8 +561,8 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
                             }}
                             className={`w-full min-h-[40px] px-2.5 py-1.5 rounded-[8px] text-left flex items-center justify-between gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
                               isSelected
-                                ? 'bg-[#7132f5] text-white font-bold'
-                                : 'text-[#101114] dark:text-[#f3f4f8] hover:bg-[#edeef3] dark:hover:bg-[#1e202b] font-semibold'
+                                ? 'bg-brand text-white font-bold'
+                                : 'text-ink dark:text-[#f3f4f8] hover:bg-surface-sunken dark:hover:bg-[#1e202b] font-semibold'
                             }`}
                           >
                             <div className="flex items-center gap-2 min-w-0">
@@ -570,7 +570,7 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
                                 className={`w-6 h-6 rounded-[6px] flex items-center justify-center shrink-0 ${
                                   isSelected
                                     ? 'bg-black/15 text-current'
-                                    : 'bg-[#edeef3] dark:bg-[#232534]'
+                                    : 'bg-surface-sunken dark:bg-[#232534]'
                                 }`}
                               >
                                 <CategoryIcon
@@ -599,7 +599,7 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
           <div>
             <label
               htmlFor="tpl-notes-input"
-              className="block text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mb-1"
+              className="block text-xs font-semibold text-ink-muted dark:text-[#9ca0ba] mb-1"
             >
               Catatan (Opsional)
             </label>
@@ -610,12 +610,12 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Catatan tambahan saat template digunakan"
-              className="w-full px-3 py-2 rounded-[10px] bg-[#fafbfe] dark:bg-[#12141a] border border-[#dedee5] dark:border-[#282937] text-xs font-medium focus:outline-none focus:border-[#7132f5]"
+              className="w-full px-3 py-2 rounded-[10px] bg-canvas dark:bg-[#12141a] border border-hairline dark:border-[#282937] text-xs font-medium focus:outline-none focus:border-brand"
             />
           </div>
 
           {/* Actions */}
-          <div className="pt-3 border-t border-[#dedee5] dark:border-[#282937] flex items-center justify-between gap-3">
+          <div className="pt-3 border-t border-hairline dark:border-[#282937] flex items-center justify-between gap-3">
             {isEditing && onDelete ? (
               confirmDelete ? (
                 <div className="flex items-center gap-2">
@@ -635,7 +635,7 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
                   <button
                     type="button"
                     onClick={() => setConfirmDelete(false)}
-                    className="px-2 py-1.5 rounded-[8px] bg-[#edeef3] dark:bg-[#232534] text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba]"
+                    className="px-2 py-1.5 rounded-[8px] bg-surface-sunken dark:bg-[#232534] text-xs font-semibold text-ink-muted dark:text-[#9ca0ba]"
                   >
                     Batal
                   </button>
@@ -658,13 +658,13 @@ const EditTemplateModalContent: React.FC<Omit<EditTemplateModalProps, 'isOpen'>>
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-[10px] bg-[#edeef3] dark:bg-[#232534] text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] hover:bg-[#e2e4ea] dark:hover:bg-[#2d3043] transition-colors"
+                className="px-4 py-2 rounded-[10px] bg-surface-sunken dark:bg-[#232534] text-xs font-semibold text-ink-muted dark:text-[#9ca0ba] hover:bg-[#e2e4ea] dark:hover:bg-[#2d3043] transition-colors"
               >
                 Batal
               </button>
               <button
                 type="submit"
-                className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] bg-[#7132f5] hover:bg-[#5b1ecf] text-white text-xs font-bold transition-all shadow-micro"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] bg-brand hover:bg-brand-active text-white text-xs font-bold transition-all shadow-micro"
               >
                 <Check className="w-3.5 h-3.5" />
                 {isEditing ? 'Simpan Perubahan' : 'Buat Template'}

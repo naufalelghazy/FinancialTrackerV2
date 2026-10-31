@@ -311,23 +311,23 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby="voice-modal-title"
-        className="relative w-full max-w-lg bg-white dark:bg-[#16171f] rounded-[24px] border border-[#dedee5] dark:border-[#282937] shadow-2xl flex flex-col max-h-[90dvh] overflow-hidden"
+        className="relative w-full max-w-lg bg-white dark:bg-[#16171f] rounded-[24px] border border-hairline dark:border-[#282937] shadow-2xl flex flex-col max-h-[90dvh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Fixed Header */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#dedee5]/70 dark:border-[#282937] shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-[#7132f5]/10 dark:bg-[#7132f5]/20 flex items-center justify-center text-[#7132f5] dark:text-[#a78bfa]">
+            <div className="w-8 h-8 rounded-full bg-brand-soft flex items-center justify-center text-brand-text dark:text-[#a78bfa]">
               <Mic className="w-4 h-4" />
             </div>
             <div>
               <h3
                 id="voice-modal-title"
-                className="font-bold text-sm sm:text-base text-[#101114] dark:text-[#f3f4f8] leading-tight"
+                className="font-bold text-sm sm:text-base text-ink dark:text-[#f3f4f8] leading-tight"
               >
                 Catat Transaksi dengan Suara
               </h3>
-              <p className="text-[11px] text-[#686b82] dark:text-[#9ca0ba]">
+              <p className="text-[11px] text-ink-muted dark:text-[#9ca0ba]">
                 Deteksi otomatis nominal, rekening, kategori, dan catatan
               </p>
             </div>
@@ -336,7 +336,7 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Tutup Modal"
-            className="w-9 h-9 rounded-full flex items-center justify-center text-[#686b82] hover:text-[#101114] dark:text-[#9ca0ba] dark:hover:text-white hover:bg-[#edeef3] dark:hover:bg-[#1e202b] focus-visible:outline-2 focus-visible:outline-[#7132f5] transition-colors"
+            className="w-9 h-9 rounded-full flex items-center justify-center text-ink-muted hover:text-ink dark:text-[#9ca0ba] dark:hover:text-white hover:bg-surface-sunken dark:hover:bg-[#1e202b] focus-visible:outline-2 focus-visible:outline-[#7132f5] transition-colors"
             title="Tutup Modal"
           >
             <X className="w-4 h-4" />
@@ -358,7 +358,7 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
           <div className="flex flex-col items-center justify-center py-1.5 space-y-2">
             <div className="relative flex items-center justify-center">
               {isListening && (
-                <span className="absolute w-20 h-20 rounded-full bg-[#7132f5]/20 dark:bg-[#3cffd0]/20 animate-pulse" />
+                <span className="absolute w-20 h-20 rounded-full bg-brand-soft dark:bg-[#3cffd0]/20 animate-pulse" />
               )}
 
               <button
@@ -368,7 +368,7 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                 className={`relative z-10 w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-md active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7132f5] ${
                   isListening
                     ? 'btn-kraken-primary ring-4 ring-[#7132f5]/30'
-                    : 'bg-[#edeef3] dark:bg-[#1e202b] text-[#686b82] dark:text-[#9ca0ba] hover:text-[#7132f5] dark:hover:text-[#3cffd0] border border-[#dedee5] dark:border-[#282937]'
+                    : 'bg-surface-sunken dark:bg-[#1e202b] text-ink-muted dark:text-[#9ca0ba] hover:text-brand-text dark:hover:text-[#3cffd0] border border-hairline dark:border-[#282937]'
                 }`}
                 title={isListening ? 'Klik untuk Menghentikan' : 'Klik untuk Mulai Bicara'}
               >
@@ -384,8 +384,8 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
               <span
                 className={`text-xs font-semibold transition-colors ${
                   isListening
-                    ? 'text-[#7132f5] dark:text-[#3cffd0]'
-                    : 'text-[#686b82] dark:text-[#9ca0ba]'
+                    ? 'text-brand-text dark:text-[#3cffd0]'
+                    : 'text-ink-muted dark:text-[#9ca0ba]'
                 }`}
               >
                 {isListening
@@ -398,14 +398,14 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
           </div>
 
           {/* Transcript Box */}
-          <div className="p-3 rounded-[14px] bg-[#fafbfe] dark:bg-[#12131a] border border-[#dedee5] dark:border-[#282937] space-y-1.5">
-            <div className="flex items-center justify-between text-[11px] font-semibold text-[#686b82] dark:text-[#9ca0ba]">
+          <div className="p-3 rounded-[14px] bg-canvas dark:bg-[#12131a] border border-hairline dark:border-[#282937] space-y-1.5">
+            <div className="flex items-center justify-between text-[11px] font-semibold text-ink-muted dark:text-[#9ca0ba]">
               <span>Teks Hasil Ucapan:</span>
               <div className="flex items-center gap-2.5">
                 <button
                   type="button"
                   onClick={() => setIsEditingTranscript(!isEditingTranscript)}
-                  className="inline-flex items-center gap-1 py-1 px-1.5 rounded text-[11px] text-[#686b82] dark:text-[#9ca0ba] hover:text-[#7132f5] dark:hover:text-[#3cffd0] focus-visible:outline-2 focus-visible:outline-[#7132f5] transition-colors"
+                  className="inline-flex items-center gap-1 py-1 px-1.5 rounded text-[11px] text-ink-muted dark:text-[#9ca0ba] hover:text-brand-text dark:hover:text-[#3cffd0] focus-visible:outline-2 focus-visible:outline-[#7132f5] transition-colors"
                 >
                   <Pencil className="w-3 h-3" />
                   <span>{isEditingTranscript ? 'Tutup Edit' : 'Edit Teks'}</span>
@@ -414,7 +414,7 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                   <button
                     type="button"
                     onClick={handleReset}
-                    className="inline-flex items-center gap-1 py-1 px-1.5 rounded text-[11px] text-[#7132f5] dark:text-[#a78bfa] hover:underline focus-visible:outline-2 focus-visible:outline-[#7132f5]"
+                    className="inline-flex items-center gap-1 py-1 px-1.5 rounded text-[11px] text-brand-text dark:text-[#a78bfa] hover:underline focus-visible:outline-2 focus-visible:outline-[#7132f5]"
                   >
                     <RotateCcw className="w-3 h-3" />
                     <span>Ulangi</span>
@@ -436,13 +436,13 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                   }}
                   placeholder="Ketik atau edit kalimat transaksi di sini..."
                   rows={2}
-                  className="w-full text-xs sm:text-sm p-2.5 rounded-[10px] bg-white dark:bg-[#181a24] border border-[#dedee5] dark:border-[#282937] text-[#101114] dark:text-[#f3f4f8] focus-visible:outline-2 focus-visible:outline-[#7132f5]"
+                  className="w-full text-xs sm:text-sm p-2.5 rounded-[10px] bg-white dark:bg-[#181a24] border border-hairline dark:border-[#282937] text-ink dark:text-[#f3f4f8] focus-visible:outline-2 focus-visible:outline-[#7132f5]"
                 />
                 <div className="flex justify-end">
                   <button
                     type="button"
                     onClick={() => setIsEditingTranscript(false)}
-                    className="text-[11px] font-bold text-[#7132f5] dark:text-[#3cffd0] hover:underline py-1 px-2"
+                    className="text-[11px] font-bold text-brand-text dark:text-[#3cffd0] hover:underline py-1 px-2"
                   >
                     Selesai Mengedit
                   </button>
@@ -455,8 +455,8 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                 title="Klik untuk mengedit teks"
                 className={`w-full text-left text-xs sm:text-sm font-medium min-h-[36px] leading-relaxed break-words cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 p-1.5 rounded-[8px] focus-visible:outline-2 focus-visible:outline-[#7132f5] transition-colors ${
                   activeText
-                    ? 'text-[#101114] dark:text-[#f3f4f8]'
-                    : 'text-[#686b82] dark:text-[#9ca0ba] italic'
+                    ? 'text-ink dark:text-[#f3f4f8]'
+                    : 'text-ink-muted dark:text-[#9ca0ba] italic'
                 }`}
               >
                 {activeText || 'Contoh: "Makan siang 35 ribu pakai BCA"'}
@@ -475,7 +475,7 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
             <div className="p-3.5 sm:p-4 rounded-[16px] bg-white dark:bg-[#181a24] border-2 border-[#7132f5]/30 dark:border-[#3cffd0]/30 space-y-3 shadow-micro animate-in fade-in duration-150">
               {/* Header Result + Badges */}
               <div className="flex items-center justify-between flex-wrap gap-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba]">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-ink-muted dark:text-[#9ca0ba]">
                   Hasil Deteksi Cerdas:
                 </span>
                 <span
@@ -484,7 +484,7 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                       ? 'bg-[#e53e3e]/15 text-[#c53030] dark:text-[#f87171]'
                       : parsed.type === 'pemasukan'
                       ? 'bg-[#149e61]/15 text-[#026b3f] dark:text-[#34d399]'
-                      : 'bg-[#7132f5]/15 text-[#7132f5] dark:text-[#a78bfa]'
+                      : 'bg-brand-soft text-brand-text dark:text-[#a78bfa]'
                   }`}
                 >
                   {parsed.type === 'pengeluaran' && <ArrowUpRight className="w-3 h-3" />}
@@ -506,7 +506,7 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
 
               {/* History Prediction Badge */}
               {parsed.predictedFromHistory && !parsed.matchedTemplate && (
-                <div className="flex items-center gap-1.5 p-2 rounded-[10px] bg-[#7132f5]/10 border border-[#7132f5]/20 text-[#7132f5] dark:text-[#a78bfa] text-xs font-medium animate-in fade-in">
+                <div className="flex items-center gap-1.5 p-2 rounded-[10px] bg-brand-soft border border-brand/20 text-brand-text dark:text-[#a78bfa] text-xs font-medium animate-in fade-in">
                   <Sparkles className="w-3.5 h-3.5 shrink-0" />
                   <span>{parsed.predictedFromHistory.reason}</span>
                 </div>
@@ -514,7 +514,7 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
 
               {/* Nominal Display */}
               <div className="flex items-baseline justify-between border-b border-[#dedee5]/70 dark:border-[#282937] pb-2">
-                <span className="text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba]">
+                <span className="text-xs font-semibold text-ink-muted dark:text-[#9ca0ba]">
                   Nominal:
                 </span>
                 <span
@@ -524,8 +524,8 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                         ? 'text-[#c53030] dark:text-[#f87171]'
                         : parsed.type === 'pemasukan'
                         ? 'text-[#026b3f] dark:text-[#34d399]'
-                        : 'text-[#101114] dark:text-[#f3f4f8]'
-                      : 'text-[#686b82] dark:text-[#9ca0ba] text-sm italic font-sans'
+                        : 'text-ink dark:text-[#f3f4f8]'
+                      : 'text-ink-muted dark:text-[#9ca0ba] text-sm italic font-sans'
                   }`}
                 >
                   {parsed.amount ? formatCurrency(parsed.amount) : 'Belum terdeteksi'}
@@ -534,7 +534,7 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
 
               {/* Quick Nominal Shortcut Chips */}
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] font-semibold mr-1">
+                <span className="text-[11px] text-ink-muted dark:text-[#9ca0ba] font-semibold mr-1">
                   {parsed.amount ? 'Pilihan angka cepat:' : 'Pilih nominal:'}
                 </span>
                 {[10000, 20000, 35000, 50000, 100000].map((quickVal) => (
@@ -544,8 +544,8 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                     onClick={() => setOverrideAmount(quickVal)}
                     className={`min-h-[30px] px-2.5 py-1 rounded-full text-[11px] font-bold transition-all focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
                       parsed.amount === quickVal
-                        ? 'bg-[#7132f5] text-white shadow-2xs'
-                        : 'bg-[#edeef3] dark:bg-[#1e202b] text-[#101114] dark:text-[#f3f4f8] hover:bg-[#dedee5] dark:hover:bg-[#282937]'
+                        ? 'bg-brand text-white shadow-2xs'
+                        : 'bg-surface-sunken dark:bg-[#1e202b] text-ink dark:text-[#f3f4f8] hover:bg-[#dedee5] dark:hover:bg-[#282937]'
                     }`}
                   >
                     {quickVal >= 1000000 ? `${quickVal / 1000000}jt` : `${quickVal / 1000}rb`}
@@ -570,17 +570,17 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                   onClick={() => toggleDropdown('account')}
                   aria-expanded={activeDropdown === 'account'}
                   aria-haspopup="listbox"
-                  className={`w-full min-h-[58px] p-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#12131a] border text-left transition-all flex flex-col justify-between focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
+                  className={`w-full min-h-[58px] p-2.5 rounded-[12px] bg-canvas dark:bg-[#12131a] border text-left transition-all flex flex-col justify-between focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
                     activeDropdown === 'account'
-                      ? 'border-[#7132f5] ring-2 ring-[#7132f5]/15'
-                      : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/60'
+                      ? 'border-brand ring-2 ring-[#7132f5]/15'
+                      : 'border-hairline dark:border-[#282937] hover:border-[#7132f5]/60'
                   }`}
                 >
                   <div className="flex items-center justify-between w-full gap-1">
-                    <span className="text-[10px] font-semibold text-[#686b82] dark:text-[#9ca0ba] truncate">
+                    <span className="text-[10px] font-semibold text-ink-muted dark:text-[#9ca0ba] truncate">
                       {parsed.type === 'transfer' ? 'Dari Rekening' : 'Akun Pembayaran'}
                     </span>
-                    <span className="text-[10px] font-bold text-[#7132f5] dark:text-[#3cffd0] inline-flex items-center gap-0.5 shrink-0">
+                    <span className="text-[10px] font-bold text-brand-text dark:text-[#3cffd0] inline-flex items-center gap-0.5 shrink-0">
                       <span>Pilih</span>
                       <ChevronDown
                         className={`w-3 h-3 transition-transform duration-150 ${
@@ -590,10 +590,10 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-1.5 mt-1 w-full">
-                    <span className="font-bold text-xs sm:text-sm text-[#101114] dark:text-[#f3f4f8] truncate">
+                    <span className="font-bold text-xs sm:text-sm text-ink dark:text-[#f3f4f8] truncate">
                       {sourceAccount ? sourceAccount.name : 'Pilih Akun'}
                     </span>
-                    <Wallet className="w-3.5 h-3.5 text-[#686b82] dark:text-[#9ca0ba] shrink-0" />
+                    <Wallet className="w-3.5 h-3.5 text-ink-muted dark:text-[#9ca0ba] shrink-0" />
                   </div>
                 </button>
 
@@ -604,17 +604,17 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                     onClick={() => toggleDropdown('destination')}
                     aria-expanded={activeDropdown === 'destination'}
                     aria-haspopup="listbox"
-                    className={`w-full min-h-[58px] p-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#12131a] border text-left transition-all flex flex-col justify-between focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
+                    className={`w-full min-h-[58px] p-2.5 rounded-[12px] bg-canvas dark:bg-[#12131a] border text-left transition-all flex flex-col justify-between focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
                       activeDropdown === 'destination'
-                        ? 'border-[#7132f5] ring-2 ring-[#7132f5]/15'
-                        : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/60'
+                        ? 'border-brand ring-2 ring-[#7132f5]/15'
+                        : 'border-hairline dark:border-[#282937] hover:border-[#7132f5]/60'
                     }`}
                   >
                     <div className="flex items-center justify-between w-full gap-1">
-                      <span className="text-[10px] font-semibold text-[#686b82] dark:text-[#9ca0ba] truncate">
+                      <span className="text-[10px] font-semibold text-ink-muted dark:text-[#9ca0ba] truncate">
                         Ke Akun Tujuan
                       </span>
-                      <span className="text-[10px] font-bold text-[#7132f5] dark:text-[#3cffd0] inline-flex items-center gap-0.5 shrink-0">
+                      <span className="text-[10px] font-bold text-brand-text dark:text-[#3cffd0] inline-flex items-center gap-0.5 shrink-0">
                         <span>Pilih</span>
                         <ChevronDown
                           className={`w-3 h-3 transition-transform duration-150 ${
@@ -624,10 +624,10 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-1.5 mt-1 w-full">
-                      <span className="font-bold text-xs sm:text-sm text-[#101114] dark:text-[#f3f4f8] truncate">
+                      <span className="font-bold text-xs sm:text-sm text-ink dark:text-[#f3f4f8] truncate">
                         {destinationAccount ? destinationAccount.name : 'Pilih Tujuan'}
                       </span>
-                      <ArrowRight className="w-3.5 h-3.5 text-[#686b82] dark:text-[#9ca0ba] shrink-0" />
+                      <ArrowRight className="w-3.5 h-3.5 text-ink-muted dark:text-[#9ca0ba] shrink-0" />
                     </div>
                   </button>
                 ) : (
@@ -636,17 +636,17 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                     onClick={() => toggleDropdown('category')}
                     aria-expanded={activeDropdown === 'category'}
                     aria-haspopup="listbox"
-                    className={`w-full min-h-[58px] p-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#12131a] border text-left transition-all flex flex-col justify-between focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
+                    className={`w-full min-h-[58px] p-2.5 rounded-[12px] bg-canvas dark:bg-[#12131a] border text-left transition-all flex flex-col justify-between focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
                       activeDropdown === 'category'
-                        ? 'border-[#7132f5] ring-2 ring-[#7132f5]/15'
-                        : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/60'
+                        ? 'border-brand ring-2 ring-[#7132f5]/15'
+                        : 'border-hairline dark:border-[#282937] hover:border-[#7132f5]/60'
                     }`}
                   >
                     <div className="flex items-center justify-between w-full gap-1">
-                      <span className="text-[10px] font-semibold text-[#686b82] dark:text-[#9ca0ba] truncate">
+                      <span className="text-[10px] font-semibold text-ink-muted dark:text-[#9ca0ba] truncate">
                         Kategori
                       </span>
-                      <span className="text-[10px] font-bold text-[#7132f5] dark:text-[#3cffd0] inline-flex items-center gap-0.5 shrink-0">
+                      <span className="text-[10px] font-bold text-brand-text dark:text-[#3cffd0] inline-flex items-center gap-0.5 shrink-0">
                         <span>Pilih</span>
                         <ChevronDown
                           className={`w-3 h-3 transition-transform duration-150 ${
@@ -656,7 +656,7 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-1.5 mt-1 w-full">
-                      <span className="font-bold text-xs sm:text-sm text-[#101114] dark:text-[#f3f4f8] truncate">
+                      <span className="font-bold text-xs sm:text-sm text-ink dark:text-[#f3f4f8] truncate">
                         {matchedCategory ? matchedCategory.name : 'Umum'}
                       </span>
                       {matchedCategory && (
@@ -677,17 +677,17 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                   <div
                     role="listbox"
                     aria-label="Pilih Akun Pembayaran"
-                    className="absolute left-0 right-0 bottom-full mb-2 z-30 rounded-[14px] bg-white dark:bg-[#16171f] border border-[#dedee5] dark:border-[#282937] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                    className="absolute left-0 right-0 bottom-full mb-2 z-30 rounded-[14px] bg-white dark:bg-[#16171f] border border-hairline dark:border-[#282937] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
                   >
-                    <div className="flex items-center justify-between px-3 py-2 bg-[#fafbfe] dark:bg-[#12131a] border-b border-[#dedee5]/70 dark:border-[#282937]">
-                      <span className="text-[11px] font-bold text-[#101114] dark:text-[#f3f4f8]">
+                    <div className="flex items-center justify-between px-3 py-2 bg-canvas dark:bg-[#12131a] border-b border-[#dedee5]/70 dark:border-[#282937]">
+                      <span className="text-[11px] font-bold text-ink dark:text-[#f3f4f8]">
                         {parsed.type === 'transfer' ? 'Pilih Rekening Asal' : 'Pilih Metode Pembayaran'}
                       </span>
                       <button
                         type="button"
                         onClick={() => setActiveDropdown(null)}
                         aria-label="Tutup daftar akun"
-                        className="w-6 h-6 rounded-full flex items-center justify-center text-[#686b82] hover:text-[#101114] dark:text-[#9ca0ba] dark:hover:text-white hover:bg-[#edeef3] dark:hover:bg-[#1e202b]"
+                        className="w-6 h-6 rounded-full flex items-center justify-center text-ink-muted hover:text-ink dark:text-[#9ca0ba] dark:hover:text-white hover:bg-surface-sunken dark:hover:bg-[#1e202b]"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -707,8 +707,8 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                             }}
                             className={`w-full min-h-[42px] px-3 py-2 rounded-[10px] text-left flex items-center justify-between gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
                               isSelected
-                                ? 'bg-[#7132f5] text-white font-bold'
-                                : 'text-[#101114] dark:text-[#f3f4f8] hover:bg-[#edeef3] dark:hover:bg-[#1e202b] font-semibold'
+                                ? 'bg-brand text-white font-bold'
+                                : 'text-ink dark:text-[#f3f4f8] hover:bg-surface-sunken dark:hover:bg-[#1e202b] font-semibold'
                             }`}
                           >
                             <div className="flex items-center gap-2 min-w-0">
@@ -717,7 +717,7 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                                 className={`text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0 ${
                                   isSelected
                                     ? 'bg-black/15 text-current'
-                                    : 'bg-[#edeef3] dark:bg-[#232534] text-[#686b82] dark:text-[#9ca0ba]'
+                                    : 'bg-surface-sunken dark:bg-[#232534] text-ink-muted dark:text-[#9ca0ba]'
                                 }`}
                               >
                                 {ACCOUNT_TYPE_LABELS[acc.type] || acc.type}
@@ -736,17 +736,17 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                   <div
                     role="listbox"
                     aria-label="Pilih Rekening Tujuan"
-                    className="absolute left-0 right-0 bottom-full mb-2 z-30 rounded-[14px] bg-white dark:bg-[#16171f] border border-[#dedee5] dark:border-[#282937] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                    className="absolute left-0 right-0 bottom-full mb-2 z-30 rounded-[14px] bg-white dark:bg-[#16171f] border border-hairline dark:border-[#282937] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
                   >
-                    <div className="flex items-center justify-between px-3 py-2 bg-[#fafbfe] dark:bg-[#12131a] border-b border-[#dedee5]/70 dark:border-[#282937]">
-                      <span className="text-[11px] font-bold text-[#101114] dark:text-[#f3f4f8]">
+                    <div className="flex items-center justify-between px-3 py-2 bg-canvas dark:bg-[#12131a] border-b border-[#dedee5]/70 dark:border-[#282937]">
+                      <span className="text-[11px] font-bold text-ink dark:text-[#f3f4f8]">
                         Pilih Rekening Tujuan
                       </span>
                       <button
                         type="button"
                         onClick={() => setActiveDropdown(null)}
                         aria-label="Tutup daftar rekening tujuan"
-                        className="w-6 h-6 rounded-full flex items-center justify-center text-[#686b82] hover:text-[#101114] dark:text-[#9ca0ba] dark:hover:text-white hover:bg-[#edeef3] dark:hover:bg-[#1e202b]"
+                        className="w-6 h-6 rounded-full flex items-center justify-center text-ink-muted hover:text-ink dark:text-[#9ca0ba] dark:hover:text-white hover:bg-surface-sunken dark:hover:bg-[#1e202b]"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -766,8 +766,8 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                             }}
                             className={`w-full min-h-[42px] px-3 py-2 rounded-[10px] text-left flex items-center justify-between gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
                               isSelected
-                                ? 'bg-[#7132f5] text-white font-bold'
-                                : 'text-[#101114] dark:text-[#f3f4f8] hover:bg-[#edeef3] dark:hover:bg-[#1e202b] font-semibold'
+                                ? 'bg-brand text-white font-bold'
+                                : 'text-ink dark:text-[#f3f4f8] hover:bg-surface-sunken dark:hover:bg-[#1e202b] font-semibold'
                             }`}
                           >
                             <div className="flex items-center gap-2 min-w-0">
@@ -776,7 +776,7 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                                 className={`text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0 ${
                                   isSelected
                                     ? 'bg-black/15 text-current'
-                                    : 'bg-[#edeef3] dark:bg-[#232534] text-[#686b82] dark:text-[#9ca0ba]'
+                                    : 'bg-surface-sunken dark:bg-[#232534] text-ink-muted dark:text-[#9ca0ba]'
                                 }`}
                               >
                                 {ACCOUNT_TYPE_LABELS[acc.type] || acc.type}
@@ -795,17 +795,17 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                   <div
                     role="listbox"
                     aria-label="Pilih Kategori Transaksi"
-                    className="absolute left-0 right-0 bottom-full mb-2 z-30 rounded-[14px] bg-white dark:bg-[#16171f] border border-[#dedee5] dark:border-[#282937] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+                    className="absolute left-0 right-0 bottom-full mb-2 z-30 rounded-[14px] bg-white dark:bg-[#16171f] border border-hairline dark:border-[#282937] shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
                   >
-                    <div className="flex items-center justify-between px-3 py-2 bg-[#fafbfe] dark:bg-[#12131a] border-b border-[#dedee5]/70 dark:border-[#282937]">
-                      <span className="text-[11px] font-bold text-[#101114] dark:text-[#f3f4f8]">
+                    <div className="flex items-center justify-between px-3 py-2 bg-canvas dark:bg-[#12131a] border-b border-[#dedee5]/70 dark:border-[#282937]">
+                      <span className="text-[11px] font-bold text-ink dark:text-[#f3f4f8]">
                         Pilih Kategori Transaksi
                       </span>
                       <button
                         type="button"
                         onClick={() => setActiveDropdown(null)}
                         aria-label="Tutup daftar kategori"
-                        className="w-6 h-6 rounded-full flex items-center justify-center text-[#686b82] hover:text-[#101114] dark:text-[#9ca0ba] dark:hover:text-white hover:bg-[#edeef3] dark:hover:bg-[#1e202b]"
+                        className="w-6 h-6 rounded-full flex items-center justify-center text-ink-muted hover:text-ink dark:text-[#9ca0ba] dark:hover:text-white hover:bg-surface-sunken dark:hover:bg-[#1e202b]"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -825,8 +825,8 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                             }}
                             className={`w-full min-h-[42px] px-3 py-2 rounded-[10px] text-left flex items-center justify-between gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-[#7132f5] ${
                               isSelected
-                                ? 'bg-[#7132f5] text-white font-bold'
-                                : 'text-[#101114] dark:text-[#f3f4f8] hover:bg-[#edeef3] dark:hover:bg-[#1e202b] font-semibold'
+                                ? 'bg-brand text-white font-bold'
+                                : 'text-ink dark:text-[#f3f4f8] hover:bg-surface-sunken dark:hover:bg-[#1e202b] font-semibold'
                             }`}
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
@@ -853,7 +853,7 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                 <div className="flex items-center justify-between">
                   <label
                     htmlFor="voice-transaction-notes"
-                    className="text-[10px] font-semibold text-[#686b82] dark:text-[#9ca0ba]"
+                    className="text-[10px] font-semibold text-ink-muted dark:text-[#9ca0ba]"
                   >
                     Catatan Transaksi:
                   </label>
@@ -870,7 +870,7 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                     <button
                       type="button"
                       onClick={() => notesInputRef.current?.focus()}
-                      className="inline-flex items-center gap-1 text-[10px] font-bold text-[#7132f5] dark:text-[#3cffd0] hover:underline"
+                      className="inline-flex items-center gap-1 text-[10px] font-bold text-brand-text dark:text-[#3cffd0] hover:underline"
                     >
                       <Pencil className="w-2.5 h-2.5" />
                       <span>Edit Catatan</span>
@@ -886,9 +886,9 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                     value={parsed.notes}
                     onChange={(e) => setOverrideNotes(e.target.value)}
                     placeholder="Tambahkan catatan transaksi..."
-                    className="w-full min-h-[42px] px-3 py-2 pr-8 rounded-[10px] bg-[#fafbfe] dark:bg-[#12131a] border border-[#dedee5] dark:border-[#282937] text-xs sm:text-sm font-medium text-[#101114] dark:text-[#f3f4f8] focus:border-[#7132f5] focus-visible:outline-2 focus-visible:outline-[#7132f5] transition-colors"
+                    className="w-full min-h-[42px] px-3 py-2 pr-8 rounded-[10px] bg-canvas dark:bg-[#12131a] border border-hairline dark:border-[#282937] text-xs sm:text-sm font-medium text-ink dark:text-[#f3f4f8] focus:border-brand focus-visible:outline-2 focus-visible:outline-[#7132f5] transition-colors"
                   />
-                  <Pencil className="w-3.5 h-3.5 text-[#686b82] dark:text-[#9ca0ba] pointer-events-none absolute right-3" />
+                  <Pencil className="w-3.5 h-3.5 text-ink-muted dark:text-[#9ca0ba] pointer-events-none absolute right-3" />
                 </div>
               </div>
             </div>
@@ -899,23 +899,23 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
             <button
               type="button"
               onClick={() => setShowExamples(!showExamples)}
-              className="flex items-center gap-1.5 py-1 text-xs text-[#7132f5] dark:text-[#a78bfa] font-bold hover:underline focus-visible:outline-2 focus-visible:outline-[#7132f5] rounded"
+              className="flex items-center gap-1.5 py-1 text-xs text-brand-text dark:text-[#a78bfa] font-bold hover:underline focus-visible:outline-2 focus-visible:outline-[#7132f5] rounded"
             >
               <HelpCircle className="w-3.5 h-3.5" />
               <span>{showExamples ? 'Sembunyikan Contoh Ucapan' : 'Lihat Contoh Kalimat yang Didukung'}</span>
             </button>
 
             {showExamples && (
-              <div className="mt-2 grid grid-cols-1 gap-1.5 p-2 rounded-[12px] bg-[#edeef3]/60 dark:bg-[#1a1c24] border border-[#dedee5] dark:border-[#282937]">
+              <div className="mt-2 grid grid-cols-1 gap-1.5 p-2 rounded-[12px] bg-[#edeef3]/60 dark:bg-[#1a1c24] border border-hairline dark:border-[#282937]">
                 {EXAMPLE_PHRASES.map((phrase, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => handleApplyExample(phrase)}
-                    className="text-left text-xs p-2.5 rounded-[8px] hover:bg-white dark:hover:bg-[#232534] text-[#101114] dark:text-[#f3f4f8] transition-all flex items-center justify-between group focus-visible:outline-2 focus-visible:outline-[#7132f5]"
+                    className="text-left text-xs p-2.5 rounded-[8px] hover:bg-white dark:hover:bg-[#232534] text-ink dark:text-[#f3f4f8] transition-all flex items-center justify-between group focus-visible:outline-2 focus-visible:outline-[#7132f5]"
                   >
                     <span className="truncate">"{phrase}"</span>
-                    <span className="text-[10px] text-[#7132f5] dark:text-[#3cffd0] font-bold shrink-0 ml-2">
+                    <span className="text-[10px] text-brand-text dark:text-[#3cffd0] font-bold shrink-0 ml-2">
                       Gunakan
                     </span>
                   </button>
@@ -948,7 +948,7 @@ const VoiceModalContent: React.FC<VoiceModalContentProps> = ({
                 type="button"
                 disabled={!canApplyToForm}
                 onClick={handleApplyToForm}
-                className="w-full sm:w-auto min-h-[44px] py-2.5 px-4 rounded-[12px] bg-[#edeef3] dark:bg-[#1e202b] hover:bg-[#dedee5] dark:hover:bg-[#282937] text-[#101114] dark:text-[#f3f4f8] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-[#dedee5] dark:border-[#282937] disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7132f5] transition-all"
+                className="w-full sm:w-auto min-h-[44px] py-2.5 px-4 rounded-[12px] bg-surface-sunken dark:bg-[#1e202b] hover:bg-[#dedee5] dark:hover:bg-[#282937] text-ink dark:text-[#f3f4f8] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-hairline dark:border-[#282937] disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7132f5] transition-all"
               >
                 <span>Tinjau di Form</span>
                 <ArrowRight className="w-3.5 h-3.5" />

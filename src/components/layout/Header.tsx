@@ -45,7 +45,7 @@ export const Header: React.FC<HeaderProps> = ({
     : 'Sinkronkan data dengan Supabase';
 
   return (
-    <header className="sticky top-0 z-30 bg-white/95 dark:bg-[#16171f]/95 backdrop-blur-sm border-b border-[#dedee5] dark:border-[#282937] shadow-micro transition-colors duration-200">
+    <header className="sticky top-0 z-30 bg-white/95 dark:bg-[#16171f]/95 backdrop-blur-sm border-b border-hairline dark:border-[#282937] shadow-micro transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
         {/* Brand Logo & Name */}
         <div
@@ -60,13 +60,13 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Wallet className={`w-5 h-5 stroke-[2.2] ${currentConfig.id === 'theverge' ? 'text-black' : 'text-white'}`} />
           </div>
-          <span className="font-bold text-base sm:text-lg text-[#101114] dark:text-[#f3f4f8] tracking-[-0.5px] block leading-none">
+          <span className="font-bold text-base sm:text-lg text-ink dark:text-[#f3f4f8] tracking-[-0.5px] block leading-none">
             Financial Tracker
           </span>
         </div>
 
         {/* Desktop Navigation Tabs (Hidden on Mobile) */}
-        <nav className="hidden md:flex items-center gap-1 bg-[#edeef3] dark:bg-[#1e202b] p-1 rounded-[12px] border border-[#dedee5] dark:border-[#282937]">
+        <nav className="hidden md:flex items-center gap-1 bg-surface-sunken dark:bg-[#1e202b] p-1 rounded-[12px] border border-hairline dark:border-[#282937]">
           {desktopNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -76,11 +76,11 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={() => onChangeTab(item.id)}
                 className={`flex items-center gap-2 px-3.5 py-1.5 rounded-[9px] text-xs font-bold transition-all ${
                   isActive
-                    ? 'bg-white dark:bg-[#282937] text-[#101114] dark:text-[#f3f4f8] shadow-micro'
-                    : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
+                    ? 'bg-white dark:bg-[#282937] text-ink dark:text-[#f3f4f8] shadow-micro'
+                    : 'text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8]'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-[#7132f5] dark:text-[#a78bfa]' : 'text-[#686b82] dark:text-[#9ca0ba]'}`} />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-brand-text dark:text-[#a78bfa]' : 'text-ink-muted dark:text-[#9ca0ba]'}`} />
                 <span>{item.label}</span>
               </button>
             );
@@ -107,7 +107,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               type="button"
               onClick={onOpenVoiceModal}
-              className="w-9 h-9 rounded-[10px] flex items-center justify-center text-[#7132f5] dark:text-[#3cffd0] hover:bg-[#edeef3] dark:hover:bg-[#1e202b] transition-colors border border-[#dedee5] dark:border-[#282937]"
+              className="w-9 h-9 rounded-[10px] flex items-center justify-center text-brand-text dark:text-[#3cffd0] hover:bg-surface-sunken dark:hover:bg-[#1e202b] transition-colors border border-hairline dark:border-[#282937]"
               title="Input Transaksi Pakai Suara"
               aria-label="Input Transaksi Pakai Suara"
             >
@@ -118,14 +118,14 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Theme Quick Toggle Button */}
           <button
             onClick={toggleTheme}
-            className="w-9 h-9 rounded-[10px] flex items-center justify-center text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8] hover:bg-[#edeef3] dark:hover:bg-[#1e202b] transition-colors border border-[#dedee5] dark:border-[#282937]"
+            className="w-9 h-9 rounded-[10px] flex items-center justify-center text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8] hover:bg-surface-sunken dark:hover:bg-[#1e202b] transition-colors border border-hairline dark:border-[#282937]"
             title={isDark ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
             aria-label="Ganti Mode Tampilan"
           >
             {isDark ? (
               <Sun className="w-4 h-4 text-[#f59e0b]" />
             ) : (
-              <Moon className="w-4 h-4 text-[#7132f5]" />
+              <Moon className="w-4 h-4 text-brand-text" />
             )}
           </button>
 
@@ -140,15 +140,15 @@ export const Header: React.FC<HeaderProps> = ({
                 !isOnline
                   ? 'border-[#f59e0b]/40 bg-[#f59e0b]/10 text-[#b45309] dark:text-[#fbbf24]'
                   : pendingSyncCount > 0
-                  ? 'border-[#7132f5]/40 bg-[#7132f5]/10 text-[#7132f5] dark:text-[#a78bfa]'
-                  : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/40 bg-[#fafbfe] dark:bg-[#1e202b] text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
+                  ? 'border-brand/40 bg-brand-soft text-brand-text dark:text-[#a78bfa]'
+                  : 'border-hairline dark:border-[#282937] hover:border-brand/40 bg-canvas dark:bg-[#1e202b] text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8]'
               }`}
             >
               {!isOnline ? (
                 <WifiOff className="w-3.5 h-3.5 text-[#f59e0b] shrink-0" />
               ) : (
                 <RefreshCw
-                  className={`w-3.5 h-3.5 text-[#7132f5] dark:text-[#a78bfa] shrink-0 ${
+                  className={`w-3.5 h-3.5 text-brand-text dark:text-[#a78bfa] shrink-0 ${
                     isRefreshing || isLoading ? 'animate-spin' : ''
                   }`}
                 />
@@ -184,7 +184,7 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Settings Button */}
           <button
             onClick={() => onOpenSettings()}
-            className="w-9 h-9 rounded-[10px] flex items-center justify-center text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8] hover:bg-[#edeef3] dark:hover:bg-[#1e202b] transition-colors active:scale-95 border border-[#dedee5] dark:border-[#282937]"
+            className="w-9 h-9 rounded-[10px] flex items-center justify-center text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8] hover:bg-surface-sunken dark:hover:bg-[#1e202b] transition-colors active:scale-95 border border-hairline dark:border-[#282937]"
             aria-label="Pengaturan"
           >
             <Settings className="w-4 h-4" />

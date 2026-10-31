@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import type { Transaction, Account, Category } from '../../types';
 import { formatCurrency } from '../../lib/formatters';
+import { isInternalTransfer } from '../../lib/transactions';
 import { CategoryIcon } from '../../components/ui/CategoryIcon';
 import { AccountAvatar } from '../../components/ui/AccountAvatar';
 import {
@@ -216,15 +217,12 @@ export const ReportView: React.FC<ReportViewProps> = ({
     return map;
   }, [categories]);
 
-  // Check if a transaction is an internal transfer / "Pindah Akun"
-  const isTransferTx = useCallback((t: Transaction): boolean => {
-    const cat = t.categoryId ? categoryMap.get(t.categoryId) : undefined;
-    return (
-      t.type === 'transfer' ||
-      Boolean(t.destinationAccountId) ||
-      Boolean(cat?.name && cat.name.toLowerCase().includes('pindah akun'))
-    );
-  }, [categoryMap]);
+  // Check if a transaction is an internal transfer / "Pindah Akun".
+  // The rule itself lives in `lib/transactions` so every view agrees.
+  const isTransferTx = useCallback(
+    (t: Transaction): boolean => isInternalTransfer(t, { categories }),
+    [categories]
+  );
 
   // Filter transactions by period
   const filteredTransactions = useMemo(() => {
@@ -466,15 +464,15 @@ export const ReportView: React.FC<ReportViewProps> = ({
   return (
     <div className="space-y-6 pb-24 min-w-0 max-w-full">
       {/* Header & Period Filter Controls */}
-      <div className="bg-white dark:bg-[#16171f] p-4 sm:p-5 rounded-[14px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper space-y-3.5 min-w-0 max-w-full">
+      <div className="bg-white dark:bg-[#16171f] p-4 sm:p-5 rounded-[14px] sm:rounded-[16px] border border-hairline dark:border-[#282937] shadow-whisper space-y-3.5 min-w-0 max-w-full">
         <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3.5 sm:gap-4 min-w-0">
           <div className="min-w-0">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-[10px] bg-[#855bfb]/15 text-[#7132f5] dark:text-[#a78bfa] flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-[10px] bg-brand-soft text-brand-text dark:text-[#a78bfa] flex items-center justify-center shrink-0">
                 <BarChart3 className="w-4.5 h-4.5 stroke-[2.2]" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-base sm:text-lg lg:text-xl font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
+                <h1 className="text-base sm:text-lg lg:text-xl font-bold text-ink dark:text-[#f3f4f8] tracking-tight">
                   Laporan & Analisis Keuangan
                 </h1>
               </div>
@@ -508,8 +506,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
                     style={{ touchAction: 'pan-y' }}
                     className={`flex-1 xl:flex-none shrink-0 px-2 sm:px-3.5 py-1.5 rounded-[9px] text-xs font-bold tracking-wide transition-all whitespace-nowrap text-center cursor-pointer ${
                       isActive
-                        ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-sm border border-black/5 dark:border-white/5'
-                        : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8] hover:bg-white/50 dark:hover:bg-[#282937]/50'
+                        ? 'bg-white dark:bg-[#282937] text-brand-text dark:text-[#a78bfa] shadow-sm border border-black/5 dark:border-white/5'
+                        : 'text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8] hover:bg-white/50 dark:hover:bg-[#282937]/50'
                     }`}
                   >
                     {item.label}
@@ -525,8 +523,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 style={{ touchAction: 'pan-y' }}
                 className={`flex-1 xl:flex-none shrink-0 px-2 sm:px-3 py-1.5 rounded-[9px] text-xs font-bold transition-all whitespace-nowrap flex items-center justify-center gap-1 cursor-pointer ${
                   period === 'custom'
-                    ? 'bg-white dark:bg-[#282937] text-[#7132f5] dark:text-[#a78bfa] shadow-sm border border-black/5 dark:border-white/5'
-                    : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8] hover:bg-white/50 dark:hover:bg-[#282937]/50'
+                    ? 'bg-white dark:bg-[#282937] text-brand-text dark:text-[#a78bfa] shadow-sm border border-black/5 dark:border-white/5'
+                    : 'text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8] hover:bg-white/50 dark:hover:bg-[#282937]/50'
                 }`}
               >
                 <Calendar className="w-3.5 h-3.5 shrink-0" />
@@ -540,44 +538,44 @@ export const ReportView: React.FC<ReportViewProps> = ({
         {period === 'custom' && (
           <div className="pt-3 border-t border-[#dedee5]/70 dark:border-[#282937] flex flex-col md:flex-row md:items-center md:justify-between gap-3 animate-in fade-in duration-200">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-[8px] bg-[#855bfb]/15 text-[#7132f5] dark:text-[#a78bfa] flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 rounded-[8px] bg-brand-soft text-brand-text dark:text-[#a78bfa] flex items-center justify-center shrink-0">
                 <Calendar className="w-3.5 h-3.5 stroke-[2.2]" />
               </div>
               <div>
-                <span className="text-xs font-bold text-[#101114] dark:text-[#f3f4f8] block">
+                <span className="text-xs font-bold text-ink dark:text-[#f3f4f8] block">
                   Rentang Tanggal Kustom
                 </span>
-                <span className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] block">
+                <span className="text-[11px] text-ink-muted dark:text-[#9ca0ba] block">
                   Tentukan tanggal awal dan akhir untuk laporan
                 </span>
               </div>
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-1.5 bg-[#edeef3] dark:bg-[#1e202b] px-3 py-1.5 rounded-[10px] border border-[#dedee5] dark:border-[#282937]">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[#9497a9]">
+              <div className="flex items-center gap-1.5 bg-surface-sunken dark:bg-[#1e202b] px-3 py-1.5 rounded-[10px] border border-hairline dark:border-[#282937]">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-ink-subtle">
                   Dari
                 </label>
                 <input
                   type="date"
                   value={customStartDate}
                   onChange={(e) => setCustomStartDate(e.target.value)}
-                  className="bg-transparent text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] outline-none cursor-pointer"
+                  className="bg-transparent text-xs font-semibold text-ink dark:text-[#f3f4f8] outline-none cursor-pointer"
                   style={{ colorScheme: isDark ? 'dark' : 'light' }}
                 />
               </div>
 
-              <span className="text-xs font-bold text-[#9497a9] px-0.5">s/d</span>
+              <span className="text-xs font-bold text-ink-subtle px-0.5">s/d</span>
 
-              <div className="flex items-center gap-1.5 bg-[#edeef3] dark:bg-[#1e202b] px-3 py-1.5 rounded-[10px] border border-[#dedee5] dark:border-[#282937]">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-[#9497a9]">
+              <div className="flex items-center gap-1.5 bg-surface-sunken dark:bg-[#1e202b] px-3 py-1.5 rounded-[10px] border border-hairline dark:border-[#282937]">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-ink-subtle">
                   Sampai
                 </label>
                 <input
                   type="date"
                   value={customEndDate}
                   onChange={(e) => setCustomEndDate(e.target.value)}
-                  className="bg-transparent text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] outline-none cursor-pointer"
+                  className="bg-transparent text-xs font-semibold text-ink dark:text-[#f3f4f8] outline-none cursor-pointer"
                   style={{ colorScheme: isDark ? 'dark' : 'light' }}
                 />
               </div>
@@ -593,7 +591,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                     setCustomStartDate(start.toISOString().slice(0, 10));
                     setCustomEndDate(end.toISOString().slice(0, 10));
                   }}
-                  className="px-2.5 py-1 rounded-[8px] bg-white dark:bg-[#282937] hover:bg-[#edeef3] dark:hover:bg-[#343647] border border-[#dedee5] dark:border-[#282937] text-[11px] font-semibold text-[#686b82] dark:text-[#9ca0ba] transition-all shadow-micro cursor-pointer"
+                  className="px-2.5 py-1 rounded-[8px] bg-white dark:bg-[#282937] hover:bg-surface-sunken dark:hover:bg-[#343647] border border-hairline dark:border-[#282937] text-[11px] font-semibold text-ink-muted dark:text-[#9ca0ba] transition-all shadow-micro cursor-pointer"
                 >
                   7 Hari
                 </button>
@@ -606,7 +604,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                     setCustomStartDate(start.toISOString().slice(0, 10));
                     setCustomEndDate(end.toISOString().slice(0, 10));
                   }}
-                  className="px-2.5 py-1 rounded-[8px] bg-white dark:bg-[#282937] hover:bg-[#edeef3] dark:hover:bg-[#343647] border border-[#dedee5] dark:border-[#282937] text-[11px] font-semibold text-[#686b82] dark:text-[#9ca0ba] transition-all shadow-micro cursor-pointer"
+                  className="px-2.5 py-1 rounded-[8px] bg-white dark:bg-[#282937] hover:bg-surface-sunken dark:hover:bg-[#343647] border border-hairline dark:border-[#282937] text-[11px] font-semibold text-ink-muted dark:text-[#9ca0ba] transition-all shadow-micro cursor-pointer"
                 >
                   30 Hari
                 </button>
@@ -621,7 +619,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                     setCustomStartDate(fmt(firstDayLastMonth));
                     setCustomEndDate(fmt(lastDayLastMonth));
                   }}
-                  className="px-2.5 py-1 rounded-[8px] bg-white dark:bg-[#282937] hover:bg-[#edeef3] dark:hover:bg-[#343647] border border-[#dedee5] dark:border-[#282937] text-[11px] font-semibold text-[#686b82] dark:text-[#9ca0ba] transition-all shadow-micro cursor-pointer"
+                  className="px-2.5 py-1 rounded-[8px] bg-white dark:bg-[#282937] hover:bg-surface-sunken dark:hover:bg-[#343647] border border-hairline dark:border-[#282937] text-[11px] font-semibold text-ink-muted dark:text-[#9ca0ba] transition-all shadow-micro cursor-pointer"
                 >
                   Bulan Lalu
                 </button>
@@ -634,9 +632,9 @@ export const ReportView: React.FC<ReportViewProps> = ({
       {/* 2 Clean Executive KPI Cards: Pemasukan & Pengeluaran (Side-by-side on mobile & desktop) */}
       <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
         {/* Total Pemasukan */}
-        <div className="min-w-0 bg-white dark:bg-[#16171f] rounded-[12px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-3 sm:p-5 relative overflow-hidden flex flex-col justify-between">
+        <div className="min-w-0 bg-white dark:bg-[#16171f] rounded-[12px] sm:rounded-[16px] border border-hairline dark:border-[#282937] shadow-whisper p-3 sm:p-5 relative overflow-hidden flex flex-col justify-between">
           <div className="flex items-center justify-between gap-1.5">
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] truncate">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-ink-muted dark:text-[#9ca0ba] truncate">
               Pemasukan
             </span>
             <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-[6px] sm:rounded-[8px] bg-[#149e61]/12 text-[#149e61] dark:text-[#34d399] flex items-center justify-center shrink-0">
@@ -646,7 +644,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
           <div className="text-sm sm:text-2xl lg:text-3xl font-bold tracking-tight text-[#026b3f] dark:text-[#34d399] mt-1.5 sm:mt-2 tabular-nums truncate">
             +{formatCurrency(totalIncome)}
           </div>
-          <div className="text-[10px] sm:text-xs text-[#686b82] dark:text-[#9ca0ba] mt-1 sm:mt-1.5 flex items-center gap-1 min-w-0">
+          <div className="text-[10px] sm:text-xs text-ink-muted dark:text-[#9ca0ba] mt-1 sm:mt-1.5 flex items-center gap-1 min-w-0">
             <ArrowUpRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#149e61] dark:text-[#34d399] shrink-0" />
             <span className="truncate sm:hidden">{incomeByCategory.length} kategori aktif</span>
             <span className="truncate hidden sm:inline">{incomeByCategory.length} kategori pemasukan aktif</span>
@@ -654,9 +652,9 @@ export const ReportView: React.FC<ReportViewProps> = ({
         </div>
 
         {/* Total Pengeluaran */}
-        <div className="min-w-0 bg-white dark:bg-[#16171f] rounded-[12px] sm:rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-3 sm:p-5 relative overflow-hidden flex flex-col justify-between">
+        <div className="min-w-0 bg-white dark:bg-[#16171f] rounded-[12px] sm:rounded-[16px] border border-hairline dark:border-[#282937] shadow-whisper p-3 sm:p-5 relative overflow-hidden flex flex-col justify-between">
           <div className="flex items-center justify-between gap-1.5">
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] truncate">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-ink-muted dark:text-[#9ca0ba] truncate">
               Pengeluaran
             </span>
             <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-[6px] sm:rounded-[8px] bg-[#e53e3e]/12 text-[#e53e3e] dark:text-[#f87171] flex items-center justify-center shrink-0">
@@ -666,7 +664,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
           <div className="text-sm sm:text-2xl lg:text-3xl font-bold tracking-tight text-[#e53e3e] dark:text-[#f87171] mt-1.5 sm:mt-2 tabular-nums truncate">
             -{formatCurrency(totalExpense)}
           </div>
-          <div className="text-[10px] sm:text-xs text-[#686b82] dark:text-[#9ca0ba] mt-1 sm:mt-1.5 flex items-center gap-1 min-w-0">
+          <div className="text-[10px] sm:text-xs text-ink-muted dark:text-[#9ca0ba] mt-1 sm:mt-1.5 flex items-center gap-1 min-w-0">
             <ArrowDownRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#e53e3e] dark:text-[#f87171] shrink-0" />
             <span className="truncate sm:hidden">{expenseByCategory.length} kategori aktif</span>
             <span className="truncate hidden sm:inline">{expenseByCategory.length} kategori pengeluaran aktif</span>
@@ -677,7 +675,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
       {/* Main Analysis Tabs - Smooth scrollable pill bar with touch swipe, drag, and chevron buttons */}
       <HorizontalScrollTabs
         ariaLabel="Tab Analisis Laporan"
-        className="flex items-center gap-2 border-b border-[#dedee5] dark:border-[#282937] pb-3 w-full px-1"
+        className="flex items-center gap-2 border-b border-hairline dark:border-[#282937] pb-3 w-full px-1"
       >
         <button
           type="button"
@@ -687,8 +685,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
           style={{ touchAction: 'pan-y' }}
           className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2.5 rounded-[10px] text-xs font-bold transition-all cursor-pointer ${
             activeChartTab === 'category'
-              ? 'bg-[#7132f5] text-white shadow-micro'
-              : 'bg-[#fafbfe] sm:bg-transparent dark:bg-[#1e202b] sm:dark:bg-transparent border border-[#dedee5] sm:border-transparent dark:border-[#282937] text-[#686b82] dark:text-[#9ca0ba] hover:bg-[#edeef3] dark:hover:bg-[#1e202b]'
+              ? 'bg-brand text-white shadow-micro'
+              : 'bg-canvas sm:bg-transparent dark:bg-[#1e202b] sm:dark:bg-transparent border border-hairline sm:border-transparent dark:border-[#282937] text-ink-muted dark:text-[#9ca0ba] hover:bg-surface-sunken dark:hover:bg-[#1e202b]'
           }`}
         >
           <PieChartIcon className="w-4 h-4 shrink-0" />
@@ -703,8 +701,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
           style={{ touchAction: 'pan-y' }}
           className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2.5 rounded-[10px] text-xs font-bold transition-all cursor-pointer ${
             activeChartTab === 'flow'
-              ? 'bg-[#7132f5] text-white shadow-micro'
-              : 'bg-[#fafbfe] sm:bg-transparent dark:bg-[#1e202b] sm:dark:bg-transparent border border-[#dedee5] sm:border-transparent dark:border-[#282937] text-[#686b82] dark:text-[#9ca0ba] hover:bg-[#edeef3] dark:hover:bg-[#1e202b]'
+              ? 'bg-brand text-white shadow-micro'
+              : 'bg-canvas sm:bg-transparent dark:bg-[#1e202b] sm:dark:bg-transparent border border-hairline sm:border-transparent dark:border-[#282937] text-ink-muted dark:text-[#9ca0ba] hover:bg-surface-sunken dark:hover:bg-[#1e202b]'
           }`}
         >
           <TrendingUp className="w-4 h-4 shrink-0" />
@@ -719,8 +717,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
           style={{ touchAction: 'pan-y' }}
           className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2.5 rounded-[10px] text-xs font-bold transition-all cursor-pointer ${
             activeChartTab === 'source'
-              ? 'bg-[#7132f5] text-white shadow-micro'
-              : 'bg-[#fafbfe] sm:bg-transparent dark:bg-[#1e202b] sm:dark:bg-transparent border border-[#dedee5] sm:border-transparent dark:border-[#282937] text-[#686b82] dark:text-[#9ca0ba] hover:bg-[#edeef3] dark:hover:bg-[#1e202b]'
+              ? 'bg-brand text-white shadow-micro'
+              : 'bg-canvas sm:bg-transparent dark:bg-[#1e202b] sm:dark:bg-transparent border border-hairline sm:border-transparent dark:border-[#282937] text-ink-muted dark:text-[#9ca0ba] hover:bg-surface-sunken dark:hover:bg-[#1e202b]'
           }`}
         >
           <TrendingUp className="w-4 h-4 shrink-0" />
@@ -735,8 +733,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
           style={{ touchAction: 'pan-y' }}
           className={`shrink-0 whitespace-nowrap flex items-center gap-2 px-3.5 py-2.5 rounded-[10px] text-xs font-bold transition-all cursor-pointer ${
             activeChartTab === 'account'
-              ? 'bg-[#7132f5] text-white shadow-micro'
-              : 'bg-[#fafbfe] sm:bg-transparent dark:bg-[#1e202b] sm:dark:bg-transparent border border-[#dedee5] sm:border-transparent dark:border-[#282937] text-[#686b82] dark:text-[#9ca0ba] hover:bg-[#edeef3] dark:hover:bg-[#1e202b]'
+              ? 'bg-brand text-white shadow-micro'
+              : 'bg-canvas sm:bg-transparent dark:bg-[#1e202b] sm:dark:bg-transparent border border-hairline sm:border-transparent dark:border-[#282937] text-ink-muted dark:text-[#9ca0ba] hover:bg-surface-sunken dark:hover:bg-[#1e202b]'
           }`}
         >
           <CreditCard className="w-4 h-4 shrink-0" />
@@ -748,18 +746,18 @@ export const ReportView: React.FC<ReportViewProps> = ({
       {activeChartTab === 'category' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Donut Chart (5 cols) */}
-          <div className="lg:col-span-5 bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-5 flex flex-col justify-between">
+          <div className="lg:col-span-5 bg-white dark:bg-[#16171f] rounded-[16px] border border-hairline dark:border-[#282937] shadow-whisper p-5 flex flex-col justify-between">
             <div>
-              <h3 className="text-sm sm:text-base font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
+              <h3 className="text-sm sm:text-base font-bold text-ink dark:text-[#f3f4f8] tracking-tight">
                 Alokasi Pengeluaran
               </h3>
-              <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
+              <p className="text-xs text-ink-muted dark:text-[#9ca0ba]">
                 Proporsi pengeluaran berdasarkan kategori
               </p>
             </div>
 
             {expenseByCategory.length === 0 ? (
-              <div className="py-20 text-center text-xs text-[#9497a9]">
+              <div className="py-20 text-center text-xs text-ink-subtle">
                 Belum ada pengeluaran pada periode ini
               </div>
             ) : (
@@ -813,22 +811,22 @@ export const ReportView: React.FC<ReportViewProps> = ({
                             {expenseByCategory[selectedExpenseIdx].name}
                           </span>
                         </div>
-                        <span className="text-sm sm:text-lg lg:text-2xl font-bold text-[#101114] dark:text-[#f3f4f8] tabular-nums tracking-tight">
+                        <span className="text-sm sm:text-lg lg:text-2xl font-bold text-ink dark:text-[#f3f4f8] tabular-nums tracking-tight">
                           {formatCurrency(expenseByCategory[selectedExpenseIdx].amount)}
                         </span>
-                        <span className="text-[10px] sm:text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mt-0.5">
+                        <span className="text-[10px] sm:text-xs font-semibold text-ink-muted dark:text-[#9ca0ba] mt-0.5">
                           {expenseByCategory[selectedExpenseIdx].percentage.toFixed(1)}% dari total
                         </span>
                       </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center transition-all duration-200">
-                        <span className="text-[10px] sm:text-xs uppercase font-bold text-[#9497a9] tracking-wider">
+                        <span className="text-[10px] sm:text-xs uppercase font-bold text-ink-subtle tracking-wider">
                           Total
                         </span>
-                        <span className="text-sm sm:text-lg lg:text-2xl font-bold text-[#101114] dark:text-[#f3f4f8] tabular-nums tracking-tight mt-0.5">
+                        <span className="text-sm sm:text-lg lg:text-2xl font-bold text-ink dark:text-[#f3f4f8] tabular-nums tracking-tight mt-0.5">
                           {formatCurrency(totalExpense)}
                         </span>
-                        <span className="text-[10px] text-[#9497a9] mt-0.5">
+                        <span className="text-[10px] text-ink-subtle mt-0.5">
                           {expenseByCategory.length} Kategori
                         </span>
                       </div>
@@ -851,8 +849,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
                           }}
                           className={`flex items-center gap-2 p-2 rounded-[10px] border cursor-pointer transition-all ${
                             selectedExpenseIdx === i
-                              ? 'bg-[#edeef3] dark:bg-[#282937] border-[#7132f5] dark:border-[#a78bfa] ring-1 ring-[#7132f5]/40 shadow-xs'
-                              : 'bg-[#fafbfe] dark:bg-[#1e202b] border-[#dedee5]/70 dark:border-[#282937] hover:border-[#7132f5]/30'
+                              ? 'bg-surface-sunken dark:bg-[#282937] border-brand dark:border-[#a78bfa] ring-1 ring-[#7132f5]/40 shadow-xs'
+                              : 'bg-canvas dark:bg-[#1e202b] border-[#dedee5]/70 dark:border-[#282937] hover:border-[#7132f5]/30'
                           }`}
                         >
                           <span
@@ -860,10 +858,10 @@ export const ReportView: React.FC<ReportViewProps> = ({
                             style={{ backgroundColor: cat.color }}
                           />
                           <div className="min-w-0 flex-1 flex items-center justify-between">
-                            <span className="text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] truncate">
+                            <span className="text-xs font-semibold text-ink dark:text-[#f3f4f8] truncate">
                               {cat.name}
                             </span>
-                            <span className="text-[11px] font-mono font-bold text-[#686b82] dark:text-[#9ca0ba] ml-1 shrink-0">
+                            <span className="text-[11px] font-mono font-bold text-ink-muted dark:text-[#9ca0ba] ml-1 shrink-0">
                               {cat.percentage.toFixed(0)}%
                             </span>
                           </div>
@@ -875,24 +873,24 @@ export const ReportView: React.FC<ReportViewProps> = ({
               </div>
             )}
 
-            <div className="pt-2 text-center text-[11px] text-[#686b82] dark:text-[#9ca0ba]">
+            <div className="pt-2 text-center text-[11px] text-ink-muted dark:text-[#9ca0ba]">
               {expenseByCategory.length} Kategori pengeluaran aktif
             </div>
           </div>
 
           {/* Ranked Category List using standard CategoryIcon (7 cols) */}
-          <div className="lg:col-span-7 bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-5 space-y-4">
+          <div className="lg:col-span-7 bg-white dark:bg-[#16171f] rounded-[16px] border border-hairline dark:border-[#282937] shadow-whisper p-5 space-y-4">
             <div>
-              <h3 className="text-sm sm:text-base font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
+              <h3 className="text-sm sm:text-base font-bold text-ink dark:text-[#f3f4f8] tracking-tight">
                 Peringkat Kategori Terbesar
               </h3>
-              <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
+              <p className="text-xs text-ink-muted dark:text-[#9ca0ba]">
                 Klik kategori untuk melihat rincian transaksi
               </p>
             </div>
 
             {expenseByCategory.length === 0 ? (
-              <div className="py-16 text-center text-xs text-[#9497a9]">
+              <div className="py-16 text-center text-xs text-ink-subtle">
                 Tidak ada data pengeluaran
               </div>
             ) : (
@@ -911,8 +909,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
                       }}
                       className={`p-3.5 rounded-[12px] border transition-all space-y-2.5 cursor-pointer ${
                         isSelected
-                          ? 'bg-[#f4f5f8] dark:bg-[#232534] border-[#7132f5] dark:border-[#a78bfa] ring-1 ring-[#7132f5] dark:ring-[#a78bfa] shadow-sm'
-                          : 'bg-[#fafbfe] dark:bg-[#1e202b] border-[#dedee5] dark:border-[#282937]/80 hover:border-[#7132f5]/40'
+                          ? 'bg-[#f4f5f8] dark:bg-[#232534] border-brand dark:border-[#a78bfa] ring-1 ring-brand dark:ring-[#a78bfa] shadow-sm'
+                          : 'bg-canvas dark:bg-[#1e202b] border-hairline dark:border-[#282937]/80 hover:border-brand/40'
                       }`}
                     >
                       <div className="flex items-center justify-between gap-3">
@@ -926,10 +924,10 @@ export const ReportView: React.FC<ReportViewProps> = ({
                             size="md"
                           />
                           <div className="min-w-0">
-                            <span className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8] block tracking-tight truncate">
+                            <span className="font-bold text-sm text-ink dark:text-[#f3f4f8] block tracking-tight truncate">
                               {cat.name}
                             </span>
-                            <span className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] block">
+                            <span className="text-[11px] text-ink-muted dark:text-[#9ca0ba] block">
                               {cat.percentage.toFixed(1)}% dari total pengeluaran • {cat.transactions.length} transaksi
                             </span>
                           </div>
@@ -941,13 +939,13 @@ export const ReportView: React.FC<ReportViewProps> = ({
                             <span className="font-bold text-sm sm:text-base text-[#e53e3e] dark:text-[#f87171] tabular-nums block">
                               -{formatCurrency(cat.amount)}
                             </span>
-                            <span className="text-[10px] px-2 py-0.5 rounded-[6px] bg-[#edeef3] dark:bg-[#282937] font-bold text-[#7132f5] dark:text-[#a78bfa] inline-block mt-0.5">
+                            <span className="text-[10px] px-2 py-0.5 rounded-[6px] bg-surface-sunken dark:bg-[#282937] font-bold text-brand-text dark:text-[#a78bfa] inline-block mt-0.5">
                               {cat.percentage.toFixed(1)}%
                             </span>
                           </div>
                           <div
-                            className={`w-7 h-7 rounded-[8px] flex items-center justify-center text-[#686b82] dark:text-[#9ca0ba] transition-transform duration-200 ${
-                              isExpanded ? 'rotate-180 text-[#7132f5] dark:text-[#a78bfa]' : ''
+                            className={`w-7 h-7 rounded-[8px] flex items-center justify-center text-ink-muted dark:text-[#9ca0ba] transition-transform duration-200 ${
+                              isExpanded ? 'rotate-180 text-brand-text dark:text-[#a78bfa]' : ''
                             }`}
                           >
                             <ChevronDown className="w-4 h-4" />
@@ -956,7 +954,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                       </div>
 
                       {/* Progress Bar Share */}
-                      <div className="w-full bg-[#edeef3] dark:bg-[#282937] rounded-full h-1.5 overflow-hidden">
+                      <div className="w-full bg-surface-sunken dark:bg-[#282937] rounded-full h-1.5 overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all duration-500"
                           style={{ width: `${cat.percentage}%`, backgroundColor: cat.color }}
@@ -969,10 +967,10 @@ export const ReportView: React.FC<ReportViewProps> = ({
                           className="pt-3 border-t border-[#dedee5]/70 dark:border-[#282937] space-y-2 animate-in fade-in duration-200"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <div className="flex items-center justify-between text-[11px] font-semibold text-[#686b82] dark:text-[#9ca0ba] px-0.5">
+                          <div className="flex items-center justify-between text-[11px] font-semibold text-ink-muted dark:text-[#9ca0ba] px-0.5">
                             <span>Rincian Transaksi ({cat.transactions.length})</span>
                             {onEditTransaction && (
-                              <span className="text-[10px] text-[#7132f5] dark:text-[#a78bfa]">
+                              <span className="text-[10px] text-brand-text dark:text-[#a78bfa]">
                                 Klik transaksi untuk ubah
                               </span>
                             )}
@@ -987,21 +985,21 @@ export const ReportView: React.FC<ReportViewProps> = ({
                                   onClick={() => onEditTransaction?.(t)}
                                   className={`flex items-center justify-between gap-2.5 p-2.5 rounded-[9px] bg-white dark:bg-[#16171f] border border-[#dedee5]/70 dark:border-[#282937] transition-all group ${
                                     onEditTransaction
-                                      ? 'hover:border-[#7132f5] dark:hover:border-[#a78bfa] hover:bg-[#fafbfe] dark:hover:bg-[#1e202b] cursor-pointer'
+                                      ? 'hover:border-brand dark:hover:border-[#a78bfa] hover:bg-surface-sunken dark:hover:bg-[#1e202b] cursor-pointer'
                                       : ''
                                   }`}
                                 >
                                   {/* Left: Date + Note + Account Tag */}
                                   <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-1.5 flex-wrap">
-                                      <span className="text-[11px] font-bold text-[#686b82] dark:text-[#9ca0ba] shrink-0 font-mono">
+                                      <span className="text-[11px] font-bold text-ink-muted dark:text-[#9ca0ba] shrink-0 font-mono">
                                         {formatShortDate(t.date)}
                                       </span>
-                                      <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] bg-[#edeef3] dark:bg-[#282937] text-[#484b5e] dark:text-[#c4c7d4] font-medium shrink-0">
+                                      <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] bg-surface-sunken dark:bg-[#282937] text-[#484b5e] dark:text-[#c4c7d4] font-medium shrink-0">
                                         {acc?.name || 'Akun'}
                                       </span>
                                     </div>
-                                    <p className="text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] truncate mt-0.5 group-hover:text-[#7132f5] dark:group-hover:text-[#a78bfa] transition-colors">
+                                    <p className="text-xs font-semibold text-ink dark:text-[#f3f4f8] truncate mt-0.5 group-hover:text-brand-text transition-colors">
                                       {t.notes?.trim() || 'Tanpa catatan'}
                                     </p>
                                   </div>
@@ -1018,7 +1016,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                                           e.stopPropagation();
                                           onEditTransaction(t);
                                         }}
-                                        className="w-6 h-6 rounded-[6px] flex items-center justify-center text-[#9497a9] group-hover:text-[#7132f5] dark:group-hover:text-[#a78bfa] hover:bg-[#855bfb]/15 transition-all cursor-pointer"
+                                        className="w-6 h-6 rounded-[6px] flex items-center justify-center text-ink-subtle group-hover:text-brand-text hover:bg-brand-soft transition-all cursor-pointer"
                                         title="Ubah transaksi"
                                       >
                                         <Edit2 className="w-3 h-3" />
@@ -1044,13 +1042,13 @@ export const ReportView: React.FC<ReportViewProps> = ({
       {activeChartTab === 'flow' && (
         <div className="space-y-6">
           {/* Cashflow Trend Bar Chart */}
-          <div className="bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-5 space-y-4">
+          <div className="bg-white dark:bg-[#16171f] rounded-[16px] border border-hairline dark:border-[#282937] shadow-whisper p-5 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
-                <h3 className="text-sm sm:text-base font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
+                <h3 className="text-sm sm:text-base font-bold text-ink dark:text-[#f3f4f8] tracking-tight">
                   Perbandingan Pemasukan vs Pengeluaran
                 </h3>
-                <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
+                <p className="text-xs text-ink-muted dark:text-[#9ca0ba]">
                   {period === 'this_month'
                     ? 'Rincian transaksi harian bulan ini'
                     : period === 'last_month'
@@ -1065,17 +1063,17 @@ export const ReportView: React.FC<ReportViewProps> = ({
               <div className="flex items-center gap-3 text-xs font-medium">
                 <div className="flex items-center gap-1.5">
                   <span className="w-3 h-3 rounded-full bg-[#10b981]" />
-                  <span className="text-[#686b82] dark:text-[#9ca0ba]">Pemasukan</span>
+                  <span className="text-ink-muted dark:text-[#9ca0ba]">Pemasukan</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <span className="w-3 h-3 rounded-full bg-[#f43f5e]" />
-                  <span className="text-[#686b82] dark:text-[#9ca0ba]">Pengeluaran</span>
+                  <span className="text-ink-muted dark:text-[#9ca0ba]">Pengeluaran</span>
                 </div>
               </div>
             </div>
 
             {timelineData.length === 0 ? (
-              <div className="text-center py-16 text-[#9497a9] text-xs">
+              <div className="text-center py-16 text-ink-subtle text-xs">
                 Tidak ada data transaksi pada periode yang dipilih.
               </div>
             ) : (
@@ -1128,18 +1126,18 @@ export const ReportView: React.FC<ReportViewProps> = ({
           </div>
 
           {/* Net Cashflow Curve Area */}
-          <div className="bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-5 space-y-4">
+          <div className="bg-white dark:bg-[#16171f] rounded-[16px] border border-hairline dark:border-[#282937] shadow-whisper p-5 space-y-4">
             <div>
-              <h3 className="text-sm sm:text-base font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
+              <h3 className="text-sm sm:text-base font-bold text-ink dark:text-[#f3f4f8] tracking-tight">
                 Tren Selisih Bersih (Net Cashflow)
               </h3>
-              <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
+              <p className="text-xs text-ink-muted dark:text-[#9ca0ba]">
                 Grafik surplus atau defisit bersih per titik waktu
               </p>
             </div>
 
             {timelineData.length === 0 ? (
-              <div className="text-center py-12 text-[#9497a9] text-xs">
+              <div className="text-center py-12 text-ink-subtle text-xs">
                 Tidak ada data pada periode ini
               </div>
             ) : (
@@ -1197,18 +1195,18 @@ export const ReportView: React.FC<ReportViewProps> = ({
       {activeChartTab === 'source' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Donut Chart (5 cols) */}
-          <div className="lg:col-span-5 bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-5 flex flex-col justify-between">
+          <div className="lg:col-span-5 bg-white dark:bg-[#16171f] rounded-[16px] border border-hairline dark:border-[#282937] shadow-whisper p-5 flex flex-col justify-between">
             <div>
-              <h3 className="text-sm sm:text-base font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
+              <h3 className="text-sm sm:text-base font-bold text-ink dark:text-[#f3f4f8] tracking-tight">
                 Distribusi Pemasukan
               </h3>
-              <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
+              <p className="text-xs text-ink-muted dark:text-[#9ca0ba]">
                 Proporsi sumber pendapatan
               </p>
             </div>
 
             {incomeByCategory.length === 0 ? (
-              <div className="py-20 text-center text-xs text-[#9497a9]">
+              <div className="py-20 text-center text-xs text-ink-subtle">
                 Belum ada transaksi pemasukan pada periode ini
               </div>
             ) : (
@@ -1265,19 +1263,19 @@ export const ReportView: React.FC<ReportViewProps> = ({
                         <span className="text-sm sm:text-lg lg:text-2xl font-bold text-[#026b3f] dark:text-[#34d399] tabular-nums tracking-tight">
                           +{formatCurrency(incomeByCategory[selectedIncomeIdx].amount)}
                         </span>
-                        <span className="text-[10px] sm:text-xs font-semibold text-[#686b82] dark:text-[#9ca0ba] mt-0.5">
+                        <span className="text-[10px] sm:text-xs font-semibold text-ink-muted dark:text-[#9ca0ba] mt-0.5">
                           {incomeByCategory[selectedIncomeIdx].percentage.toFixed(1)}% dari total
                         </span>
                       </div>
                     ) : (
                       <div className="flex flex-col items-center justify-center transition-all duration-200">
-                        <span className="text-[10px] sm:text-xs uppercase font-bold text-[#9497a9] tracking-wider">
+                        <span className="text-[10px] sm:text-xs uppercase font-bold text-ink-subtle tracking-wider">
                           Total
                         </span>
                         <span className="text-sm sm:text-lg lg:text-2xl font-bold text-[#026b3f] dark:text-[#34d399] tabular-nums tracking-tight mt-0.5">
                           +{formatCurrency(totalIncome)}
                         </span>
-                        <span className="text-[10px] text-[#9497a9] mt-0.5">
+                        <span className="text-[10px] text-ink-subtle mt-0.5">
                           {incomeByCategory.length} Kategori
                         </span>
                       </div>
@@ -1300,8 +1298,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
                           }}
                           className={`flex items-center gap-2 p-2 rounded-[10px] border cursor-pointer transition-all ${
                             selectedIncomeIdx === i
-                              ? 'bg-[#edeef3] dark:bg-[#282937] border-[#10b981] dark:border-[#34d399] ring-1 ring-[#10b981]/40 shadow-xs'
-                              : 'bg-[#fafbfe] dark:bg-[#1e202b] border-[#dedee5]/70 dark:border-[#282937] hover:border-[#10b981]/30'
+                              ? 'bg-surface-sunken dark:bg-[#282937] border-[#10b981] dark:border-[#34d399] ring-1 ring-[#10b981]/40 shadow-xs'
+                              : 'bg-canvas dark:bg-[#1e202b] border-[#dedee5]/70 dark:border-[#282937] hover:border-[#10b981]/30'
                           }`}
                         >
                           <span
@@ -1309,10 +1307,10 @@ export const ReportView: React.FC<ReportViewProps> = ({
                             style={{ backgroundColor: cat.color }}
                           />
                           <div className="min-w-0 flex-1 flex items-center justify-between">
-                            <span className="text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] truncate">
+                            <span className="text-xs font-semibold text-ink dark:text-[#f3f4f8] truncate">
                               {cat.name}
                             </span>
-                            <span className="text-[11px] font-mono font-bold text-[#686b82] dark:text-[#9ca0ba] ml-1 shrink-0">
+                            <span className="text-[11px] font-mono font-bold text-ink-muted dark:text-[#9ca0ba] ml-1 shrink-0">
                               {cat.percentage.toFixed(0)}%
                             </span>
                           </div>
@@ -1324,24 +1322,24 @@ export const ReportView: React.FC<ReportViewProps> = ({
               </div>
             )}
 
-            <div className="pt-2 text-center text-[11px] text-[#686b82] dark:text-[#9ca0ba]">
+            <div className="pt-2 text-center text-[11px] text-ink-muted dark:text-[#9ca0ba]">
               {incomeByCategory.length} Kategori pemasukan tercatat
             </div>
           </div>
 
           {/* Ranked Income List using standard CategoryIcon (7 cols) */}
-          <div className="lg:col-span-7 bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-5 space-y-4">
+          <div className="lg:col-span-7 bg-white dark:bg-[#16171f] rounded-[16px] border border-hairline dark:border-[#282937] shadow-whisper p-5 space-y-4">
             <div>
-              <h3 className="text-sm sm:text-base font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
+              <h3 className="text-sm sm:text-base font-bold text-ink dark:text-[#f3f4f8] tracking-tight">
                 Rincian Sumber Pendapatan
               </h3>
-              <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
+              <p className="text-xs text-ink-muted dark:text-[#9ca0ba]">
                 Klik kategori untuk melihat rincian transaksi
               </p>
             </div>
 
             {incomeByCategory.length === 0 ? (
-              <div className="py-16 text-center text-xs text-[#9497a9]">
+              <div className="py-16 text-center text-xs text-ink-subtle">
                 Tidak ada data pemasukan
               </div>
             ) : (
@@ -1355,10 +1353,10 @@ export const ReportView: React.FC<ReportViewProps> = ({
                         setExpandedIncomeIndex((prev) => (prev === idx ? null : idx));
                         setActiveIncomeIndex(idx);
                       }}
-                      className={`p-3.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#1e202b] border transition-all space-y-2.5 cursor-pointer ${
+                      className={`p-3.5 rounded-[12px] bg-canvas dark:bg-[#1e202b] border transition-all space-y-2.5 cursor-pointer ${
                         selectedIncomeIdx === idx
                           ? 'border-[#10b981] dark:border-[#34d399] ring-1 ring-[#10b981]/30 shadow-xs'
-                          : 'border-[#dedee5] dark:border-[#282937]/80 hover:border-[#10b981]/40'
+                          : 'border-hairline dark:border-[#282937]/80 hover:border-[#10b981]/40'
                       }`}
                     >
                       <div className="flex items-center justify-between gap-3">
@@ -1372,10 +1370,10 @@ export const ReportView: React.FC<ReportViewProps> = ({
                             size="md"
                           />
                           <div className="min-w-0">
-                            <span className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8] block tracking-tight truncate">
+                            <span className="font-bold text-sm text-ink dark:text-[#f3f4f8] block tracking-tight truncate">
                               {cat.name}
                             </span>
-                            <span className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] block">
+                            <span className="text-[11px] text-ink-muted dark:text-[#9ca0ba] block">
                               {cat.percentage.toFixed(1)}% dari total pendapatan • {cat.transactions.length} transaksi
                             </span>
                           </div>
@@ -1387,12 +1385,12 @@ export const ReportView: React.FC<ReportViewProps> = ({
                             <span className="font-bold text-sm sm:text-base text-[#026b3f] dark:text-[#34d399] tabular-nums block">
                               +{formatCurrency(cat.amount)}
                             </span>
-                            <span className="text-[10px] px-2 py-0.5 rounded-[6px] bg-[#edeef3] dark:bg-[#282937] font-bold text-[#10b981] dark:text-[#34d399] inline-block mt-0.5">
+                            <span className="text-[10px] px-2 py-0.5 rounded-[6px] bg-surface-sunken dark:bg-[#282937] font-bold text-[#10b981] dark:text-[#34d399] inline-block mt-0.5">
                               {cat.percentage.toFixed(1)}%
                             </span>
                           </div>
                           <div
-                            className={`w-7 h-7 rounded-[8px] flex items-center justify-center text-[#686b82] dark:text-[#9ca0ba] transition-transform duration-200 ${
+                            className={`w-7 h-7 rounded-[8px] flex items-center justify-center text-ink-muted dark:text-[#9ca0ba] transition-transform duration-200 ${
                               isExpanded ? 'rotate-180 text-[#10b981] dark:text-[#34d399]' : ''
                             }`}
                           >
@@ -1402,7 +1400,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                       </div>
 
                       {/* Progress Bar Share */}
-                      <div className="w-full bg-[#edeef3] dark:bg-[#282937] rounded-full h-1.5 overflow-hidden">
+                      <div className="w-full bg-surface-sunken dark:bg-[#282937] rounded-full h-1.5 overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all duration-500"
                           style={{ width: `${cat.percentage}%`, backgroundColor: cat.color }}
@@ -1415,7 +1413,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                           className="pt-3 border-t border-[#dedee5]/70 dark:border-[#282937] space-y-2 animate-in fade-in duration-200"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <div className="flex items-center justify-between text-[11px] font-semibold text-[#686b82] dark:text-[#9ca0ba] px-0.5">
+                          <div className="flex items-center justify-between text-[11px] font-semibold text-ink-muted dark:text-[#9ca0ba] px-0.5">
                             <span>Rincian Transaksi ({cat.transactions.length})</span>
                             {onEditTransaction && (
                               <span className="text-[10px] text-[#10b981] dark:text-[#34d399]">
@@ -1433,21 +1431,21 @@ export const ReportView: React.FC<ReportViewProps> = ({
                                   onClick={() => onEditTransaction?.(t)}
                                   className={`flex items-center justify-between gap-2.5 p-2.5 rounded-[9px] bg-white dark:bg-[#16171f] border border-[#dedee5]/70 dark:border-[#282937] transition-all group ${
                                     onEditTransaction
-                                      ? 'hover:border-[#10b981] dark:hover:border-[#34d399] hover:bg-[#fafbfe] dark:hover:bg-[#1e202b] cursor-pointer'
+                                      ? 'hover:border-[#10b981] dark:hover:border-[#34d399] hover:bg-surface-sunken dark:hover:bg-[#1e202b] cursor-pointer'
                                       : ''
                                   }`}
                                 >
                                   {/* Left: Date + Note + Account Tag */}
                                   <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-1.5 flex-wrap">
-                                      <span className="text-[11px] font-bold text-[#686b82] dark:text-[#9ca0ba] shrink-0 font-mono">
+                                      <span className="text-[11px] font-bold text-ink-muted dark:text-[#9ca0ba] shrink-0 font-mono">
                                         {formatShortDate(t.date)}
                                       </span>
-                                      <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] bg-[#edeef3] dark:bg-[#282937] text-[#484b5e] dark:text-[#c4c7d4] font-medium shrink-0">
+                                      <span className="text-[10px] px-1.5 py-0.5 rounded-[4px] bg-surface-sunken dark:bg-[#282937] text-[#484b5e] dark:text-[#c4c7d4] font-medium shrink-0">
                                         {acc?.name || 'Akun'}
                                       </span>
                                     </div>
-                                    <p className="text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] truncate mt-0.5 group-hover:text-[#10b981] dark:group-hover:text-[#34d399] transition-colors">
+                                    <p className="text-xs font-semibold text-ink dark:text-[#f3f4f8] truncate mt-0.5 group-hover:text-[#10b981] dark:group-hover:text-[#34d399] transition-colors">
                                       {t.notes?.trim() || 'Tanpa catatan'}
                                     </p>
                                   </div>
@@ -1464,7 +1462,7 @@ export const ReportView: React.FC<ReportViewProps> = ({
                                           e.stopPropagation();
                                           onEditTransaction(t);
                                         }}
-                                        className="w-6 h-6 rounded-[6px] flex items-center justify-center text-[#9497a9] group-hover:text-[#10b981] dark:group-hover:text-[#34d399] hover:bg-[#10b981]/15 transition-all cursor-pointer"
+                                        className="w-6 h-6 rounded-[6px] flex items-center justify-center text-ink-subtle group-hover:text-[#10b981] dark:group-hover:text-[#34d399] hover:bg-[#10b981]/15 transition-all cursor-pointer"
                                         title="Ubah transaksi"
                                       >
                                         <Edit2 className="w-3 h-3" />
@@ -1488,18 +1486,18 @@ export const ReportView: React.FC<ReportViewProps> = ({
 
       {/* ===================== TAB 4: PENGELUARAN PER AKUN ===================== */}
       {activeChartTab === 'account' && (
-        <div className="bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper p-5 space-y-5">
+        <div className="bg-white dark:bg-[#16171f] rounded-[16px] border border-hairline dark:border-[#282937] shadow-whisper p-5 space-y-5">
           <div>
-            <h3 className="text-sm sm:text-base font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
+            <h3 className="text-sm sm:text-base font-bold text-ink dark:text-[#f3f4f8] tracking-tight">
               Pengeluaran Berdasarkan Rekening & Sumber Pembayaran
             </h3>
-            <p className="text-xs text-[#686b82] dark:text-[#9ca0ba]">
+            <p className="text-xs text-ink-muted dark:text-[#9ca0ba]">
               Mengetahui dari rekening atau dompet mana pengeluaran paling sering terjadi
             </p>
           </div>
 
           {expenseByAccount.length === 0 ? (
-            <div className="py-16 text-center text-xs text-[#9497a9]">
+            <div className="py-16 text-center text-xs text-ink-subtle">
               Tidak ada data pengeluaran pada akun mana pun
             </div>
           ) : (
@@ -1509,22 +1507,22 @@ export const ReportView: React.FC<ReportViewProps> = ({
                 return (
                   <div
                     key={idx}
-                    className="p-3.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#1e202b] border border-[#dedee5] dark:border-[#282937]/80 hover:border-[#7132f5]/40 transition-all space-y-2.5"
+                    className="p-3.5 rounded-[12px] bg-canvas dark:bg-[#1e202b] border border-hairline dark:border-[#282937]/80 hover:border-brand/40 transition-all space-y-2.5"
                   >
                     <div className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-3 min-w-0">
                         {acc.account ? (
                           <AccountAvatar acc={acc.account} />
                         ) : (
-                          <div className="w-10 h-10 rounded-[8px] bg-[#edeef3] dark:bg-[#282937] flex items-center justify-center text-[#7132f5] dark:text-[#a78bfa] font-bold text-xs uppercase shrink-0">
+                          <div className="w-10 h-10 rounded-[8px] bg-surface-sunken dark:bg-[#282937] flex items-center justify-center text-brand-text dark:text-[#a78bfa] font-bold text-xs uppercase shrink-0">
                             {acc.name.slice(0, 2)}
                           </div>
                         )}
                         <div className="min-w-0">
-                          <span className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8] block truncate">
+                          <span className="font-bold text-sm text-ink dark:text-[#f3f4f8] block truncate">
                             {acc.name}
                           </span>
-                          <span className="text-[10px] text-[#686b82] dark:text-[#9ca0ba] uppercase font-semibold">
+                          <span className="text-[10px] text-ink-muted dark:text-[#9ca0ba] uppercase font-semibold">
                             {acc.type}
                           </span>
                         </div>
@@ -1534,15 +1532,15 @@ export const ReportView: React.FC<ReportViewProps> = ({
                         <span className="font-bold text-sm sm:text-base text-[#e53e3e] dark:text-[#f87171] tabular-nums block">
                           -{formatCurrency(acc.amount)}
                         </span>
-                        <span className="text-[10px] text-[#9497a9] font-semibold">
+                        <span className="text-[10px] text-ink-subtle font-semibold">
                           {percentage.toFixed(1)}% dari total belanja
                         </span>
                       </div>
                     </div>
 
-                    <div className="w-full bg-[#edeef3] dark:bg-[#282937] rounded-full h-2 overflow-hidden">
+                    <div className="w-full bg-surface-sunken dark:bg-[#282937] rounded-full h-2 overflow-hidden">
                       <div
-                        className="h-full bg-[#7132f5] rounded-full transition-all duration-500"
+                        className="h-full bg-brand rounded-full transition-all duration-500"
                         style={{ width: `${percentage}%` }}
                       />
                     </div>

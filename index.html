@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" data-theme="coinbase">
   <head>
     <meta charset="UTF-8" />
     <meta
@@ -11,10 +11,39 @@
     
     <title>💰 Financial Tracker</title>
 
-    <!-- Google Fonts: IBM Plex Sans (Kraken UI Fallback) -->
+    <!--
+      Applies the saved theme before first paint.
+      Without this the page renders one frame with the default theme and then
+      snaps to the user's choice (a visible flash of the wrong colours).
+      Inline on purpose: a module script would run after the first paint.
+    -->
+    <script>
+      (function () {
+        try {
+          var systems = ['coinbase', 'theverge', 'kraken', 'autumn', 'mongodb'];
+          var saved = localStorage.getItem('ft_design_system');
+          var system = systems.indexOf(saved) >= 0 ? saved : 'coinbase';
+          document.documentElement.setAttribute('data-theme', system);
+
+          var mode = localStorage.getItem('ft_theme');
+          var prefersDark =
+            window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var isDark = mode === 'dark' || ((!mode || mode === 'system') && prefersDark);
+          if (isDark) document.documentElement.classList.add('dark');
+        } catch (e) {
+          /* localStorage unavailable: fall back to the markup defaults. */
+        }
+      })();
+    </script>
+
+    <!--
+      Fonts: only the Kraken baseline is render-blocking (it is the default
+      theme). Every other design system loads its family on demand from the
+      theme provider, so first paint no longer waits on eight families.
+    -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />

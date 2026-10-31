@@ -64,7 +64,7 @@ export const BillsView: React.FC<BillsViewProps> = ({
 
       {/* Credit Account Grid */}
       <div className="space-y-3">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-[#686b82] dark:text-[#9ca0ba] px-1">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-ink-muted dark:text-[#9ca0ba] px-1">
           Rincian Kartu Kredit, Paylater & Pinjaman
         </h3>
 
@@ -76,15 +76,15 @@ export const BillsView: React.FC<BillsViewProps> = ({
             return (
               <div
                 key={acc.id}
-                className="group p-4 bg-white dark:bg-[#16171f] rounded-[12px] border border-[#dedee5] dark:border-[#282937] shadow-micro transition-all flex items-center justify-between"
+                className="group p-4 bg-white dark:bg-[#16171f] rounded-[12px] border border-hairline dark:border-[#282937] shadow-micro transition-all flex items-center justify-between"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <AccountAvatar acc={acc} />
                   <div className="min-w-0">
-                    <span className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8] block tracking-tight group-hover:text-[#7132f5] transition-colors truncate">
+                    <span className="font-bold text-sm text-ink dark:text-[#f3f4f8] block tracking-tight group-hover:text-brand-text transition-colors truncate">
                       {acc.name}
                     </span>
-                    <span className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] font-medium flex items-center gap-1 mt-0.5">
+                    <span className="text-[11px] text-ink-muted dark:text-[#9ca0ba] font-medium flex items-center gap-1 mt-0.5">
                       {hasDebt ? (
                         <span className="text-[#e53e3e] dark:text-[#f87171] font-semibold">Ada Tagihan</span>
                       ) : (
@@ -105,7 +105,7 @@ export const BillsView: React.FC<BillsViewProps> = ({
                     >
                       {hasDebt ? maskAmount(debtAmount, '-') : 'Rp 0'}
                     </span>
-                    <span className="text-[10px] text-[#9497a9] dark:text-[#7d8299] uppercase font-semibold">
+                    <span className="text-[10px] text-ink-subtle dark:text-[#7d8299] uppercase font-semibold">
                       {hasDebt ? 'Belum Dibayar' : 'Lunas'}
                     </span>
                   </div>
@@ -115,7 +115,7 @@ export const BillsView: React.FC<BillsViewProps> = ({
                       e.stopPropagation();
                       onEditAccount?.(acc);
                     }}
-                    className="w-8 h-8 rounded-[8px] flex items-center justify-center text-[#9497a9] hover:text-[#7132f5] dark:hover:text-[#a78bfa] hover:bg-[#855bfb]/15 transition-all cursor-pointer active:scale-95 border border-transparent hover:border-[#855bfb]/30"
+                    className="w-8 h-8 rounded-[8px] flex items-center justify-center text-ink-subtle hover:text-brand-text hover:bg-brand-soft transition-all cursor-pointer active:scale-95 border border-transparent hover:border-[#855bfb]/30"
                     title="Ubah Tagihan / Akun"
                     aria-label="Ubah Tagihan / Akun"
                   >

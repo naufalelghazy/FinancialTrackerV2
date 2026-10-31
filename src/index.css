@@ -2,6 +2,43 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ==============================================================
+   THEME TOKENS
+   --------------------------------------------------------------
+   Every design system writes the same set of variables; components
+   read them (`bg-surface`, `text-ink`, `bg-brand`). Nothing below
+   needs `[data-theme=x] .bg-\[\#7132f5\]` override blocks any more.
+
+   `inline` keeps the var() reference in the emitted utility instead
+   of baking the value in, which is what lets one declaration follow
+   the active theme.
+   ============================================================== */
+@theme inline {
+  --color-brand: var(--brand-primary);
+  --color-brand-hover: var(--brand-primary-hover);
+  --color-brand-active: var(--brand-primary-active);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-soft-hover: var(--brand-soft-hover);
+  --color-brand-text: var(--brand-text);
+  --color-on-brand: var(--on-brand);
+
+  --color-canvas: var(--bg-canvas);
+  --color-surface: var(--bg-surface);
+  --color-surface-raised: var(--bg-surface-raised);
+  --color-surface-sunken: var(--bg-surface-sunken);
+
+  --color-ink: var(--text-primary);
+  --color-ink-muted: var(--text-secondary);
+  --color-ink-subtle: var(--text-tertiary);
+
+  --color-hairline: var(--border-default);
+  --color-hairline-strong: var(--border-strong);
+
+  --radius-card: var(--card-radius);
+  --radius-control: var(--control-radius);
+  --radius-pill: var(--pill-radius);
+}
+
 @layer base {
   :root {
     --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -18,6 +55,33 @@
     --kraken-green: #149e61;
     --kraken-green-dark: #026b3f;
     --kraken-green-subtle: rgba(20, 158, 97, 0.16);
+
+    /* Kraken baseline tokens. See the "LEGACY COMPATIBILITY BRIDGE"
+       block at the end of this file for how they are applied to the
+       hard-coded utility classes that still exist in the markup. */
+    --brand-primary: #7132f5;
+    --brand-primary-hover: #5b1ecf;
+    --brand-primary-active: #4a17b0;
+    --brand-soft: rgba(133, 91, 251, 0.16);
+    --brand-soft-hover: rgba(133, 91, 251, 0.24);
+    --brand-text: #7132f5;
+    --on-brand: #ffffff;
+
+    --bg-canvas: #fafbfe;
+    --bg-surface: #ffffff;
+    --bg-surface-raised: #ffffff;
+    --bg-surface-sunken: #edeef3;
+
+    --text-primary: #101114;
+    --text-secondary: #686b82;
+    --text-tertiary: #9497a9;
+
+    --border-default: #dedee5;
+    --border-strong: #9497a9;
+
+    --card-radius: 16px;
+    --control-radius: 12px;
+    --pill-radius: 9999px;
   }
 
   .dark {
@@ -25,6 +89,26 @@
     --kraken-cool-gray: #9ca0ba;
     --kraken-silver-blue: #767993;
     --kraken-border: #282937;
+
+    --brand-primary: #7132f5;
+    --brand-primary-hover: #855bfb;
+    --brand-primary-active: #5741d8;
+    --brand-soft: rgba(133, 91, 251, 0.22);
+    --brand-soft-hover: rgba(133, 91, 251, 0.32);
+    --brand-text: #a78bfa;
+    --on-brand: #ffffff;
+
+    --bg-canvas: #0d0e12;
+    --bg-surface: #16171f;
+    --bg-surface-raised: #1e202b;
+    --bg-surface-sunken: #13141c;
+
+    --text-primary: #f3f4f8;
+    --text-secondary: #9ca0ba;
+    --text-tertiary: #767993;
+
+    --border-default: #282937;
+    --border-strong: #3a3b4d;
   }
 
   html {
@@ -45,8 +129,8 @@
   }
 
   body {
-    background-color: #fafbfe;
-    color: #101114;
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
     font-family: var(--font-sans);
     min-height: 100vh;
     min-height: 100dvh;
@@ -57,8 +141,8 @@
   }
 
   .dark body {
-    background-color: #0d0e12;
-    color: #f3f4f8;
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
   }
 }
 
@@ -89,16 +173,16 @@
 }
 
 .btn-kraken-primary {
-  background-color: #7132f5;
-  color: #ffffff;
-  border-radius: 12px;
+  background-color: var(--brand-primary);
+  color: var(--on-brand);
+  border-radius: var(--control-radius);
   padding: 13px 16px;
   font-weight: 600;
   transition: all 0.15s ease-in-out;
 }
 
 .btn-kraken-primary:hover {
-  background-color: #5b1ecf;
+  background-color: var(--brand-primary-hover);
 }
 
 .btn-kraken-primary:active {
@@ -170,20 +254,20 @@
 
 
 .btn-kraken-subtle {
-  background-color: rgba(133, 91, 251, 0.16);
-  color: #7132f5;
-  border-radius: 12px;
+  background-color: var(--brand-soft);
+  color: var(--brand-text);
+  border-radius: var(--control-radius);
   font-weight: 600;
   transition: all 0.15s ease-in-out;
 }
 
 .btn-kraken-subtle:hover {
-  background-color: rgba(133, 91, 251, 0.24);
+  background-color: var(--brand-soft-hover);
 }
 
 .dark .btn-kraken-subtle {
-  background-color: rgba(133, 91, 251, 0.22);
-  color: #a78bfa;
+  background-color: var(--brand-soft);
+  color: var(--brand-text);
 }
 
 
@@ -197,269 +281,78 @@
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-display: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', 'Coinbase Mono', monospace;
+
+  --brand-primary: #0052ff;
+  --brand-primary-hover: #003ecc;
+  --brand-primary-active: #0032a8;
+  --brand-soft: rgba(0, 82, 255, 0.1);
+  --brand-soft-hover: rgba(0, 82, 255, 0.18);
+  --brand-text: #0052ff;
+  --on-brand: #ffffff;
+
+  --bg-canvas: #ffffff;
+  --bg-surface: #ffffff;
+  --bg-surface-raised: #ffffff;
+  --bg-surface-sunken: #f5f6f8;
+
+  --text-primary: #0a0b0d;
+  --text-secondary: #5b616e;
+  --text-tertiary: #8a919e;
+
+  --border-default: #dee1e6;
+  --border-strong: #b8bdc7;
+
+  /* Coinbase geometry: pill CTAs, 24px cards */
+  --card-radius: 24px;
+  --control-radius: 9999px;
+  --pill-radius: 9999px;
 }
 
-[data-theme=coinbase] body {
-  font-family: var(--font-sans);
-  background-color: #ffffff;
-  color: #0a0b0d;
+/* Coinbase dark canvas is near-black; cards sit one step lighter. */
+.dark[data-theme=coinbase],
+[data-theme=coinbase].dark {
+  --brand-primary: #0052ff;
+  --brand-primary-hover: #387cff;
+  --brand-primary-active: #003ecc;
+  --brand-soft: rgba(0, 82, 255, 0.22);
+  --brand-soft-hover: rgba(0, 82, 255, 0.32);
+  --brand-text: #387cff;
+  --on-brand: #ffffff;
+
+  --bg-canvas: #0a0b0d;
+  --bg-surface: #16181c;
+  --bg-surface-raised: #1d1f24;
+  --bg-surface-sunken: #121316;
+
+  --text-primary: #ffffff;
+  --text-secondary: #a8acb3;
+  --text-tertiary: #7d828b;
+
+  --border-default: #22252a;
+  --border-strong: #34383f;
 }
 
-[data-theme=coinbase].dark body,
-.dark[data-theme=coinbase] body,
-[data-theme=coinbase] .dark body {
-  background-color: #0a0b0d !important;
-  color: #ffffff !important;
+/* Coinbase Hero Debt Card: semantic down red, 24px radius. */
+[data-theme=coinbase] .hero-debt-card {
+  background-color: #cf202f;
+  border-color: #b01b27;
+  border-radius: 24px;
 }
 
-/* Primary Action Buttons: Coinbase Blue (#0052ff) pill */
-[data-theme=coinbase] button.btn-kraken-primary,
-[data-theme=coinbase] .btn-kraken-primary,
-[data-theme=coinbase] button.bg-\[\#7132f5\],
-[data-theme=coinbase] a.bg-\[\#7132f5\] {
-  background-color: #0052ff !important;
-  color: #ffffff !important;
-  border-radius: 9999px !important;
+.dark[data-theme=coinbase] .hero-debt-card,
+[data-theme=coinbase].dark .hero-debt-card {
+  background-color: #b51a27;
+  border-color: #ef4444;
 }
 
-/* Coinbase Hero Balance Card (Coinbase Blue #0052ff with 24px Card Radius) */
-[data-theme=coinbase] .hero-balance-card,
-[data-theme=coinbase] div.bg-\[\#7132f5\] {
-  background-color: #0052ff !important;
-  border-color: #003ecc !important;
-  border-radius: 24px !important;
-  color: #ffffff !important;
-}
-
-  /* Coinbase Hero Debt Card (Coinbase Semantic Down Red #cf202f with 24px Card Radius) */
-  [data-theme=coinbase] .hero-debt-card {
-    background-color: #cf202f !important;
-    border: 1px solid #b01b27 !important;
-    border-radius: 24px !important;
-    color: #ffffff !important;
-    box-shadow: 0 6px 20px -2px rgba(207, 32, 47, 0.25) !important;
-  }
-
-  [data-theme=coinbase].dark .hero-debt-card,
-  [data-theme=coinbase] .dark .hero-debt-card {
-    background-color: #b51a27 !important;
-    border-color: #ef4444 !important;
-    box-shadow: 0 6px 24px -2px rgba(207, 32, 47, 0.35) !important;
-  }
-
-  [data-theme=coinbase] .hero-debt-card .debt-card-header,
-  [data-theme=coinbase] .hero-debt-card .debt-card-icon {
-    color: rgba(255, 255, 255, 0.95) !important;
-  }
-
-  [data-theme=coinbase] .hero-debt-card .debt-card-badge {
-    background-color: rgba(0, 0, 0, 0.25) !important;
-    color: #ffffff !important;
-    border: 1px solid rgba(255, 255, 255, 0.25) !important;
-    border-radius: 9999px !important;
-    font-family: var(--font-sans) !important;
-  }
-
-  [data-theme=coinbase] .hero-debt-card .debt-card-amount {
-    color: #ffffff !important;
-  }
-
-  /* Coinbase Numerical Data: JetBrains Mono across all financial figures */
-  [data-theme=coinbase] .balance-card-amount,
-  [data-theme=coinbase] .hero-balance-card .balance-card-amount,
-  [data-theme=coinbase] .hero-balance-card .text-3xl,
-  [data-theme=coinbase] .hero-balance-card .text-4xl,
-  [data-theme=coinbase] .hero-debt-card .debt-card-amount,
-  [data-theme=coinbase] .net-worth-amount,
-  [data-theme=coinbase] .cashflow-amount,
-  [data-theme=coinbase] .tabular-nums,
-  [data-theme=coinbase] .font-mono {
-    font-family: var(--font-mono) !important;
-  }
-
-
-  [data-theme=coinbase] .hero-debt-card .debt-card-sub {
-    color: rgba(255, 255, 255, 0.85) !important;
-  }
-
-  [data-theme=coinbase] .hero-debt-card .debt-card-divider {
-    border-color: rgba(255, 255, 255, 0.2) !important;
-  }
-
-  [data-theme=coinbase] .hero-debt-card .debt-card-btn {
-    color: #ffffff !important;
-    font-weight: 600 !important;
-  }
-
-  [data-theme=coinbase] .hero-debt-card .debt-card-btn:hover {
-    opacity: 0.85 !important;
-  }
-
-  [data-theme=coinbase] .hero-debt-card .debt-card-status {
-    color: rgba(255, 255, 255, 0.85) !important;
-  }
-
-
-[data-theme=coinbase] .btn-kraken-primary:hover,
-[data-theme=coinbase] .hover\:bg-\[\#5741d8\]:hover {
-  background-color: #003ecc !important;
-}
-
-[data-theme=coinbase] .bg-\[\#5741d8\] {
-  background-color: #003ecc !important;
-  border-radius: 9999px !important;
-}
-
-/* Subtle Pill Chips */
-[data-theme=coinbase] .btn-kraken-subtle,
-[data-theme=coinbase] .bg-\[\#855bfb\]\/15,
-[data-theme=coinbase] .bg-\[\#855bfb\]\/10,
-[data-theme=coinbase] .bg-\[\#855bfb\]\/20 {
-  background-color: rgba(0, 82, 255, 0.1) !important;
-  color: #0052ff !important;
-  border-radius: 9999px !important;
-}
-
-[data-theme=coinbase].dark .btn-kraken-subtle,
-[data-theme=coinbase] .dark .btn-kraken-subtle,
-[data-theme=coinbase].dark .bg-\[\#855bfb\]\/15,
-[data-theme=coinbase] .dark .bg-\[\#855bfb\]\/15 {
-  background-color: rgba(0, 82, 255, 0.22) !important;
-  color: #5b95ff !important;
-  border-radius: 9999px !important;
-}
-
-/* Primary Color Text */
-[data-theme=coinbase] .text-\[\#7132f5\] {
-  color: #0052ff !important;
-}
-
-[data-theme=coinbase].dark .text-\[\#7132f5\],
-[data-theme=coinbase].dark .dark\:text-\[\#a78bfa\],
-[data-theme=coinbase] .dark .text-\[\#7132f5\],
-[data-theme=coinbase] .dark .dark\:text-\[\#a78bfa\] {
-  color: #387cff !important;
-}
-
-/* Border on focus & active */
-[data-theme=coinbase] .border-\[\#7132f5\] {
-  border-color: #0052ff !important;
-}
-
-[data-theme=coinbase] .focus\:border-\[\#7132f5\]:focus {
-  border-color: #0052ff !important;
-}
-
-/* Card Geometry: 24px rounded */
-[data-theme=coinbase] .rounded-\[16px\],
-[data-theme=coinbase] .rounded-\[14px\] {
-  border-radius: 24px !important;
-}
-
-/* Hairline dividers in LIGHT MODE */
-[data-theme=coinbase]:not(.dark) .border-\[\#dedee5\],
-html[data-theme=coinbase]:not(.dark) .border-\[\#dedee5\] {
-  border-color: #dee1e6 !important;
-}
-
-/* ==============================================================
-   COINBASE DARK MODE OVERRIDES (#0A0B0D Canvas, #16181C Cards)
-   ============================================================== */
-/* Card surfaces and containers in dark mode */
-[data-theme=coinbase].dark .bg-white,
-.dark[data-theme=coinbase] .bg-white,
-[data-theme=coinbase] .dark .bg-white,
-[data-theme=coinbase].dark .dark\:bg-\[\#16171f\],
-.dark[data-theme=coinbase] .dark\:bg-\[\#16171f\],
-[data-theme=coinbase] .dark .dark\:bg-\[\#16171f\] {
-  background-color: #16181c !important;
-}
-
-/* Nested cards, input backgrounds, & secondary panels in dark mode */
-[data-theme=coinbase].dark .dark\:bg-\[\#1e202b\],
-.dark[data-theme=coinbase] .dark\:bg-\[\#1e202b\],
-[data-theme=coinbase] .dark .dark\:bg-\[\#1e202b\],
-[data-theme=coinbase].dark .dark\:bg-\[\#13141c\],
-.dark[data-theme=coinbase] .dark\:bg-\[\#13141c\],
-[data-theme=coinbase] .dark .dark\:bg-\[\#13141c\],
-[data-theme=coinbase].dark .bg-\[\#fafbfe\],
-.dark[data-theme=coinbase] .bg-\[\#fafbfe\],
-[data-theme=coinbase] .dark .bg-\[\#fafbfe\] {
-  background-color: #121316 !important;
-}
-
-/* Inactive button backgrounds in dark mode */
-[data-theme=coinbase].dark button.bg-\[\#fafbfe\],
-.dark[data-theme=coinbase] button.bg-\[\#fafbfe\],
-[data-theme=coinbase] .dark button.bg-\[\#fafbfe\] {
-  background-color: #16181c !important;
-}
-
-/* Segmented control backgrounds in dark mode */
-[data-theme=coinbase].dark .bg-\[\#edeef3\],
-.dark[data-theme=coinbase] .bg-\[\#edeef3\],
-[data-theme=coinbase] .dark .bg-\[\#edeef3\] {
-  background-color: #121316 !important;
-}
-
-/* Active segmented buttons in dark mode */
-[data-theme=coinbase].dark .dark\:bg-\[\#282937\],
-.dark[data-theme=coinbase] .dark\:bg-\[\#282937\],
-[data-theme=coinbase] .dark .dark\:bg-\[\#282937\],
-[data-theme=coinbase].dark .dark\:bg-\[\#232534\],
-.dark[data-theme=coinbase] .dark\:bg-\[\#232534\],
-[data-theme=coinbase] .dark .dark\:bg-\[\#232534\],
-[data-theme=coinbase].dark button.bg-\[\#101114\],
-.dark[data-theme=coinbase] button.bg-\[\#101114\],
-[data-theme=coinbase] .dark button.bg-\[\#101114\] {
-  background-color: #22252a !important;
-  color: #ffffff !important;
-}
-
-/* Borders & Dividers in DARK MODE - quiet slate #22252a instead of white/light hairlines */
-[data-theme=coinbase].dark .border-\[\#dedee5\],
-.dark[data-theme=coinbase] .border-\[\#dedee5\],
-[data-theme=coinbase] .dark .border-\[\#dedee5\],
-[data-theme=coinbase].dark .border-\[\#282937\],
-.dark[data-theme=coinbase] .border-\[\#282937\],
-[data-theme=coinbase] .dark .border-\[\#282937\],
-[data-theme=coinbase].dark .dark\:border-\[\#282937\],
-.dark[data-theme=coinbase] .dark\:border-\[\#282937\],
-[data-theme=coinbase] .dark .dark\:border-\[\#282937\],
-[data-theme=coinbase].dark [class*="border-\[\#dedee5\]"],
-.dark[data-theme=coinbase] [class*="border-\[\#dedee5\]"],
-[data-theme=coinbase] .dark [class*="border-\[\#dedee5\]"],
-[data-theme=coinbase].dark [class*="dark:border-\[\#282937\]"],
-.dark[data-theme=coinbase] [class*="dark:border-\[\#282937\]"],
-[data-theme=coinbase] .dark [class*="dark:border-\[\#282937\]"] {
-  border-color: #22252a !important;
-}
-
-[data-theme=coinbase].dark .divide-\[\#dedee5\] > :not([hidden]) ~ :not([hidden]),
-.dark[data-theme=coinbase] .divide-\[\#dedee5\] > :not([hidden]) ~ :not([hidden]),
-[data-theme=coinbase] .dark .divide-\[\#dedee5\] > :not([hidden]) ~ :not([hidden]),
-[data-theme=coinbase].dark .divide-\[\#282937\] > :not([hidden]) ~ :not([hidden]),
-.dark[data-theme=coinbase] .divide-\[\#282937\] > :not([hidden]) ~ :not([hidden]),
-[data-theme=coinbase] .dark .divide-\[\#282937\] > :not([hidden]) ~ :not([hidden]),
-[data-theme=coinbase].dark .dark\:divide-\[\#282937\] > :not([hidden]) ~ :not([hidden]),
-.dark[data-theme=coinbase] .dark\:divide-\[\#282937\] > :not([hidden]) ~ :not([hidden]),
-[data-theme=coinbase] .dark .dark\:divide-\[\#282937\] > :not([hidden]) ~ :not([hidden]) {
-  border-color: #22252a !important;
-}
-
-/* Secondary text in dark mode */
-[data-theme=coinbase].dark .dark\:text-\[\#9ca0ba\],
-.dark[data-theme=coinbase] .dark\:text-\[\#9ca0ba\],
-[data-theme=coinbase] .dark .dark\:text-\[\#9ca0ba\] {
-  color: #a8acb3 !important;
-}
-
-/* Monospace numerals */
-[data-theme=coinbase] .font-mono,
+/* Coinbase numerical data uses JetBrains Mono everywhere. */
+[data-theme=coinbase] .balance-card-amount,
+[data-theme=coinbase] .net-worth-amount,
+[data-theme=coinbase] .cashflow-amount,
+[data-theme=coinbase] .debt-card-amount,
 [data-theme=coinbase] .tabular-nums {
-  font-family: var(--font-mono) !important;
+  font-family: var(--font-mono);
 }
-
 
 /* ==============================================================
    2. THE VERGE DESIGN SYSTEM (DESIGN-theverge.md)
@@ -473,1010 +366,210 @@ html[data-theme=coinbase]:not(.dark) .border-\[\#dedee5\] {
   --font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-display: 'Anton', 'Oswald', 'Impact', sans-serif;
   --font-mono: 'Space Mono', monospace;
+
+  /* Mint is the fill colour; it needs black text to stay legible. */
+  --brand-primary: #3cffd0;
+  --brand-primary-hover: #2ae6ba;
+  --brand-primary-active: #22c9a3;
+  --brand-soft: rgba(82, 0, 255, 0.08);
+  --brand-soft-hover: rgba(82, 0, 255, 0.14);
+  --brand-text: #5200ff;
+  --on-brand: #000000;
+
+  --bg-canvas: #f7f7f9;
+  --bg-surface: #ffffff;
+  --bg-surface-raised: #ffffff;
+  --bg-surface-sunken: #ededf2;
+
+  --text-primary: #131313;
+  --text-secondary: #5d5d68;
+  --text-tertiary: #8a8a94;
+
+  --border-default: #e2e2e7;
+  --border-strong: #c8c8cf;
+
+  /* Verge is a flat editorial system: pill CTAs, tight 1px borders. */
+  --card-radius: 12px;
+  --control-radius: 9999px;
+  --pill-radius: 9999px;
 }
 
-[data-theme=theverge] body {
-  font-family: var(--font-sans);
-  background-color: #f7f7f9 !important;
-  color: #131313 !important;
+/* The Verge is dark-first: its "light" canvas is still near-black. */
+.dark[data-theme=theverge],
+[data-theme=theverge].dark {
+  --brand-primary: #3cffd0;
+  --brand-primary-hover: #6bffe0;
+  --brand-primary-active: #22c9a3;
+  --brand-soft: rgba(60, 255, 208, 0.12);
+  --brand-soft-hover: rgba(60, 255, 208, 0.2);
+  --brand-text: #3cffd0;
+  --on-brand: #000000;
+
+  --bg-canvas: #131313;
+  --bg-surface: #191919;
+  --bg-surface-raised: #1f1f1f;
+  --bg-surface-sunken: #0e0e0e;
+
+  --text-primary: #ffffff;
+  --text-secondary: #a3a3a3;
+  --text-tertiary: #7a7a7a;
+
+  --border-default: #2e2e2e;
+  --border-strong: #434343;
 }
 
-[data-theme=theverge].dark body,
-.dark[data-theme=theverge] body,
-[data-theme=theverge] .dark body {
-  background-color: #131313 !important;
-  color: #ffffff !important;
-}
-
-/* Headlines: Anton condensed heavy display */
-[data-theme=theverge] h1,
-[data-theme=theverge] h2,
-[data-theme=theverge] .font-bold.text-base,
-[data-theme=theverge] .font-bold.text-lg,
-[data-theme=theverge] .font-bold.text-xl,
-[data-theme=theverge] .font-bold.text-2xl,
-[data-theme=theverge] .font-bold.text-3xl {
-  font-family: var(--font-display) !important;
-  letter-spacing: 0.6px !important;
-}
-
-/* Primary Action Buttons: Jelly Mint (#3cffd0) pill with black (#000000) text */
-[data-theme=theverge] button.btn-kraken-primary,
-[data-theme=theverge] .btn-kraken-primary,
-[data-theme=theverge] button.bg-\[\#7132f5\],
-[data-theme=theverge] a.bg-\[\#7132f5\],
-[data-theme=theverge] button.bg-\[\#5741d8\],
-[data-theme=theverge] .bg-\[\#5741d8\],
-[data-theme=theverge] a.bg-\[\#5741d8\] {
-  background-color: #3cffd0 !important;
-  color: #000000 !important;
-  font-weight: 700 !important;
-  border-radius: 9999px !important;
-  border: none !important;
-}
-
-[data-theme=theverge] .btn-kraken-primary:hover,
-[data-theme=theverge] button.btn-kraken-primary:hover,
-[data-theme=theverge] button.bg-\[\#5741d8\]:hover,
-[data-theme=theverge] .bg-\[\#5741d8\]:hover,
-[data-theme=theverge] .hover\:bg-\[\#5741d8\]:hover {
-  background-color: #309875 !important;
-  color: #ffffff !important;
-}
-
-/* The Verge Hero Balance Card (Pitch-black editorial spotlight card with neon Mint outline in both light and dark) */
-[data-theme=theverge] .hero-balance-card,
-[data-theme=theverge] div.bg-\[\#7132f5\] {
-  background-color: #131313 !important;
-  border: 1.5px solid #3cffd0 !important;
-  border-radius: 20px !important;
-  box-shadow: none !important;
-  color: #ffffff !important;
-}
-
-[data-theme=theverge] .hero-balance-card .text-white,
-[data-theme=theverge] div.bg-\[\#7132f5\] .text-white,
-[data-theme=theverge] .hero-balance-card .text-3xl,
-[data-theme=theverge] div.bg-\[\#7132f5\] .text-3xl,
-[data-theme=theverge] .hero-balance-card .text-4xl,
-[data-theme=theverge] div.bg-\[\#7132f5\] .text-4xl {
-  color: #ffffff !important;
-}
-
-[data-theme=theverge] .hero-balance-card .text-white\/80,
-[data-theme=theverge] div.bg-\[\#7132f5\] .text-white\/80 {
-  color: #3cffd0 !important;
-}
-
-[data-theme=theverge] .hero-balance-card .text-white\/70,
-[data-theme=theverge] div.bg-\[\#7132f5\] .text-white\/70 {
-  color: #949494 !important;
-}
-
-[data-theme=theverge] .hero-balance-card .bg-white\/15,
-[data-theme=theverge] div.bg-\[\#7132f5\] .bg-white\/15 {
-  background-color: rgba(60, 255, 208, 0.15) !important;
-  color: #3cffd0 !important;
-  border: 1px solid rgba(60, 255, 208, 0.35) !important;
-}
-
-[data-theme=theverge] .hero-balance-card .border-white\/15,
-[data-theme=theverge] div.bg-\[\#7132f5\] .border-white\/15 {
-  border-color: #313131 !important;
-}
-
-[data-theme=theverge] .hero-balance-card button,
-[data-theme=theverge] div.bg-\[\#7132f5\] button {
-  background-color: #3cffd0 !important;
-  color: #000000 !important;
-  font-weight: 700 !important;
-  border-radius: 9999px !important;
-}
-
-[data-theme=theverge] .hero-balance-card button:hover,
-[data-theme=theverge] div.bg-\[\#7132f5\] button:hover {
-  background-color: #309875 !important;
-  color: #ffffff !important;
-}
-
-/* The Verge Hero Debt Card (Saturated Neon/Crimson Danger Red #c9182b with 1.5px Neon Red #ff4d5a Outline) */
+/* Verge keeps its flat editorial geometry in both modes. */
 [data-theme=theverge] .hero-debt-card {
-  background-color: #c9182b !important;
-  border: 1.5px solid #ff4d5a !important;
-  border-radius: 20px !important;
-  box-shadow: none !important;
-  color: #ffffff !important;
+  background-color: #ff3b30;
+  border: 1px solid #ff3b30;
+  border-radius: 12px;
+  box-shadow: none;
 }
 
-[data-theme=theverge] .hero-debt-card .debt-card-header,
-[data-theme=theverge] .hero-debt-card .debt-card-icon {
-  color: #ffffff !important;
-  font-family: var(--font-mono) !important;
-  text-transform: uppercase !important;
-  letter-spacing: 1.2px !important;
+.dark[data-theme=theverge] .hero-debt-card,
+[data-theme=theverge].dark .hero-debt-card {
+  background-color: #262626;
+  border-color: #3cffd0;
+  box-shadow: none;
 }
 
-[data-theme=theverge] .hero-debt-card .debt-card-badge {
-  background-color: #131313 !important;
-  color: #ffffff !important;
-  border: 1px solid #ff4d5a !important;
-  border-radius: 9999px !important;
-  font-family: var(--font-mono) !important;
-  text-transform: uppercase !important;
-  letter-spacing: 1px !important;
+/* Verge focus ring is mint, always. */
+[data-theme=theverge] .focus\:border-\[\#7132f5\]:focus {
+  border-color: var(--brand-text);
+  outline: 2px solid var(--brand-primary);
 }
-
-[data-theme=theverge] .hero-debt-card .debt-card-amount {
-  color: #ffffff !important;
-}
-
-[data-theme=theverge] .balance-card-amount,
-[data-theme=theverge] .hero-balance-card .balance-card-amount,
-[data-theme=theverge] .hero-balance-card .text-3xl,
-[data-theme=theverge] .hero-balance-card .text-4xl,
-[data-theme=theverge] .hero-debt-card .debt-card-amount {
-  font-family: var(--font-display) !important;
-  letter-spacing: 0.8px !important;
-}
-
-[data-theme=theverge] .net-worth-amount,
-[data-theme=theverge] .cashflow-amount,
-[data-theme=theverge] .tabular-nums {
-  font-family: var(--font-mono) !important;
-  letter-spacing: 0.5px !important;
-}
-
-[data-theme=theverge] .hero-debt-card .debt-card-sub {
-  color: #ffe2e5 !important;
-}
-
-[data-theme=theverge] .hero-debt-card .debt-card-divider {
-  border-color: rgba(255, 255, 255, 0.3) !important;
-}
-
-[data-theme=theverge] .hero-debt-card .debt-card-btn {
-  color: #ffffff !important;
-  font-family: var(--font-mono) !important;
-  font-weight: 700 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.8px !important;
-}
-
-[data-theme=theverge] .hero-debt-card .debt-card-btn:hover {
-  color: #ffe2e5 !important;
-}
-
-[data-theme=theverge] .hero-debt-card .debt-card-status {
-  color: #ffffff !important;
-  font-family: var(--font-mono) !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.8px !important;
-}
-
-/* UPPERCASE Mono Labels & Kickers */
-[data-theme=theverge] .text-\[10px\],
-[data-theme=theverge] .text-\[11px\],
-[data-theme=theverge] .uppercase {
-  font-family: var(--font-mono) !important;
-  letter-spacing: 1.2px !important;
-}
-
-/* Card Geometry: 20px pill-card */
-[data-theme=theverge] .rounded-\[16px\],
-[data-theme=theverge] .rounded-\[14px\] {
-  border-radius: 20px !important;
-}
-
-/* Remove decorative shadows for flat, crisp 1px borders */
-[data-theme=theverge] .shadow-whisper,
-[data-theme=theverge] .shadow-micro {
-  box-shadow: none !important;
-}
-
-/* ==============================================================
-   THE VERGE LIGHT MODE (#f7f7f9 Canvas, #ffffff Cards, #5200ff Ultraviolet Accents)
-   ============================================================== */
-[data-theme=theverge]:not(.dark) body,
-html[data-theme=theverge]:not(.dark) body {
-  background-color: #f7f7f9 !important;
-  color: #131313 !important;
-}
-
-/* Surfaces and Cards in Light Mode */
-[data-theme=theverge]:not(.dark) .bg-white,
-html[data-theme=theverge]:not(.dark) .bg-white {
-  background-color: #ffffff !important;
-}
-
-[data-theme=theverge]:not(.dark) .bg-\[\#fafbfe\],
-html[data-theme=theverge]:not(.dark) .bg-\[\#fafbfe\] {
-  background-color: #f7f7f9 !important;
-}
-
-[data-theme=theverge]:not(.dark) .bg-\[\#edeef3\],
-html[data-theme=theverge]:not(.dark) .bg-\[\#edeef3\] {
-  background-color: #ededf2 !important;
-}
-
-/* Flat Hairline 1px Borders in Light Mode */
-[data-theme=theverge]:not(.dark) .border-\[\#dedee5\],
-html[data-theme=theverge]:not(.dark) .border-\[\#dedee5\] {
-  border-color: #e2e2e7 !important;
-}
-
-[data-theme=theverge]:not(.dark) .divide-\[\#dedee5\] > :not([hidden]) ~ :not([hidden]),
-html[data-theme=theverge]:not(.dark) .divide-\[\#dedee5\] > :not([hidden]) ~ :not([hidden]) {
-  border-color: #e2e2e7 !important;
-}
-
-/* Typography in Light Mode */
-[data-theme=theverge]:not(.dark) .text-\[\#101114\],
-html[data-theme=theverge]:not(.dark) .text-\[\#101114\] {
-  color: #131313 !important;
-}
-
-[data-theme=theverge]:not(.dark) .text-\[\#686b82\],
-html[data-theme=theverge]:not(.dark) .text-\[\#686b82\] {
-  color: #5d5d68 !important;
-}
-
-/* Primary Accents in Light Mode: Verge Ultraviolet (#5200ff) */
-[data-theme=theverge]:not(.dark) .text-\[\#7132f5\],
-html[data-theme=theverge]:not(.dark) .text-\[\#7132f5\] {
-  color: #5200ff !important;
-}
-
-[data-theme=theverge]:not(.dark) .border-\[\#7132f5\],
-html[data-theme=theverge]:not(.dark) .border-\[\#7132f5\] {
-  border-color: #5200ff !important;
-}
-
-[data-theme=theverge]:not(.dark) .focus\:border-\[\#7132f5\]:focus,
-html[data-theme=theverge]:not(.dark) .focus\:border-\[\#7132f5\]:focus {
-  border-color: #5200ff !important;
-  outline: 2px solid #3cffd0 !important;
-}
-
-/* Subtle Tags & Chips in Light Mode */
-[data-theme=theverge]:not(.dark) .btn-kraken-subtle,
-html[data-theme=theverge]:not(.dark) .btn-kraken-subtle,
-[data-theme=theverge]:not(.dark) .bg-\[\#855bfb\]\/15,
-html[data-theme=theverge]:not(.dark) .bg-\[\#855bfb\]\/15,
-[data-theme=theverge]:not(.dark) .bg-\[\#855bfb\]\/10,
-html[data-theme=theverge]:not(.dark) .bg-\[\#855bfb\]\/10,
-[data-theme=theverge]:not(.dark) .bg-\[\#855bfb\]\/20,
-html[data-theme=theverge]:not(.dark) .bg-\[\#855bfb\]\/20 {
-  background-color: rgba(82, 0, 255, 0.08) !important;
-  color: #5200ff !important;
-  border: 1px solid rgba(82, 0, 255, 0.22) !important;
-  border-radius: 9999px !important;
-}
-
-/* Segmented Buttons in Light Mode */
-[data-theme=theverge]:not(.dark) button.bg-white,
-html[data-theme=theverge]:not(.dark) button.bg-white {
-  background-color: #ffffff !important;
-  color: #131313 !important;
-  box-shadow: none !important;
-  border: 1px solid #e2e2e7 !important;
-}
-
-/* Hover States in Light Mode */
-[data-theme=theverge]:not(.dark) .hover\:bg-\[\#fafbfe\]:hover,
-html[data-theme=theverge]:not(.dark) .hover\:bg-\[\#fafbfe\]:hover,
-[data-theme=theverge]:not(.dark) .hover\:bg-\[\#edeef3\]:hover,
-html[data-theme=theverge]:not(.dark) .hover\:bg-\[\#edeef3\]:hover {
-  background-color: #f1f1f5 !important;
-}
-
-/* ==============================================================
-   THE VERGE DARK MODE (#131313 Canvas, #191919 Cards, #3cffd0 Mint Accents)
-   ============================================================== */
-[data-theme=theverge].dark body,
-.dark[data-theme=theverge] body,
-[data-theme=theverge] .dark body {
-  background-color: #131313 !important;
-  color: #ffffff !important;
-}
-
-/* Cards & Surface Slate in Dark Mode */
-[data-theme=theverge].dark .bg-white,
-.dark[data-theme=theverge] .bg-white,
-[data-theme=theverge] .dark .bg-white,
-[data-theme=theverge].dark .bg-\[\#fafbfe\],
-.dark[data-theme=theverge] .bg-\[\#fafbfe\],
-[data-theme=theverge] .dark .bg-\[\#fafbfe\],
-[data-theme=theverge].dark .dark\:bg-\[\#16171f\],
-.dark[data-theme=theverge] .dark\:bg-\[\#16171f\],
-[data-theme=theverge] .dark .dark\:bg-\[\#16171f\],
-[data-theme=theverge].dark .dark\:bg-\[\#0d0e12\],
-.dark[data-theme=theverge] .dark\:bg-\[\#0d0e12\],
-[data-theme=theverge] .dark .dark\:bg-\[\#0d0e12\] {
-  background-color: #191919 !important;
-}
-
-[data-theme=theverge].dark .bg-\[\#edeef3\],
-.dark[data-theme=theverge] .bg-\[\#edeef3\],
-[data-theme=theverge] .dark .bg-\[\#edeef3\],
-[data-theme=theverge].dark .dark\:bg-\[\#1e202b\],
-.dark[data-theme=theverge] .dark\:bg-\[\#1e202b\],
-[data-theme=theverge] .dark .dark\:bg-\[\#1e202b\],
-[data-theme=theverge].dark .dark\:bg-\[\#13141c\],
-.dark[data-theme=theverge] .dark\:bg-\[\#13141c\],
-[data-theme=theverge] .dark .dark\:bg-\[\#13141c\] {
-  background-color: #262626 !important;
-}
-
-/* Inactive button backgrounds in Dark Mode */
-[data-theme=theverge].dark button.bg-\[\#fafbfe\],
-.dark[data-theme=theverge] button.bg-\[\#fafbfe\],
-[data-theme=theverge] .dark button.bg-\[\#fafbfe\] {
-  background-color: #191919 !important;
-}
-
-/* Active segmented buttons in Dark Mode */
-[data-theme=theverge].dark .dark\:bg-\[\#282937\],
-.dark[data-theme=theverge] .dark\:bg-\[\#282937\],
-[data-theme=theverge] .dark .dark\:bg-\[\#282937\],
-[data-theme=theverge].dark .dark\:bg-\[\#232534\],
-.dark[data-theme=theverge] .dark\:bg-\[\#232534\],
-[data-theme=theverge] .dark .dark\:bg-\[\#232534\],
-[data-theme=theverge].dark button.bg-\[\#101114\],
-.dark[data-theme=theverge] button.bg-\[\#101114\],
-[data-theme=theverge] .dark button.bg-\[\#101114\] {
-  background-color: #2c2c2c !important;
-  color: #ffffff !important;
-}
-
-/* Flat 1px Hairline Borders in Dark Mode */
-[data-theme=theverge].dark .border-\[\#dedee5\],
-.dark[data-theme=theverge] .border-\[\#dedee5\],
-[data-theme=theverge] .dark .border-\[\#dedee5\],
-[data-theme=theverge].dark .dark\:border-\[\#282937\],
-.dark[data-theme=theverge] .dark\:border-\[\#282937\],
-[data-theme=theverge] .dark .dark\:border-\[\#282937\] {
-  border-color: #313131 !important;
-}
-
-[data-theme=theverge].dark .divide-\[\#dedee5\] > :not([hidden]) ~ :not([hidden]),
-.dark[data-theme=theverge] .divide-\[\#dedee5\] > :not([hidden]) ~ :not([hidden]),
-[data-theme=theverge] .dark .divide-\[\#dedee5\] > :not([hidden]) ~ :not([hidden]),
-[data-theme=theverge].dark .dark\:divide-\[\#282937\] > :not([hidden]) ~ :not([hidden]),
-.dark[data-theme=theverge] .dark\:divide-\[\#282937\] > :not([hidden]) ~ :not([hidden]),
-[data-theme=theverge] .dark .dark\:divide-\[\#282937\] > :not([hidden]) ~ :not([hidden]) {
-  border-color: #313131 !important;
-}
-
-[data-theme=theverge].dark .border-\[\#7132f5\],
-.dark[data-theme=theverge] .border-\[\#7132f5\],
-[data-theme=theverge] .dark .border-\[\#7132f5\] {
-  border-color: #3cffd0 !important;
-}
-
-[data-theme=theverge].dark .focus\:border-\[\#7132f5\]:focus,
-.dark[data-theme=theverge] .focus\:border-\[\#7132f5\]:focus,
-[data-theme=theverge] .dark .focus\:border-\[\#7132f5\]:focus {
-  border-color: #3cffd0 !important;
-  outline: 2px solid #5200ff !important;
-}
-
-/* Text colors in Dark Mode */
-[data-theme=theverge].dark .text-\[\#101114\],
-.dark[data-theme=theverge] .text-\[\#101114\],
-[data-theme=theverge] .dark .text-\[\#101114\],
-[data-theme=theverge].dark .dark\:text-\[\#f3f4f8\],
-.dark[data-theme=theverge] .dark\:text-\[\#f3f4f8\],
-[data-theme=theverge] .dark .dark\:text-\[\#f3f4f8\] {
-  color: #ffffff !important;
-}
-
-[data-theme=theverge].dark .text-\[\#686b82\],
-.dark[data-theme=theverge] .text-\[\#686b82\],
-[data-theme=theverge] .dark .text-\[\#686b82\],
-[data-theme=theverge].dark .dark\:text-\[\#9ca0ba\],
-.dark[data-theme=theverge] .dark\:text-\[\#9ca0ba\],
-[data-theme=theverge] .dark .dark\:text-\[\#9ca0ba\] {
-  color: #949494 !important;
-}
-
-/* Text primary accents in Dark Mode */
-[data-theme=theverge].dark .text-\[\#7132f5\],
-.dark[data-theme=theverge] .text-\[\#7132f5\],
-[data-theme=theverge] .dark .text-\[\#7132f5\],
-[data-theme=theverge].dark .dark\:text-\[\#a78bfa\],
-.dark[data-theme=theverge] .dark\:text-\[\#a78bfa\],
-[data-theme=theverge] .dark .dark\:text-\[\#a78bfa\] {
-  color: #3cffd0 !important;
-}
-
-/* Subtle tags & active chips in Dark Mode */
-[data-theme=theverge].dark .btn-kraken-subtle,
-.dark[data-theme=theverge] .btn-kraken-subtle,
-[data-theme=theverge] .dark .btn-kraken-subtle,
-[data-theme=theverge].dark .bg-\[\#855bfb\]\/15,
-.dark[data-theme=theverge] .bg-\[\#855bfb\]\/15,
-[data-theme=theverge] .dark .bg-\[\#855bfb\]\/15,
-[data-theme=theverge].dark .bg-\[\#855bfb\]\/10,
-.dark[data-theme=theverge] .bg-\[\#855bfb\]\/10,
-[data-theme=theverge] .dark .bg-\[\#855bfb\]\/10,
-[data-theme=theverge].dark .bg-\[\#855bfb\]\/20,
-.dark[data-theme=theverge] .bg-\[\#855bfb\]\/20,
-[data-theme=theverge] .dark .bg-\[\#855bfb\]\/20 {
-  background-color: rgba(60, 255, 208, 0.15) !important;
-  color: #3cffd0 !important;
-  border: 1px solid rgba(60, 255, 208, 0.35) !important;
-  border-radius: 9999px !important;
-}
-
 
 /* ==============================================================
    3. AUTUMN DESIGN SYSTEM (DESIGN-autumn.md)
-   Warm Oat & Sand Light (#F4EFEA), Warm Stone Dark (#1C1917),
-   Warm Autumn Orange Accent (#EA580C / #C2410C),
-   Plus Jakarta Sans Typography & Tabular Figures.
+   Warm oat canvas, amber accents, Plus Jakarta Sans.
    ============================================================== */
 [data-theme=autumn] {
-  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
-  --font-display: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Plus Jakarta Sans', sans-serif;
   --font-mono: 'Plus Jakarta Sans', monospace;
+
+  --brand-primary: #ea580c;
+  --brand-primary-hover: #c2410c;
+  --brand-primary-active: #9a3412;
+  --brand-soft: rgba(234, 88, 12, 0.1);
+  --brand-soft-hover: rgba(234, 88, 12, 0.18);
+  --brand-text: #c2410c;
+  --on-brand: #ffffff;
+
+  --bg-canvas: #f4efea;
+  --bg-surface: #fffdfb;
+  --bg-surface-raised: #ffffff;
+  --bg-surface-sunken: #ebe3da;
+
+  --text-primary: #1c1917;
+  --text-secondary: #6b5f56;
+  --text-tertiary: #948a82;
+
+  --border-default: #e2d8cd;
+  --border-strong: #c7b8a8;
+
+  --card-radius: 14px;
+  --control-radius: 10px;
+  --pill-radius: 9999px;
 }
 
-[data-theme=autumn] body {
-  background-color: #f4efea !important;
-  color: #1e1e1e !important;
-  font-family: var(--font-sans) !important;
+.dark[data-theme=autumn],
+[data-theme=autumn].dark {
+  --brand-primary: #ea580c;
+  --brand-primary-hover: #f97316;
+  --brand-primary-active: #c2410c;
+  --brand-soft: rgba(234, 88, 12, 0.22);
+  --brand-soft-hover: rgba(234, 88, 12, 0.32);
+  --brand-text: #fb923c;
+  --on-brand: #ffffff;
+
+  --bg-canvas: #1c1917;
+  --bg-surface: #24201d;
+  --bg-surface-raised: #2e2925;
+  --bg-surface-sunken: #171412;
+
+  --text-primary: #faf5f0;
+  --text-secondary: #b8aaa0;
+  --text-tertiary: #8a7d74;
+
+  --border-default: #3a332d;
+  --border-strong: #52483f;
 }
 
-[data-theme=autumn].dark body,
-.dark[data-theme=autumn] body,
-[data-theme=autumn] .dark body {
-  background-color: #1c1917 !important;
-  color: #f5f5f4 !important;
-}
-
-/* Primary Button & CTA styling */
-[data-theme=autumn] button.btn-kraken-primary,
-[data-theme=autumn] .btn-kraken-primary,
-[data-theme=autumn] button.bg-\[\#7132f5\],
-[data-theme=autumn] a.bg-\[\#7132f5\] {
-  background-color: #ea580c !important;
-  color: #ffffff !important;
-  border-radius: 10px !important;
-  box-shadow: 0 2px 10px rgba(234, 88, 12, 0.22) !important;
-  border: none !important;
-}
-
-[data-theme=autumn] .btn-kraken-primary:hover,
-[data-theme=autumn] .hover\:bg-\[\#5741d8\]:hover {
-  background-color: #c2410c !important;
-}
-
-[data-theme=autumn] .bg-\[\#5741d8\] {
-  background-color: #c2410c !important;
-}
-
-/* Hero Balance Card */
-[data-theme=autumn] .hero-balance-card,
-[data-theme=autumn] div.bg-\[\#7132f5\] {
-  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%) !important;
-  border-radius: 16px !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  box-shadow: 0 4px 20px -2px rgba(234, 88, 12, 0.25) !important;
-}
-
-/* Hero Debt Card */
+/* Autumn keeps its warm red for the outstanding-bills card. */
 [data-theme=autumn] .hero-debt-card {
-  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%) !important;
-  border-radius: 16px !important;
-  border: 1px solid rgba(255, 255, 255, 0.15) !important;
-  box-shadow: 0 4px 20px -2px rgba(185, 28, 28, 0.2) !important;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  border-color: #ef4444;
 }
 
-[data-theme=autumn].dark .hero-debt-card,
-[data-theme=autumn] .dark .hero-debt-card {
-  background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-}
-
-/* Numbers & Tabular Figures in Autumn: Plus Jakarta Sans Bold */
-[data-theme=autumn] .balance-card-amount,
-[data-theme=autumn] .hero-balance-card .balance-card-amount,
-[data-theme=autumn] .hero-balance-card .text-3xl,
-[data-theme=autumn] .hero-balance-card .text-4xl,
-[data-theme=autumn] .hero-debt-card .debt-card-amount,
-[data-theme=autumn] .net-worth-amount,
-[data-theme=autumn] .cashflow-amount,
-[data-theme=autumn] .tabular-nums,
-[data-theme=autumn] .font-mono {
-  font-family: 'Plus Jakarta Sans', var(--font-sans) !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.02em !important;
-}
-
-/* Subtle highlights & badges */
-[data-theme=autumn] .btn-kraken-subtle,
-[data-theme=autumn] .bg-\[\#855bfb\]\/15,
-[data-theme=autumn] .bg-\[\#855bfb\]\/10,
-[data-theme=autumn] .bg-\[\#855bfb\]\/20 {
-  background-color: rgba(234, 88, 12, 0.12) !important;
-  color: #ea580c !important;
-}
-
-[data-theme=autumn].dark .btn-kraken-subtle,
-[data-theme=autumn] .dark .btn-kraken-subtle,
-[data-theme=autumn].dark .bg-\[\#855bfb\]\/15,
-[data-theme=autumn] .dark .bg-\[\#855bfb\]\/15 {
-  background-color: rgba(234, 88, 12, 0.2) !important;
-  color: #fb923c !important;
-}
-
-/* Primary text & accent colors */
-[data-theme=autumn] .text-\[\#7132f5\] {
-  color: #ea580c !important;
-}
-
-[data-theme=autumn].dark .text-\[\#7132f5\],
-[data-theme=autumn].dark .dark\:text-\[\#a78bfa\],
-[data-theme=autumn] .dark .text-\[\#7132f5\],
-[data-theme=autumn] .dark .dark\:text-\[\#a78bfa\] {
-  color: #fb923c !important;
-}
-
-[data-theme=autumn] .border-\[\#7132f5\] {
-  border-color: #ea580c !important;
-}
-
-[data-theme=autumn] .focus\:border-\[\#7132f5\]:focus {
-  border-color: #ea580c !important;
-}
-
-/* Container & Surface card colors in LIGHT MODE */
-[data-theme=autumn]:not(.dark) .bg-white,
-html[data-theme=autumn]:not(.dark) .bg-white {
-  background-color: #ffffff !important;
-}
-
-[data-theme=autumn]:not(.dark) .bg-\[\#fafbfe\],
-html[data-theme=autumn]:not(.dark) .bg-\[\#fafbfe\] {
-  background-color: #f8f6f2 !important;
-}
-
-[data-theme=autumn]:not(.dark) .border-\[\#dedee5\],
-html[data-theme=autumn]:not(.dark) .border-\[\#dedee5\] {
-  border-color: #e7e1d8 !important;
-}
-
-[data-theme=autumn]:not(.dark) .text-\[\#101114\],
-html[data-theme=autumn]:not(.dark) .text-\[\#101114\] {
-  color: #1e1e1e !important;
-}
-
-[data-theme=autumn]:not(.dark) .text-\[\#686b82\],
-html[data-theme=autumn]:not(.dark) .text-\[\#686b82\] {
-  color: #78716c !important;
-}
-
-/* ==============================================================
-   AUTUMN DARK MODE OVERRIDES (#1C1917 Canvas, #24201D Cards)
-   ============================================================== */
-[data-theme=autumn].dark body,
-.dark[data-theme=autumn] body,
-[data-theme=autumn] .dark body {
-  background-color: #1c1917 !important;
-  color: #f5f5f4 !important;
-}
-
-/* Card surfaces and containers in dark mode */
-[data-theme=autumn].dark .bg-white,
-.dark[data-theme=autumn] .bg-white,
-[data-theme=autumn] .dark .bg-white,
-[data-theme=autumn].dark .dark\:bg-\[\#16171f\],
-.dark[data-theme=autumn] .dark\:bg-\[\#16171f\],
-[data-theme=autumn] .dark .dark\:bg-\[\#16171f\] {
-  background-color: #24201d !important;
-}
-
-/* Nested cards & secondary panels in dark mode */
-[data-theme=autumn].dark .dark\:bg-\[\#1e202b\],
-.dark[data-theme=autumn] .dark\:bg-\[\#1e202b\],
-[data-theme=autumn] .dark .dark\:bg-\[\#1e202b\],
-[data-theme=autumn].dark .dark\:bg-\[\#13141c\],
-.dark[data-theme=autumn] .dark\:bg-\[\#13141c\],
-[data-theme=autumn] .dark .dark\:bg-\[\#13141c\] {
-  background-color: #1c1917 !important;
-}
-
-/* Inactive button backgrounds in dark mode */
-[data-theme=autumn].dark .bg-\[\#fafbfe\],
-.dark[data-theme=autumn] .bg-\[\#fafbfe\],
-[data-theme=autumn] .dark .bg-\[\#fafbfe\],
-[data-theme=autumn].dark button.bg-\[\#fafbfe\],
-.dark[data-theme=autumn] button.bg-\[\#fafbfe\],
-[data-theme=autumn] .dark button.bg-\[\#fafbfe\] {
-  background-color: #24201d !important;
-}
-
-/* Segmented control backgrounds in dark mode */
-[data-theme=autumn].dark .bg-\[\#edeef3\],
-.dark[data-theme=autumn] .bg-\[\#edeef3\],
-[data-theme=autumn] .dark .bg-\[\#edeef3\] {
-  background-color: #171513 !important;
-}
-
-/* Active segmented buttons in dark mode */
-[data-theme=autumn].dark .dark\:bg-\[\#282937\],
-.dark[data-theme=autumn] .dark\:bg-\[\#282937\],
-[data-theme=autumn] .dark .dark\:bg-\[\#282937\],
-[data-theme=autumn].dark .dark\:bg-\[\#232534\],
-.dark[data-theme=autumn] .dark\:bg-\[\#232534\],
-[data-theme=autumn] .dark .dark\:bg-\[\#232534\] {
-  background-color: #2e2925 !important;
-}
-
-/* Borders in dark mode */
-[data-theme=autumn].dark .border-\[\#dedee5\],
-.dark[data-theme=autumn] .border-\[\#dedee5\],
-[data-theme=autumn] .dark .border-\[\#dedee5\],
-[data-theme=autumn].dark .dark\:border-\[\#282937\],
-.dark[data-theme=autumn] .dark\:border-\[\#282937\],
-[data-theme=autumn] .dark .dark\:border-\[\#282937\] {
-  border-color: #383431 !important;
-}
-
-/* Text in dark mode */
-[data-theme=autumn].dark .text-\[\#101114\],
-.dark[data-theme=autumn] .text-\[\#101114\],
-[data-theme=autumn] .dark .text-\[\#101114\],
-[data-theme=autumn].dark .dark\:text-\[\#f3f4f8\],
-.dark[data-theme=autumn] .dark\:text-\[\#f3f4f8\],
-[data-theme=autumn] .dark .dark\:text-\[\#f3f4f8\] {
-  color: #f5f5f4 !important;
-}
-
-[data-theme=autumn].dark .text-\[\#686b82\],
-.dark[data-theme=autumn] .text-\[\#686b82\],
-[data-theme=autumn] .dark .text-\[\#686b82\],
-[data-theme=autumn].dark .dark\:text-\[\#9ca0ba\],
-.dark[data-theme=autumn] .dark\:text-\[\#9ca0ba\],
-[data-theme=autumn] .dark .dark\:text-\[\#9ca0ba\] {
-  color: #a8a29e !important;
-}
-
-/* Card Geometry: 16px */
-[data-theme=autumn] .rounded-\[16px\],
-[data-theme=autumn] .rounded-\[14px\] {
-  border-radius: 16px !important;
-}
-
-/* Warm diffused soft shadow */
-[data-theme=autumn] .shadow-whisper {
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04) !important;
-}
-[data-theme=autumn].dark .shadow-whisper,
-.dark[data-theme=autumn] .shadow-whisper {
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4) !important;
+.dark[data-theme=autumn] .hero-debt-card,
+[data-theme=autumn].dark .hero-debt-card {
+  background: linear-gradient(135deg, #b91c1c 0%, #881337 100%);
+  border-color: #f87171;
 }
 
 /* ==============================================================
    4. MONGODB DESIGN SYSTEM (DESIGN-mongodb.md)
-   Developer Data Platform.
-   Canvas White (#FFFFFF) & Brand Teal Deep Dark (#001E2B).
-   Signature MongoDB Green (#00ED64) pill button with deep teal text (#001E2B).
-   Brand Green Dark (#00684A) and Mint Soft (#E3FCEF / #C3F0D2) accents.
-   Euclid Circular A typography & Source Code Pro tabular numbers.
-   12px rounded cards with crisp borders and minimal elevation.
+   Developer data platform. Deep-teal canvas (#001e2b), MongoDB
+   Green (#00ed64) accents, pill CTAs, Euclid Circular A.
    ============================================================== */
 [data-theme=mongodb] {
   --font-sans: 'Euclid Circular A', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Euclid Circular A', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'Source Code Pro', 'SF Mono', Menlo, Consolas, monospace;
+  --font-display: 'Euclid Circular A', sans-serif;
+  --font-mono: 'Source Code Pro', ui-monospace, monospace;
+
+  /* MongoDB green is very light: it needs dark text on top. */
+  --brand-primary: #00ed64;
+  --brand-primary-hover: #00c853;
+  --brand-primary-active: #00a845;
+  --brand-soft: rgba(0, 237, 100, 0.14);
+  --brand-soft-hover: rgba(0, 237, 100, 0.22);
+  --brand-text: #00684a;
+  --on-brand: #001e2b;
+
+  --bg-canvas: #ffffff;
+  --bg-surface: #ffffff;
+  --bg-surface-raised: #ffffff;
+  --bg-surface-sunken: #f4f7f6;
+
+  --text-primary: #001e2b;
+  --text-secondary: #4f6b73;
+  --text-tertiary: #7a9199;
+
+  --border-default: #dde5e3;
+  --border-strong: #b6c4c1;
+
+  --card-radius: 16px;
+  --control-radius: 9999px;
+  --pill-radius: 9999px;
 }
 
-[data-theme=mongodb] body {
-  background-color: #ffffff !important;
-  color: #001e2b !important;
-  font-family: var(--font-sans) !important;
+.dark[data-theme=mongodb],
+[data-theme=mongodb].dark {
+  --brand-primary: #00ed64;
+  --brand-primary-hover: #3dff8f;
+  --brand-primary-active: #00c853;
+  --brand-soft: rgba(0, 237, 100, 0.16);
+  --brand-soft-hover: rgba(0, 237, 100, 0.26);
+  --brand-text: #00ed64;
+  --on-brand: #001e2b;
+
+  --bg-canvas: #001e2b;
+  --bg-surface: #02303f;
+  --bg-surface-raised: #08384a;
+  --bg-surface-sunken: #00161f;
+
+  --text-primary: #ffffff;
+  --text-secondary: #a4bcc0;
+  --text-tertiary: #7f9ba0;
+
+  --border-default: #11384c;
+  --border-strong: #1d4d63;
 }
 
-[data-theme=mongodb].dark body,
-.dark[data-theme=mongodb] body,
-[data-theme=mongodb] .dark body {
-  background-color: #001e2b !important;
-  color: #ffffff !important;
-}
-
-/* Primary Action Button: MongoDB Green Pill (#00ed64) with Deep Teal Text (#001e2b) */
-[data-theme=mongodb] button.btn-kraken-primary,
-[data-theme=mongodb] .btn-kraken-primary,
-[data-theme=mongodb] button.bg-\[\#7132f5\],
-[data-theme=mongodb] a.bg-\[\#7132f5\] {
-  background-color: #00ed64 !important;
-  color: #001e2b !important;
-  border-radius: 9999px !important;
-  font-weight: 600 !important;
-  box-shadow: 0 2px 10px rgba(0, 237, 100, 0.28) !important;
-  border: none !important;
-}
-
-[data-theme=mongodb] .btn-kraken-primary:hover,
-[data-theme=mongodb] button.btn-kraken-primary:hover,
-[data-theme=mongodb] .hover\:bg-\[\#5741d8\]:hover {
-  background-color: #00b545 !important;
-  color: #001e2b !important;
-}
-
-[data-theme=mongodb] .btn-kraken-primary:active,
-[data-theme=mongodb] button.btn-kraken-primary:active {
-  background-color: #008c34 !important;
-  color: #001e2b !important;
-}
-
-[data-theme=mongodb] .bg-\[\#5741d8\] {
-  background-color: #00684a !important;
-  color: #ffffff !important;
-  border-radius: 9999px !important;
-}
-
-/* Hero Balance Card: Signature Dark Teal Band with Green Border */
-[data-theme=mongodb] .hero-balance-card,
-[data-theme=mongodb] div.bg-\[\#7132f5\] {
-  background: linear-gradient(135deg, #001e2b 0%, #003847 100%) !important;
-  border-radius: 12px !important;
-  border: 1px solid #00684a !important;
-  color: #ffffff !important;
-  box-shadow: 0 8px 24px -4px rgba(0, 30, 43, 0.35) !important;
-}
-
-/* Hero Debt Card: Semantic Down Red with 12px Card Radius */
-[data-theme=mongodb] .hero-debt-card {
-  background: linear-gradient(135deg, #c5221f 0%, #90131e 100%) !important;
-  border-radius: 12px !important;
-  border: 1px solid #e53935 !important;
-  color: #ffffff !important;
-  box-shadow: 0 6px 20px -2px rgba(197, 34, 31, 0.3) !important;
-}
-
-[data-theme=mongodb].dark .hero-debt-card,
-[data-theme=mongodb] .dark .hero-debt-card {
-  background: linear-gradient(135deg, #90131e 0%, #5c0b13 100%) !important;
-  border: 1px solid #c5221f !important;
-  box-shadow: 0 6px 24px -2px rgba(197, 34, 31, 0.4) !important;
-}
-
-[data-theme=mongodb] .hero-debt-card .debt-card-header,
-[data-theme=mongodb] .hero-debt-card .debt-card-icon {
-  color: rgba(255, 255, 255, 0.95) !important;
-}
-
-[data-theme=mongodb] .hero-debt-card .debt-card-badge {
-  background-color: rgba(0, 0, 0, 0.3) !important;
-  color: #ffffff !important;
-  border: 1px solid rgba(255, 255, 255, 0.25) !important;
-  border-radius: 9999px !important;
-  font-family: var(--font-sans) !important;
-}
-
-[data-theme=mongodb] .hero-debt-card .debt-card-amount {
-  color: #ffffff !important;
-}
-
-[data-theme=mongodb] .hero-debt-card .debt-card-sub {
-  color: rgba(255, 255, 255, 0.85) !important;
-}
-
-[data-theme=mongodb] .hero-debt-card .debt-card-divider {
-  border-color: rgba(255, 255, 255, 0.2) !important;
-}
-
-[data-theme=mongodb] .hero-debt-card .debt-card-btn {
-  color: #ffffff !important;
-  font-weight: 600 !important;
-}
-
-[data-theme=mongodb] .hero-debt-card .debt-card-btn:hover {
-  color: #fee2e2 !important;
-}
-
-[data-theme=mongodb] .hero-debt-card .debt-card-status {
-  color: rgba(255, 255, 255, 0.85) !important;
-}
-
-/* Numerical Data: Source Code Pro Technical Figures */
-[data-theme=mongodb] .balance-card-amount,
-[data-theme=mongodb] .hero-balance-card .balance-card-amount,
-[data-theme=mongodb] .hero-balance-card .text-3xl,
-[data-theme=mongodb] .hero-balance-card .text-4xl,
-[data-theme=mongodb] .hero-debt-card .debt-card-amount,
-[data-theme=mongodb] .net-worth-amount,
-[data-theme=mongodb] .cashflow-amount,
-[data-theme=mongodb] .tabular-nums,
-[data-theme=mongodb] .font-mono {
-  font-family: var(--font-mono) !important;
-  font-feature-settings: 'tnum' 1;
-}
-
-/* Subtle Pill Badges & Chips */
-[data-theme=mongodb] .btn-kraken-subtle,
-[data-theme=mongodb] .bg-\[\#855bfb\]\/15,
-[data-theme=mongodb] .bg-\[\#855bfb\]\/10,
-[data-theme=mongodb] .bg-\[\#855bfb\]\/20 {
-  background-color: #e3fcef !important;
-  color: #00684a !important;
-  border-radius: 9999px !important;
-  font-weight: 600 !important;
-}
-
-[data-theme=mongodb].dark .btn-kraken-subtle,
-[data-theme=mongodb] .dark .btn-kraken-subtle,
-[data-theme=mongodb].dark .bg-\[\#855bfb\]\/15,
-[data-theme=mongodb] .dark .bg-\[\#855bfb\]\/15 {
-  background-color: rgba(0, 237, 100, 0.16) !important;
-  color: #00ed64 !important;
-  border-radius: 9999px !important;
-}
-
-/* Primary text & link colors */
-[data-theme=mongodb] .text-\[\#7132f5\] {
-  color: #00684a !important;
-}
-
-[data-theme=mongodb].dark .text-\[\#7132f5\],
-[data-theme=mongodb].dark .dark\:text-\[\#a78bfa\],
-[data-theme=mongodb] .dark .text-\[\#7132f5\],
-[data-theme=mongodb] .dark .dark\:text-\[\#a78bfa\] {
-  color: #00ed64 !important;
-}
-
-[data-theme=mongodb] .border-\[\#7132f5\] {
-  border-color: #00684a !important;
-}
-
-[data-theme=mongodb].dark .border-\[\#7132f5\],
-[data-theme=mongodb] .dark .border-\[\#7132f5\] {
-  border-color: #00ed64 !important;
-}
-
-[data-theme=mongodb] .focus\:border-\[\#7132f5\]:focus {
-  border-color: #00684a !important;
-}
-
-[data-theme=mongodb].dark .focus\:border-\[\#7132f5\]:focus {
-  border-color: #00ed64 !important;
-}
-
-/* Container & Surface card colors in LIGHT MODE */
-[data-theme=mongodb]:not(.dark) .bg-white,
-html[data-theme=mongodb]:not(.dark) .bg-white {
-  background-color: #ffffff !important;
-}
-
-[data-theme=mongodb]:not(.dark) .bg-\[\#fafbfe\],
-html[data-theme=mongodb]:not(.dark) .bg-\[\#fafbfe\] {
-  background-color: #f9fbfa !important;
-}
-
-[data-theme=mongodb]:not(.dark) .border-\[\#dedee5\],
-html[data-theme=mongodb]:not(.dark) .border-\[\#dedee5\] {
-  border-color: #e1e5e8 !important;
-}
-
-[data-theme=mongodb]:not(.dark) .text-\[\#101114\],
-html[data-theme=mongodb]:not(.dark) .text-\[\#101114\] {
-  color: #001e2b !important;
-}
-
-[data-theme=mongodb]:not(.dark) .text-\[\#686b82\],
-html[data-theme=mongodb]:not(.dark) .text-\[\#686b82\] {
-  color: #5c6c7a !important;
-}
-
-/* ==============================================================
-   MONGODB DARK MODE OVERRIDES (#001E2B Canvas, #0A2533 Cards)
-   ============================================================== */
-[data-theme=mongodb].dark body,
-.dark[data-theme=mongodb] body,
-[data-theme=mongodb] .dark body {
-  background-color: #001e2b !important;
-  color: #ffffff !important;
-}
-
-/* Card surfaces and containers in dark mode */
-[data-theme=mongodb].dark .bg-white,
-.dark[data-theme=mongodb] .bg-white,
-[data-theme=mongodb] .dark .bg-white,
-[data-theme=mongodb].dark .dark\:bg-\[\#16171f\],
-.dark[data-theme=mongodb] .dark\:bg-\[\#16171f\],
-[data-theme=mongodb] .dark .dark\:bg-\[\#16171f\] {
-  background-color: #0a2533 !important;
-}
-
-/* Nested cards & secondary panels in dark mode */
-[data-theme=mongodb].dark .dark\:bg-\[\#1e202b\],
-.dark[data-theme=mongodb] .dark\:bg-\[\#1e202b\],
-[data-theme=mongodb] .dark .dark\:bg-\[\#1e202b\],
-[data-theme=mongodb].dark .dark\:bg-\[\#13141c\],
-.dark[data-theme=mongodb] .dark\:bg-\[\#13141c\],
-[data-theme=mongodb] .dark .dark\:bg-\[\#13141c\] {
-  background-color: #061d28 !important;
-}
-
-/* Inactive button backgrounds in dark mode */
-[data-theme=mongodb].dark .bg-\[\#fafbfe\],
-.dark[data-theme=mongodb] .bg-\[\#fafbfe\],
-[data-theme=mongodb] .dark .bg-\[\#fafbfe\],
-[data-theme=mongodb].dark button.bg-\[\#fafbfe\],
-.dark[data-theme=mongodb] button.bg-\[\#fafbfe\],
-[data-theme=mongodb] .dark button.bg-\[\#fafbfe\] {
-  background-color: #0d2d3e !important;
-}
-
-/* Segmented control backgrounds in dark mode */
-[data-theme=mongodb].dark .bg-\[\#edeef3\],
-.dark[data-theme=mongodb] .bg-\[\#edeef3\],
-[data-theme=mongodb] .dark .bg-\[\#edeef3\] {
-  background-color: #061d28 !important;
-}
-
-/* Active segmented buttons in dark mode */
-[data-theme=mongodb].dark .dark\:bg-\[\#282937\],
-.dark[data-theme=mongodb] .dark\:bg-\[\#282937\],
-[data-theme=mongodb] .dark .dark\:bg-\[\#282937\],
-[data-theme=mongodb].dark .dark\:bg-\[\#232534\],
-.dark[data-theme=mongodb] .dark\:bg-\[\#232534\],
-[data-theme=mongodb] .dark .dark\:bg-\[\#232534\] {
-  background-color: #12384c !important;
-}
-
-/* Borders in dark mode */
-[data-theme=mongodb].dark .border-\[\#dedee5\],
-.dark[data-theme=mongodb] .border-\[\#dedee5\],
-[data-theme=mongodb] .dark .border-\[\#dedee5\],
-[data-theme=mongodb].dark .dark\:border-\[\#282937\],
-.dark[data-theme=mongodb] .dark\:border-\[\#282937\],
-[data-theme=mongodb] .dark .dark\:border-\[\#282937\] {
-  border-color: #1c3848 !important;
-}
-
-/* Text in dark mode */
-[data-theme=mongodb].dark .text-\[\#101114\],
-.dark[data-theme=mongodb] .text-\[\#101114\],
-[data-theme=mongodb] .dark .text-\[\#101114\],
-[data-theme=mongodb].dark .dark\:text-\[\#f3f4f8\],
-.dark[data-theme=mongodb] .dark\:text-\[\#f3f4f8\],
-[data-theme=mongodb] .dark .dark\:text-\[\#f3f4f8\] {
-  color: #ffffff !important;
-}
-
-[data-theme=mongodb].dark .text-\[\#686b82\],
-.dark[data-theme=mongodb] .text-\[\#686b82\],
-[data-theme=mongodb] .dark .text-\[\#686b82\],
-[data-theme=mongodb].dark .dark\:text-\[\#9ca0ba\],
-.dark[data-theme=mongodb] .dark\:text-\[\#9ca0ba\],
-[data-theme=mongodb] .dark .dark\:text-\[\#9ca0ba\] {
-  color: #a8b3bc !important;
-}
-
-/* Card Geometry: 12px rounded (rounded.lg) */
-[data-theme=mongodb] .rounded-\[16px\],
-[data-theme=mongodb] .rounded-\[14px\] {
-  border-radius: 12px !important;
-}
-
-/* Elevation Shadows */
-[data-theme=mongodb] .shadow-whisper {
-  box-shadow: 0px 4px 12px rgba(0, 30, 43, 0.06) !important;
-}
-[data-theme=mongodb].dark .shadow-whisper,
-.dark[data-theme=mongodb] .shadow-whisper {
-  box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.45) !important;
-}
-
-/* MongoDB active segmented button for pengeluaran in dark mode */
-[data-theme=mongodb].dark button.bg-\[\#101114\],
-.dark[data-theme=mongodb] button.bg-\[\#101114\],
-[data-theme=mongodb] .dark button.bg-\[\#101114\] {
-  background-color: #12384c !important;
-  color: #ffffff !important;
+/* MongoDB keeps its signature green hero card and dark text on it. */
+[data-theme=mongodb] .hero-balance-card {
+  color: var(--on-brand);
 }
 
 /* ==============================================================
@@ -1559,10 +652,153 @@ button.theme-preview-cta[data-preview-theme="mongodb"] {
   border-color: #00ed64 !important;
 }
 
-/* Autumn active segmented button for pengeluaran in dark mode */
-[data-theme=autumn].dark button.bg-\[\#101114\],
-.dark[data-theme=autumn] button.bg-\[\#101114\],
-[data-theme=autumn] .dark button.bg-\[\#101114\] {
-  background-color: #2e2925 !important;
-  color: #ffffff !important;
+/* ==============================================================
+   LEGACY COMPATIBILITY BRIDGE
+
+   The markup still contains hard-coded Kraken palette utilities
+   (`bg-[#7132f5]`, `text-[#101114]`, ...) in ~21 files. Rewriting
+   all of them at once is a large, risky visual change, so this block
+   maps the 23 distinct classes onto the theme tokens above.
+
+   Effect: no `[data-theme=x]` override blocks are needed any more, and
+   every theme is driven by one variable set. Points 21-23 of the
+   Sprint 2 plan then delete these utilities from the markup, after
+   which this entire block can be removed.
+
+   `!important` is required because these rules target generated
+   utility classes and must win over the single-class utility.
+   ============================================================== */
+
+/* --- Brand surfaces --------------------------------------------- */
+.bg-\[\#7132f5\] {
+  background-color: var(--brand-primary) !important;
+}
+.hover\:bg-\[\#5741d8\]:hover,
+.bg-\[\#5741d8\] {
+  background-color: var(--brand-primary-hover) !important;
+}
+.hover\:bg-\[\#5b1ecf\]:hover,
+.active\:bg-\[\#5b1ecf\]:active {
+  background-color: var(--brand-primary-active) !important;
+}
+
+/* Hard-coded alpha variants collapse onto the single brand-soft token. */
+.bg-\[\#855bfb\]\/10,
+.bg-\[\#855bfb\]\/15,
+.bg-\[\#855bfb\]\/20,
+.bg-\[\#7132f5\]\/10,
+.bg-\[\#7132f5\]\/12,
+.bg-\[\#7132f5\]\/15,
+.bg-\[\#7132f5\]\/20 {
+  background-color: var(--brand-soft) !important;
+}
+.hover\:bg-\[\#7132f5\]\/10:hover,
+.hover\:bg-\[\#7132f5\]\/20:hover {
+  background-color: var(--brand-soft-hover) !important;
+}
+.bg-\[\#7132f5\]\/20:hover {
+  background-color: var(--brand-soft-hover) !important;
+}
+
+/* --- Brand text -------------------------------------------------- */
+.text-\[\#7132f5\] {
+  color: var(--brand-text) !important;
+}
+.dark .dark\:text-\[\#a78bfa\] {
+  color: var(--brand-text) !important;
+}
+.hover\:text-\[\#7132f5\]:hover {
+  color: var(--brand-text) !important;
+}
+
+/* --- Brand borders ----------------------------------------------- */
+.border-\[\#7132f5\],
+.border-\[\#7132f5\]\/20,
+.border-\[\#7132f5\]\/40 {
+  border-color: var(--brand-primary) !important;
+}
+.hover\:border-\[\#7132f5\]\/40:hover,
+.focus\:border-\[\#7132f5\]:focus {
+  border-color: var(--brand-primary) !important;
+}
+.ring-\[\#7132f5\] {
+  --tw-ring-color: var(--brand-primary) !important;
+}
+
+/* --- Surfaces ---------------------------------------------------- */
+.bg-white {
+  background-color: var(--bg-surface) !important;
+}
+.bg-\[\#fafbfe\],
+.bg-\[\#fafbfe\]\/60 {
+  background-color: var(--bg-canvas) !important;
+}
+.hover\:bg-\[\#fafbfe\]:hover {
+  background-color: var(--bg-surface-sunken) !important;
+}
+.bg-\[\#edeef3\] {
+  background-color: var(--bg-surface-sunken) !important;
+}
+.hover\:bg-\[\#edeef3\]:hover {
+  background-color: var(--bg-surface-sunken) !important;
+}
+.dark\:bg-\[\#16171f\],
+.dark\:bg-\[\#1a1c26\] {
+  background-color: var(--bg-surface) !important;
+}
+.dark\:bg-\[\#1e202b\] {
+  background-color: var(--bg-surface-raised) !important;
+}
+.dark\:bg-\[\#13141c\],
+.dark\:bg-\[\#0d0e12\] {
+  background-color: var(--bg-surface-sunken) !important;
+}
+.dark\:bg-\[\#282937\]\/80 {
+  background-color: var(--bg-surface-sunken) !important;
+}
+.dark\:bg-\[\#282937\] {
+  background-color: var(--border-default) !important;
+}
+.dark\:bg-\[\#232534\] {
+  background-color: var(--bg-surface-raised) !important;
+}
+button.bg-\[\#101114\],
+.dark button.bg-\[\#101114\] {
+  background-color: var(--text-primary) !important;
+  color: var(--bg-surface) !important;
+}
+
+/* --- Text -------------------------------------------------------- */
+.text-\[\#101114\] {
+  color: var(--text-primary) !important;
+}
+.text-\[\#686b82\] {
+  color: var(--text-secondary) !important;
+}
+.text-\[\#9497a9\] {
+  color: var(--text-tertiary) !important;
+}
+.dark\:text-\[\#f3f4f8\] {
+  color: var(--text-primary) !important;
+}
+.dark\:text-\[\#9ca0ba\] {
+  color: var(--text-secondary) !important;
+}
+.dark\:text-\[\#767993\] {
+  color: var(--text-tertiary) !important;
+}
+
+/* --- Borders & dividers ------------------------------------------ */
+.border-\[\#dedee5\] {
+  border-color: var(--border-default) !important;
+}
+.dark\:border-\[\#282937\],
+.dark\:border-\[\#a78bfa\] {
+  border-color: var(--border-default) !important;
+}
+.divide-\[\#dedee5\] > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--border-default) !important;
+}
+.dark\:divide-\[\#282937\] > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--border-default) !important;
 }

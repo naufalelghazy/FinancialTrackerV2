@@ -15,70 +15,93 @@ export interface ThemeConfig {
   pillShape: boolean;
   fontDisplay: string;
   fontSans: string;
+  /** Monospace family for numerical data, where the system defines one. */
+  fontMono: string;
+  /** Shape of the primary call-to-action, shown in the Theme Studio. */
+  buttonStyle: string;
+  /** Example label rendered inside the CTA preview. */
+  previewLabel: string;
   docFile: string;
 }
 
+/**
+ * The single source of truth for every design system.
+ * `SettingsModal` and `ThemeContext` both read from here, so a colour or label
+ * can no longer drift between the theme cards and the applied theme.
+ */
 export const DESIGN_SYSTEMS: Record<DesignSystem, ThemeConfig> = {
   mongodb: {
     id: 'mongodb',
     name: 'MongoDB',
     tagline: 'Developer Data Platform',
     badge: 'MongoDB Edition',
-    description: 'Aksen hijau MongoDB, kanvas deep-teal, tombol pill, dan tipografi Euclid Circular',
+    description: 'Tampilan sederhana, bersih, dan profesional dengan nuansa hijau khas MongoDB.',
     primaryColor: '#00ed64',
     accentColor: '#00684a',
     canvasBg: { light: '#ffffff', dark: '#001e2b' },
     pillShape: true,
     fontDisplay: 'Euclid Circular A',
     fontSans: 'Euclid Circular A',
+    fontMono: 'Source Code Pro',
+    buttonStyle: 'Green Pill + Teks Deep Teal',
+    previewLabel: 'Catat Transaksi',
     docFile: 'DESIGN-mongodb.md',
   },
   coinbase: {
     id: 'coinbase',
     name: 'Coinbase',
-    tagline: 'Financial Institutional Edition',
+    tagline: 'Financial Institutional Calm',
     badge: 'Coinbase Edition',
-    description: 'Aksen Coinbase Blue, tombol pill, dan tipografi Inter & JetBrains Mono.',
+    description: 'Tampilan bersih, tenang, dan profesional dengan nuansa biru khas finansial modern.',
     primaryColor: '#0052ff',
     accentColor: '#003ecc',
     canvasBg: { light: '#ffffff', dark: '#0a0b0d' },
     pillShape: true,
     fontDisplay: 'Inter',
     fontSans: 'Inter',
+    fontMono: 'JetBrains Mono',
+    buttonStyle: 'Pill 100px (rounded-full)',
+    previewLabel: 'Catat Transaksi',
     docFile: 'DESIGN-coinbase.md',
   },
   theverge: {
     id: 'theverge',
     name: 'The Verge',
-    tagline: 'Cyber Editorial Edition',
+    tagline: 'Cyber Editorial Newsprint',
     badge: 'The Verge Edition',
-    description: 'Aksen neon Jelly Mint & Ultraviolet, kanvas editorial, dan headline Anton.',
+    description: 'Tampilan editorial tegas: kanvas gelap, aksen neon mint, headline Anton.',
     primaryColor: '#3cffd0',
     accentColor: '#5200ff',
     canvasBg: { light: '#f7f7f9', dark: '#131313' },
     pillShape: true,
     fontDisplay: 'Anton',
     fontSans: 'Space Grotesk',
+    fontMono: 'Space Mono',
+    buttonStyle: 'Neon Mint Pill + Teks Hitam Pekat',
+    previewLabel: 'CATAT TRANSAKSI',
     docFile: 'DESIGN-theverge.md',
   },
   kraken: {
     id: 'kraken',
     name: 'Kraken',
-    tagline: 'Crypto Classic Edition',
+    tagline: 'Crypto Modernist Classic',
     badge: 'Kraken Edition',
-    description: 'Aksen Kraken Purple, font IBM Plex Sans, dan bayangan lembut.',
+    description: 'Tampilan modern dan elegan dengan nuansa ungu yang nyaman di mata.',
     primaryColor: '#7132f5',
     accentColor: '#5741d8',
     canvasBg: { light: '#fafbfe', dark: '#0d0e12' },
     pillShape: false,
     fontDisplay: 'IBM Plex Sans',
     fontSans: 'IBM Plex Sans',
+    fontMono: 'JetBrains Mono',
+    buttonStyle: 'Rounded 12px + Bayangan Whisper',
+    previewLabel: 'Catat Transaksi',
     docFile: 'DESIGN-kraken.md',
   },
   autumn: {
     id: 'autumn',
     name: 'Autumn',
-    tagline: 'Warm Insight Edition',
+    tagline: 'Warm Insight Analytics',
     badge: 'Autumn Edition',
     description: 'Tampilan hangat dengan nuansa warna oat dan aksen oranye musim gugur yang nyaman.',
     primaryColor: '#ea580c',
@@ -87,9 +110,21 @@ export const DESIGN_SYSTEMS: Record<DesignSystem, ThemeConfig> = {
     pillShape: false,
     fontDisplay: 'Plus Jakarta Sans',
     fontSans: 'Plus Jakarta Sans',
+    fontMono: 'Plus Jakarta Sans',
+    buttonStyle: 'Rounded 10px + Warm Amber Accent',
+    previewLabel: 'Catat Transaksi',
     docFile: 'DESIGN-autumn.md',
   },
 };
+
+/** Display order used by the Theme Studio. */
+export const DESIGN_SYSTEM_ORDER: DesignSystem[] = [
+  'mongodb',
+  'coinbase',
+  'theverge',
+  'kraken',
+  'autumn',
+];
 
 export interface ThemeContextType {
   theme: ThemeMode;

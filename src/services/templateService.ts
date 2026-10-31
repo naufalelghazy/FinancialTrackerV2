@@ -11,6 +11,29 @@ function toValidUuidOrNull(val?: string | null): string | null {
   return UUID_REGEX.test(trimmed) ? trimmed : null;
 }
 
+function isUuid(val: string): boolean {
+  return UUID_REGEX.test(val);
+}
+
+/**
+ * Maps a `quick_templates` row to the app model.
+ * Account/category ids that are not UUIDs (legacy seed ids such as `gopay`)
+ * are dropped, because they can never reference a Postgres uuid column.
+ */
+function mapTemplateRow(row: Record<string, unknown>): QuickTemplate {
+  return {
+    id: String(row.id),
+    name: String(row.name ?? ''),
+    type: (row.type === 'pemasukan' || row.type === 'transfer' ? row.type : 'pengeluaran') as TransactionType,
+    amount: Number(row.amount) || 0,
+    sourceAccountId: row.source_account_id ? String(row.source_account_id) : '',
+    destinationAccountId: row.destination_account_id ? String(row.destination_account_id) : undefined,
+    categoryId: row.category_id ? String(row.category_id) : undefined,
+    notes: row.notes ? String(row.notes) : '',
+    emoji: row.emoji ? String(row.emoji) : '📌',
+  };
+}
+
 /**
  * Loads quick templates synchronously from localStorage cache for instant UI rendering.
  */
@@ -60,26 +83,19 @@ export async function loadQuickTemplates(): Promise<QuickTemplate[]> {
     if (error) throw error;
 
     if (data && data.length > 0) {
-      const mapped: QuickTemplate[] = data.map((row: any) => ({
-        id: row.id,
-        name: row.name,
-        type: row.type as TransactionType,
-        amount: Number(row.amount) || 0,
-        sourceAccountId: row.source_account_id || '',
-        destinationAccountId: row.destination_account_id || undefined,
-        categoryId: row.category_id || undefined,
-        notes: row.notes || '',
-        emoji: row.emoji || '📌',
-      }));
+      const mapped: QuickTemplate[] = (data as Record<string, unknown>[]).map(mapTemplateRow);
 
       saveQuickTemplates(mapped);
       return mapped;
     }
 
-    // If table is newly created and currently empty, migrate cached templates to Supabase
-    if (cached.length > 0) {
+    // If table is newly created and currently empty, migrate cached templates to Supabase.
+    // Only templates with a real uuid can be seeded; legacy seed ids (e.g. `tpl_kopi`)
+    // are skipped rather than sent to a uuid primary key and rejected.
+    const seedable = cached.filter((t) => isUuid(t.id));
+    if (seedable.length > 0) {
       try {
-        const rowsToInsert = cached.map((t) => ({
+        const rowsToInsert = seedable.map((t) => ({
           id: t.id,
           name: t.name,
           type: t.type,
@@ -91,7 +107,8 @@ export async function loadQuickTemplates(): Promise<QuickTemplate[]> {
           emoji: t.emoji || '📌',
         }));
 
-        await supabase.from('quick_templates').insert(rowsToInsert);
+        const { error } = await supabase.from('quick_templates').insert(rowsToInsert);
+        if (error) console.warn('Initial templates seed to Supabase skipped:', error.message);
       } catch (seedErr) {
         console.warn('Initial templates seed to Supabase skipped:', seedErr);
       }
@@ -113,7 +130,8 @@ export async function addQuickTemplate(
 ): Promise<{ newTemplate: QuickTemplate; updatedList: QuickTemplate[] }> {
   const newTemplate: QuickTemplate = {
     ...data,
-    id: `tpl_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    // Must be a uuid: the primary key is `uuid`, and Postgres rejects `tpl_...`.
+    id: crypto.randomUUID(),
   };
 
   const updatedList = [newTemplate, ...currentTemplates];

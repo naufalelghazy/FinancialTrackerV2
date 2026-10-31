@@ -1,13 +1,49 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import {
-  DESIGN_SYSTEMS,
-  ThemeContext,
-  type DesignSystem,
-  type ThemeMode,
-  type ThemeConfig,
-} from './themeStore';
+import { DESIGN_SYSTEMS, ThemeContext, type DesignSystem, type ThemeMode, type ThemeConfig } from './themeStore';
 
 export type { DesignSystem, ThemeMode, ThemeConfig };
+
+/**
+ * Google Fonts families each design system needs, keyed by design system.
+ *
+ * Only the Kraken baseline is loaded by `index.html`; the rest are injected on
+ * demand so first paint is not blocked by eight font families the user may
+ * never see.
+ */
+const THEME_FONTS: Record<DesignSystem, string[]> = {
+  kraken: [],
+  coinbase: ['Inter:wght@300;400;500;600;700', 'JetBrains+Mono:wght@400;500;600;700'],
+  theverge: [
+    'Anton',
+    'Space+Grotesk:wght@300;400;500;600;700',
+    'Space+Mono:ital,wght@0,400;0,700;1,400',
+  ],
+  autumn: ['Plus+Jakarta+Sans:wght@400;500;600;700;800'],
+  mongodb: ['Source+Code+Pro:wght@400;500;600;700'],
+};
+
+const loadedFontHrefs = new Set<string>();
+
+/** Injects the stylesheet for a design system's fonts exactly once. */
+function loadFontsFor(system: DesignSystem): void {
+  const families = THEME_FONTS[system];
+  if (families.length === 0) return;
+
+  const href = `https://fonts.googleapis.com/css2?${families
+    .map((family) => `family=${family}`)
+    .join('&')}&display=swap`;
+
+  if (loadedFontHrefs.has(href)) return;
+  loadedFontHrefs.add(href);
+
+  if (document.querySelector(`link[href="${href}"]`)) return;
+
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = href;
+  link.crossOrigin = 'anonymous';
+  document.head.appendChild(link);
+}
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [designSystem, setDesignSystemState] = useState<DesignSystem>(() => {
@@ -53,6 +89,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return systemIsDark;
   }, [theme, systemIsDark]);
 
+  const currentConfig = useMemo(() => DESIGN_SYSTEMS[designSystem], [designSystem]);
+
   useEffect(() => {
     const root = document.documentElement;
     root.setAttribute('data-theme', designSystem);
@@ -63,21 +101,19 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       root.classList.remove('dark');
     }
 
+    // Load the family this design system actually uses, not all of them.
+    loadFontsFor(designSystem);
+
+    // `currentConfig` already knows both canvas colours, so the theme-color
+    // meta tag no longer needs its own if/else chain per design system.
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-      if (designSystem === 'coinbase') {
-        metaThemeColor.setAttribute('content', isDark ? '#0a0b0d' : '#0052ff');
-      } else if (designSystem === 'theverge') {
-        metaThemeColor.setAttribute('content', isDark ? '#131313' : '#f7f7f9');
-      } else if (designSystem === 'autumn') {
-        metaThemeColor.setAttribute('content', isDark ? '#1c1917' : '#ea580c');
-      } else if (designSystem === 'mongodb') {
-        metaThemeColor.setAttribute('content', isDark ? '#001e2b' : '#00ed64');
-      } else {
-        metaThemeColor.setAttribute('content', isDark ? '#0d0e12' : '#7132f5');
-      }
+      metaThemeColor.setAttribute(
+        'content',
+        isDark ? currentConfig.canvasBg.dark : currentConfig.canvasBg.light
+      );
     }
-  }, [designSystem, isDark]);
+  }, [designSystem, isDark, currentConfig]);
 
   const setDesignSystem = (newSystem: DesignSystem) => {
     setDesignSystemState(newSystem);
@@ -100,8 +136,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setTheme('dark');
     }
   };
-
-  const currentConfig = useMemo(() => DESIGN_SYSTEMS[designSystem], [designSystem]);
 
   return (
     <ThemeContext.Provider

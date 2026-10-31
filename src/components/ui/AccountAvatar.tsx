@@ -25,7 +25,7 @@ export const AccountAvatar: React.FC<AccountAvatarProps> = ({ acc, size = 'md' }
         alt=""
         aria-hidden="true"
         onError={() => setHasError(true)}
-        className={`${sizeClasses} object-contain bg-white dark:bg-[#252836] border border-[#dedee5] dark:border-[#282937] shadow-2xs shrink-0`}
+        className={`${sizeClasses} object-contain bg-white dark:bg-[#252836] border border-hairline dark:border-[#282937] shadow-2xs shrink-0`}
       />
     );
   }
@@ -36,7 +36,7 @@ export const AccountAvatar: React.FC<AccountAvatarProps> = ({ acc, size = 'md' }
         src={localFallback}
         alt=""
         aria-hidden="true"
-        className={`${sizeClasses} object-contain bg-white dark:bg-[#252836] border border-[#dedee5] dark:border-[#282937] shadow-2xs shrink-0`}
+        className={`${sizeClasses} object-contain bg-white dark:bg-[#252836] border border-hairline dark:border-[#282937] shadow-2xs shrink-0`}
       />
     );
   }
@@ -44,7 +44,7 @@ export const AccountAvatar: React.FC<AccountAvatarProps> = ({ acc, size = 'md' }
   return (
     <div
       aria-hidden="true"
-      className={`${sizeClasses} bg-[#f1edfe] text-[#7132f5] flex items-center justify-center font-bold border border-[#dedee5] dark:border-[#282937] shrink-0`}
+      className={`${sizeClasses} bg-[#f1edfe] text-brand-text flex items-center justify-center font-bold border border-hairline dark:border-[#282937] shrink-0`}
     >
       {acc.name.slice(0, 3).toUpperCase()}
     </div>

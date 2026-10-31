@@ -370,33 +370,33 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
     <div className="space-y-4 pb-24">
       {/* Active Account Mutation Banner (Shown when filtering by a specific account) */}
       {selectedAccountObj && (
-        <div className="bg-white dark:bg-[#16171f] p-4 rounded-[16px] border border-[#7132f5]/40 dark:border-[#855bfb]/40 shadow-whisper flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="bg-white dark:bg-[#16171f] p-4 rounded-[16px] border border-brand/40 dark:border-[#855bfb]/40 shadow-whisper flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <AccountAvatar acc={selectedAccountObj} size="md" />
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#7132f5]/15 text-[#7132f5] dark:text-[#a78bfa]">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-brand-soft text-brand-text dark:text-[#a78bfa]">
                   Mutasi Rekening
                 </span>
-                <span className="text-[11px] font-medium text-[#686b82] dark:text-[#9ca0ba] capitalize">
+                <span className="text-[11px] font-medium text-ink-muted dark:text-[#9ca0ba] capitalize">
                   {ACCOUNT_TYPE_LABELS[selectedAccountObj.type] || selectedAccountObj.type}
                 </span>
               </div>
-              <h3 className="text-base font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight truncate mt-0.5">
+              <h3 className="text-base font-bold text-ink dark:text-[#f3f4f8] tracking-tight truncate mt-0.5">
                 {selectedAccountObj.name}
               </h3>
             </div>
           </div>
 
-          <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#dedee5] dark:border-[#282937]">
+          <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-hairline dark:border-[#282937]">
             <div className="sm:text-right">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-[#686b82] dark:text-[#9ca0ba] block">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-ink-muted dark:text-[#9ca0ba] block">
                 Saldo Saat Ini
               </span>
               <span
                 className={`text-sm sm:text-base font-bold tabular-nums ${
                   selectedAccountObj.balance >= 0
-                    ? 'text-[#101114] dark:text-[#f3f4f8]'
+                    ? 'text-ink dark:text-[#f3f4f8]'
                     : 'text-[#e53e3e] dark:text-[#f87171]'
                 }`}
               >
@@ -407,10 +407,10 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
             <button
               type="button"
               onClick={() => handleSetAccountFilter('all')}
-              className="px-3 py-2 rounded-[10px] bg-[#edeef3] dark:bg-[#232534] hover:bg-[#e2e4ec] dark:hover:bg-[#2d3042] text-xs font-bold text-[#101114] dark:text-[#f3f4f8] inline-flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+              className="px-3 py-2 rounded-[10px] bg-surface-sunken dark:bg-[#232534] hover:bg-[#e2e4ec] dark:hover:bg-[#2d3042] text-xs font-bold text-ink dark:text-[#f3f4f8] inline-flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
               title="Tampilkan Semua Rekening"
             >
-              <X className="w-3.5 h-3.5 text-[#686b82] dark:text-[#9ca0ba]" />
+              <X className="w-3.5 h-3.5 text-ink-muted dark:text-[#9ca0ba]" />
               <span>Semua Rekening</span>
             </button>
           </div>
@@ -418,13 +418,13 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
       )}
 
       {/* Search & Filter Header Card */}
-      <div className="bg-white dark:bg-[#16171f] p-4 sm:p-5 rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper space-y-3.5">
+      <div className="bg-white dark:bg-[#16171f] p-4 sm:p-5 rounded-[16px] border border-hairline dark:border-[#282937] shadow-whisper space-y-3.5">
         <div className="flex items-center justify-between gap-2">
           <div>
-            <h2 className="text-base font-bold text-[#101114] dark:text-[#f3f4f8] tracking-[-0.5px]">
+            <h2 className="text-base font-bold text-ink dark:text-[#f3f4f8] tracking-[-0.5px]">
               Riwayat Transaksi
             </h2>
-            <p className="text-[11px] text-[#686b82] dark:text-[#9ca0ba]">
+            <p className="text-[11px] text-ink-muted dark:text-[#9ca0ba]">
               Daftar seluruh mutasi, pengeluaran & pemasukan per bulan
             </p>
           </div>
@@ -433,14 +433,14 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="px-2.5 py-1 rounded-[8px] bg-[#7132f5]/10 hover:bg-[#7132f5]/20 text-[#7132f5] dark:text-[#a78bfa] text-xs font-bold inline-flex items-center gap-1 transition-colors cursor-pointer"
+                className="px-2.5 py-1 rounded-[8px] bg-brand-soft text-brand-text dark:text-[#a78bfa] text-xs font-bold inline-flex items-center gap-1 transition-colors cursor-pointer"
                 title="Reset Semua Filter"
               >
                 <RotateCcw className="w-3 h-3" />
                 <span>Reset Filter</span>
               </button>
             )}
-            <span className="px-2.5 py-1 rounded-[8px] bg-[#edeef3] dark:bg-[#232534] text-xs font-bold text-[#101114] dark:text-[#f3f4f8]">
+            <span className="px-2.5 py-1 rounded-[8px] bg-surface-sunken dark:bg-[#232534] text-xs font-bold text-ink dark:text-[#f3f4f8]">
               {filtered.length} Transaksi
             </span>
           </div>
@@ -448,20 +448,20 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
 
         {/* Search Input */}
         <div className="relative">
-          <Search className="w-4 h-4 text-[#9497a9] absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-ink-subtle absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari transaksi, rekening, kategori, atau catatan..."
-            className="w-full pl-9 pr-9 py-2.5 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] text-sm text-[#101114] dark:text-[#f3f4f8] outline-none focus:border-[#7132f5] focus:ring-2 focus:ring-[#855bfb]/15 placeholder:text-[#9497a9] transition-all"
+            className="w-full pl-9 pr-9 py-2.5 rounded-[12px] bg-canvas dark:bg-[#13141c] border border-hairline dark:border-[#282937] text-sm text-ink dark:text-[#f3f4f8] outline-none focus:border-brand focus:ring-2 focus:ring-[#855bfb]/15 placeholder:text-ink-subtle transition-all"
           />
           {search && (
             <button
               type="button"
               onClick={() => setSearch('')}
               aria-label="Hapus pencarian"
-              className="w-6 h-6 rounded-full flex items-center justify-center text-[#9497a9] hover:text-[#101114] dark:hover:text-[#f3f4f8] absolute right-2.5 top-1/2 -translate-y-1/2"
+              className="w-6 h-6 rounded-full flex items-center justify-center text-ink-subtle hover:text-ink dark:hover:text-[#f3f4f8] absolute right-2.5 top-1/2 -translate-y-1/2"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -480,10 +480,10 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
               }}
               aria-haspopup="listbox"
               aria-expanded={isAccountDropdownOpen}
-              className={`w-full px-3 py-2 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border text-left flex items-center justify-between gap-2 transition-all cursor-pointer ${
+              className={`w-full px-3 py-2 rounded-[12px] bg-canvas dark:bg-[#13141c] border text-left flex items-center justify-between gap-2 transition-all cursor-pointer ${
                 activeAccountId !== 'all'
-                  ? 'border-[#7132f5] ring-2 ring-[#855bfb]/15'
-                  : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/50'
+                  ? 'border-brand ring-2 ring-[#855bfb]/15'
+                  : 'border-hairline dark:border-[#282937] hover:border-[#7132f5]/50'
               }`}
             >
               <div className="flex items-center gap-2 min-w-0">
@@ -491,24 +491,24 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                   <>
                     <AccountAvatar acc={selectedAccountObj} size="sm" />
                     <div className="min-w-0">
-                      <span className="text-xs font-bold text-[#101114] dark:text-[#f3f4f8] truncate block">
+                      <span className="text-xs font-bold text-ink dark:text-[#f3f4f8] truncate block">
                         {selectedAccountObj.name}
                       </span>
-                      <span className="text-[10px] text-[#686b82] dark:text-[#9ca0ba] tabular-nums block">
+                      <span className="text-[10px] text-ink-muted dark:text-[#9ca0ba] tabular-nums block">
                         {formatCurrency(selectedAccountObj.balance)}
                       </span>
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="w-7 h-7 rounded-[8px] bg-[#edeef3] dark:bg-[#232534] flex items-center justify-center text-[#686b82] dark:text-[#9ca0ba] shrink-0">
+                    <div className="w-7 h-7 rounded-[8px] bg-surface-sunken dark:bg-[#232534] flex items-center justify-center text-ink-muted dark:text-[#9ca0ba] shrink-0">
                       <Wallet className="w-3.5 h-3.5" />
                     </div>
                     <div className="min-w-0">
-                      <span className="text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] truncate block">
+                      <span className="text-xs font-semibold text-ink dark:text-[#f3f4f8] truncate block">
                         Semua Rekening
                       </span>
-                      <span className="text-[10px] text-[#686b82] dark:text-[#9ca0ba] block">
+                      <span className="text-[10px] text-ink-muted dark:text-[#9ca0ba] block">
                         Filter per akun ({accounts.length})
                       </span>
                     </div>
@@ -516,8 +516,8 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                 )}
               </div>
               <ChevronDown
-                className={`w-4 h-4 text-[#686b82] dark:text-[#9ca0ba] shrink-0 transition-transform duration-150 ${
-                  isAccountDropdownOpen ? 'rotate-180 text-[#7132f5]' : ''
+                className={`w-4 h-4 text-ink-muted dark:text-[#9ca0ba] shrink-0 transition-transform duration-150 ${
+                  isAccountDropdownOpen ? 'rotate-180 text-brand-text' : ''
                 }`}
               />
             </button>
@@ -526,7 +526,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
               <div
                 role="listbox"
                 aria-label="Filter Rekening"
-                className="absolute left-0 right-0 mt-1.5 z-40 bg-white dark:bg-[#1e1f2b] rounded-[12px] border border-[#dedee5] dark:border-[#282937] shadow-xl max-h-64 overflow-y-auto p-1.5 space-y-0.5"
+                className="absolute left-0 right-0 mt-1.5 z-40 bg-white dark:bg-[#1e1f2b] rounded-[12px] border border-hairline dark:border-[#282937] shadow-xl max-h-64 overflow-y-auto p-1.5 space-y-0.5"
               >
                 <button
                   type="button"
@@ -538,17 +538,17 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                   }}
                   className={`w-full px-2.5 py-2 rounded-[9px] text-left flex items-center justify-between gap-2 transition-colors cursor-pointer ${
                     activeAccountId === 'all'
-                      ? 'bg-[#7132f5]/12 text-[#7132f5] dark:text-[#a78bfa] font-bold'
-                      : 'hover:bg-[#f4f5f8] dark:hover:bg-[#252736] text-[#101114] dark:text-[#f3f4f8]'
+                      ? 'bg-brand-soft text-brand-text dark:text-[#a78bfa] font-bold'
+                      : 'hover:bg-[#f4f5f8] dark:hover:bg-[#252736] text-ink dark:text-[#f3f4f8]'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-7 h-7 rounded-[8px] bg-[#edeef3] dark:bg-[#282937] flex items-center justify-center text-[#686b82] dark:text-[#9ca0ba] shrink-0">
+                    <div className="w-7 h-7 rounded-[8px] bg-surface-sunken dark:bg-[#282937] flex items-center justify-center text-ink-muted dark:text-[#9ca0ba] shrink-0">
                       <Wallet className="w-3.5 h-3.5" />
                     </div>
                     <span className="text-xs font-semibold truncate">Semua Rekening</span>
                   </div>
-                  {activeAccountId === 'all' && <Check className="w-4 h-4 text-[#7132f5] shrink-0" />}
+                  {activeAccountId === 'all' && <Check className="w-4 h-4 text-brand-text shrink-0" />}
                 </button>
 
                 {accounts.map((acc) => {
@@ -565,8 +565,8 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                       }}
                       className={`w-full px-2.5 py-2 rounded-[9px] text-left flex items-center justify-between gap-2 transition-colors cursor-pointer ${
                         isSelected
-                          ? 'bg-[#7132f5]/12 text-[#7132f5] dark:text-[#a78bfa] font-bold'
-                          : 'hover:bg-[#f4f5f8] dark:hover:bg-[#252736] text-[#101114] dark:text-[#f3f4f8]'
+                          ? 'bg-brand-soft text-brand-text dark:text-[#a78bfa] font-bold'
+                          : 'hover:bg-[#f4f5f8] dark:hover:bg-[#252736] text-ink dark:text-[#f3f4f8]'
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
@@ -574,7 +574,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
                             <span className="text-xs font-bold truncate">{acc.name}</span>
-                            <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-[#edeef3] dark:bg-[#282937] text-[#686b82] dark:text-[#9ca0ba] shrink-0">
+                            <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded bg-surface-sunken dark:bg-[#282937] text-ink-muted dark:text-[#9ca0ba] shrink-0">
                               {ACCOUNT_TYPE_LABELS[acc.type] || acc.type}
                             </span>
                           </div>
@@ -582,14 +582,14 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                             className={`text-[10px] font-medium tabular-nums block ${
                               acc.balance < 0
                                 ? 'text-[#e53e3e] dark:text-[#f87171]'
-                                : 'text-[#686b82] dark:text-[#9ca0ba]'
+                                : 'text-ink-muted dark:text-[#9ca0ba]'
                             }`}
                           >
                             {formatCurrency(acc.balance)}
                           </span>
                         </div>
                       </div>
-                      {isSelected && <Check className="w-4 h-4 text-[#7132f5] shrink-0" />}
+                      {isSelected && <Check className="w-4 h-4 text-brand-text shrink-0" />}
                     </button>
                   );
                 })}
@@ -607,10 +607,10 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
               }}
               aria-haspopup="listbox"
               aria-expanded={isCategoryDropdownOpen}
-              className={`w-full px-3 py-2 rounded-[12px] bg-[#fafbfe] dark:bg-[#13141c] border text-left flex items-center justify-between gap-2 transition-all cursor-pointer ${
+              className={`w-full px-3 py-2 rounded-[12px] bg-canvas dark:bg-[#13141c] border text-left flex items-center justify-between gap-2 transition-all cursor-pointer ${
                 selectedCategoryId !== 'all'
-                  ? 'border-[#7132f5] ring-2 ring-[#855bfb]/15'
-                  : 'border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/50'
+                  ? 'border-brand ring-2 ring-[#855bfb]/15'
+                  : 'border-hairline dark:border-[#282937] hover:border-[#7132f5]/50'
               }`}
             >
               <div className="flex items-center gap-2 min-w-0">
@@ -624,24 +624,24 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                       size="sm"
                     />
                     <div className="min-w-0">
-                      <span className="text-xs font-bold text-[#101114] dark:text-[#f3f4f8] truncate block">
+                      <span className="text-xs font-bold text-ink dark:text-[#f3f4f8] truncate block">
                         {selectedCategoryObj.name}
                       </span>
-                      <span className="text-[10px] text-[#686b82] dark:text-[#9ca0ba] capitalize block">
+                      <span className="text-[10px] text-ink-muted dark:text-[#9ca0ba] capitalize block">
                         {selectedCategoryObj.type}
                       </span>
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="w-7 h-7 rounded-[8px] bg-[#edeef3] dark:bg-[#232534] flex items-center justify-center text-[#686b82] dark:text-[#9ca0ba] shrink-0">
+                    <div className="w-7 h-7 rounded-[8px] bg-surface-sunken dark:bg-[#232534] flex items-center justify-center text-ink-muted dark:text-[#9ca0ba] shrink-0">
                       <Layers className="w-3.5 h-3.5" />
                     </div>
                     <div className="min-w-0">
-                      <span className="text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] truncate block">
+                      <span className="text-xs font-semibold text-ink dark:text-[#f3f4f8] truncate block">
                         Semua Kategori
                       </span>
-                      <span className="text-[10px] text-[#686b82] dark:text-[#9ca0ba] block">
+                      <span className="text-[10px] text-ink-muted dark:text-[#9ca0ba] block">
                         Filter per kategori ({availableCategoriesForFilter.length})
                       </span>
                     </div>
@@ -649,8 +649,8 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                 )}
               </div>
               <ChevronDown
-                className={`w-4 h-4 text-[#686b82] dark:text-[#9ca0ba] shrink-0 transition-transform duration-150 ${
-                  isCategoryDropdownOpen ? 'rotate-180 text-[#7132f5]' : ''
+                className={`w-4 h-4 text-ink-muted dark:text-[#9ca0ba] shrink-0 transition-transform duration-150 ${
+                  isCategoryDropdownOpen ? 'rotate-180 text-brand-text' : ''
                 }`}
               />
             </button>
@@ -659,7 +659,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
               <div
                 role="listbox"
                 aria-label="Filter Kategori"
-                className="absolute left-0 right-0 mt-1.5 z-40 bg-white dark:bg-[#1e1f2b] rounded-[12px] border border-[#dedee5] dark:border-[#282937] shadow-xl max-h-64 overflow-y-auto p-1.5 space-y-0.5"
+                className="absolute left-0 right-0 mt-1.5 z-40 bg-white dark:bg-[#1e1f2b] rounded-[12px] border border-hairline dark:border-[#282937] shadow-xl max-h-64 overflow-y-auto p-1.5 space-y-0.5"
               >
                 <button
                   type="button"
@@ -671,17 +671,17 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                   }}
                   className={`w-full px-2.5 py-2 rounded-[9px] text-left flex items-center justify-between gap-2 transition-colors cursor-pointer ${
                     selectedCategoryId === 'all'
-                      ? 'bg-[#7132f5]/12 text-[#7132f5] dark:text-[#a78bfa] font-bold'
-                      : 'hover:bg-[#f4f5f8] dark:hover:bg-[#252736] text-[#101114] dark:text-[#f3f4f8]'
+                      ? 'bg-brand-soft text-brand-text dark:text-[#a78bfa] font-bold'
+                      : 'hover:bg-[#f4f5f8] dark:hover:bg-[#252736] text-ink dark:text-[#f3f4f8]'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-7 h-7 rounded-[8px] bg-[#edeef3] dark:bg-[#282937] flex items-center justify-center text-[#686b82] dark:text-[#9ca0ba] shrink-0">
+                    <div className="w-7 h-7 rounded-[8px] bg-surface-sunken dark:bg-[#282937] flex items-center justify-center text-ink-muted dark:text-[#9ca0ba] shrink-0">
                       <Layers className="w-3.5 h-3.5" />
                     </div>
                     <span className="text-xs font-semibold truncate">Semua Kategori</span>
                   </div>
-                  {selectedCategoryId === 'all' && <Check className="w-4 h-4 text-[#7132f5] shrink-0" />}
+                  {selectedCategoryId === 'all' && <Check className="w-4 h-4 text-brand-text shrink-0" />}
                 </button>
 
                 {availableCategoriesForFilter.map((cat) => {
@@ -698,8 +698,8 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                       }}
                       className={`w-full px-2.5 py-2 rounded-[9px] text-left flex items-center justify-between gap-2 transition-colors cursor-pointer ${
                         isSelected
-                          ? 'bg-[#7132f5]/12 text-[#7132f5] dark:text-[#a78bfa] font-bold'
-                          : 'hover:bg-[#f4f5f8] dark:hover:bg-[#252736] text-[#101114] dark:text-[#f3f4f8]'
+                          ? 'bg-brand-soft text-brand-text dark:text-[#a78bfa] font-bold'
+                          : 'hover:bg-[#f4f5f8] dark:hover:bg-[#252736] text-ink dark:text-[#f3f4f8]'
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
@@ -712,12 +712,12 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                         />
                         <div className="min-w-0">
                           <span className="text-xs font-bold truncate block">{cat.name}</span>
-                          <span className="text-[10px] text-[#686b82] dark:text-[#9ca0ba] capitalize block">
+                          <span className="text-[10px] text-ink-muted dark:text-[#9ca0ba] capitalize block">
                             {cat.type}
                           </span>
                         </div>
                       </div>
-                      {isSelected && <Check className="w-4 h-4 text-[#7132f5] shrink-0" />}
+                      {isSelected && <Check className="w-4 h-4 text-brand-text shrink-0" />}
                     </button>
                   );
                 })}
@@ -727,7 +727,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
         </div>
 
         {/* Filter Segmented Control */}
-        <div className="flex bg-[#edeef3] dark:bg-[#232534] p-1 rounded-[10px] gap-1 text-xs">
+        <div className="flex bg-surface-sunken dark:bg-[#232534] p-1 rounded-[10px] gap-1 text-xs">
           {[
             { id: 'all', label: 'Semua', icon: null },
             { id: 'pengeluaran', label: 'Keluar', icon: ArrowUpRight },
@@ -742,8 +742,8 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                 onClick={() => setFilterType(tab.id)}
                 className={`flex-1 py-1.5 px-2 rounded-[8px] font-semibold flex items-center justify-center gap-1 transition-all ${
                   isActive
-                    ? 'bg-white dark:bg-[#282937] text-[#101114] dark:text-[#f3f4f8] shadow-micro'
-                    : 'text-[#686b82] dark:text-[#9ca0ba] hover:text-[#101114] dark:hover:text-[#f3f4f8]'
+                    ? 'bg-white dark:bg-[#282937] text-ink dark:text-[#f3f4f8] shadow-micro'
+                    : 'text-ink-muted dark:text-[#9ca0ba] hover:text-ink dark:hover:text-[#f3f4f8]'
                 }`}
               >
                 {Icon && <Icon className="w-3.5 h-3.5 shrink-0" />}
@@ -755,16 +755,16 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
 
         {/* Accordion Toggle Controls */}
         {groupedByMonth.length > 1 && (
-          <div className="pt-2 border-t border-[#dedee5] dark:border-[#282937]/70 flex items-center justify-between text-xs text-[#686b82] dark:text-[#9ca0ba]">
+          <div className="pt-2 border-t border-hairline dark:border-[#282937]/70 flex items-center justify-between text-xs text-ink-muted dark:text-[#9ca0ba]">
             <span className="text-[11px]">
               {groupedByMonth.length} Bulan Terdata
             </span>
             <button
               type="button"
               onClick={handleToggleAll}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] bg-[#fafbfe] dark:bg-[#13141c] border border-[#dedee5] dark:border-[#282937] hover:border-[#7132f5]/50 text-xs font-semibold text-[#101114] dark:text-[#f3f4f8] transition-all cursor-pointer active:scale-95"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[8px] bg-canvas dark:bg-[#13141c] border border-hairline dark:border-[#282937] hover:border-[#7132f5]/50 text-xs font-semibold text-ink dark:text-[#f3f4f8] transition-all cursor-pointer active:scale-95"
             >
-              <ChevronsUpDown className="w-3.5 h-3.5 text-[#7132f5] shrink-0" />
+              <ChevronsUpDown className="w-3.5 h-3.5 text-brand-text shrink-0" />
               <span>{allMonthsExpanded ? 'Tutup Semua Bulan' : 'Buka Semua Bulan'}</span>
             </button>
           </div>
@@ -773,10 +773,10 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
 
       {/* Monthly Grouped Transaction Accordions */}
       {groupedByMonth.length === 0 ? (
-        <div className="text-center py-12 bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] p-6 text-[#9497a9] dark:text-[#7d8299] shadow-whisper">
-          <Calendar className="w-8 h-8 mx-auto mb-2 opacity-40 text-[#686b82] dark:text-[#9ca0ba]" />
-          <p className="text-sm font-semibold text-[#101114] dark:text-[#f3f4f8]">Tidak ada transaksi ditemukan</p>
-          <p className="text-xs text-[#9497a9] mt-1">Coba ubah kata kunci pencarian atau filter rekening/kategori</p>
+        <div className="text-center py-12 bg-white dark:bg-[#16171f] rounded-[16px] border border-hairline dark:border-[#282937] p-6 text-ink-subtle dark:text-[#7d8299] shadow-whisper">
+          <Calendar className="w-8 h-8 mx-auto mb-2 opacity-40 text-ink-muted dark:text-[#9ca0ba]" />
+          <p className="text-sm font-semibold text-ink dark:text-[#f3f4f8]">Tidak ada transaksi ditemukan</p>
+          <p className="text-xs text-ink-subtle mt-1">Coba ubah kata kunci pencarian atau filter rekening/kategori</p>
         </div>
       ) : (
         <div className="space-y-3.5">
@@ -788,38 +788,38 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
             return (
               <div
                 key={monthGroup.monthKey}
-                className="bg-white dark:bg-[#16171f] rounded-[16px] border border-[#dedee5] dark:border-[#282937] shadow-whisper overflow-hidden transition-all duration-200"
+                className="bg-white dark:bg-[#16171f] rounded-[16px] border border-hairline dark:border-[#282937] shadow-whisper overflow-hidden transition-all duration-200"
               >
                 {/* Month Dropdown / Accordion Trigger */}
                 <button
                   type="button"
                   onClick={() => toggleMonth(monthGroup.monthKey, isFirst)}
                   aria-expanded={isOpen}
-                  className="w-full px-4 py-3 sm:px-5 sm:py-3.5 flex items-center justify-between gap-3 text-left bg-[#f8f9fc] dark:bg-[#1e202b] hover:bg-[#edeef3] dark:hover:bg-[#252837] transition-colors cursor-pointer select-none"
+                  className="w-full px-4 py-3 sm:px-5 sm:py-3.5 flex items-center justify-between gap-3 text-left bg-[#f8f9fc] dark:bg-[#1e202b] hover:bg-surface-sunken dark:hover:bg-[#252837] transition-colors cursor-pointer select-none"
                 >
                   {/* Left: Calendar Icon + Month Title + Badge */}
                   <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                     <div
                       className={`w-8 h-8 sm:w-9 sm:h-9 rounded-[10px] flex items-center justify-center shrink-0 ${
                         isCurrent
-                          ? 'bg-[#7132f5]/15 text-[#7132f5] dark:text-[#a78bfa]'
-                          : 'bg-[#edeef3] dark:bg-[#282937] text-[#686b82] dark:text-[#9ca0ba]'
+                          ? 'bg-brand-soft text-brand-text dark:text-[#a78bfa]'
+                          : 'bg-surface-sunken dark:bg-[#282937] text-ink-muted dark:text-[#9ca0ba]'
                       }`}
                     >
                       <Calendar className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-sm sm:text-base font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
+                        <h3 className="text-sm sm:text-base font-bold text-ink dark:text-[#f3f4f8] tracking-tight">
                           {monthGroup.label}
                         </h3>
                         {isCurrent && (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#7132f5]/15 text-[#7132f5] dark:text-[#a78bfa] tracking-wide">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand-soft text-brand-text dark:text-[#a78bfa] tracking-wide">
                             Bulan Ini
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-[#686b82] dark:text-[#9ca0ba] mt-0.5">
+                      <p className="text-[11px] text-ink-muted dark:text-[#9ca0ba] mt-0.5">
                         {monthGroup.totalCount} transaksi
                       </p>
                     </div>
@@ -840,7 +840,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                           </span>
                         )}
                       </div>
-                      <span className="text-[10px] text-[#9497a9] block mt-0.5">
+                      <span className="text-[10px] text-ink-subtle block mt-0.5">
                         {monthGroup.netTotal !== 0 ? (
                           <>
                             Net:{' '}
@@ -856,8 +856,8 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                     </div>
 
                     <div
-                      className={`w-7 h-7 sm:w-8 sm:h-8 rounded-[8px] bg-white dark:bg-[#16171f] border border-[#dedee5] dark:border-[#282937] flex items-center justify-center text-[#686b82] dark:text-[#9ca0ba] transition-transform duration-200 shrink-0 ${
-                        isOpen ? 'rotate-180 text-[#7132f5] dark:text-[#a78bfa]' : ''
+                      className={`w-7 h-7 sm:w-8 sm:h-8 rounded-[8px] bg-white dark:bg-[#16171f] border border-hairline dark:border-[#282937] flex items-center justify-center text-ink-muted dark:text-[#9ca0ba] transition-transform duration-200 shrink-0 ${
+                        isOpen ? 'rotate-180 text-brand-text dark:text-[#a78bfa]' : ''
                       }`}
                     >
                       <ChevronDown className="w-4 h-4" />
@@ -867,21 +867,21 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
 
                 {/* Collapsible Month Body with Days */}
                 {isOpen && (
-                  <div className="p-3 sm:p-4 space-y-3 bg-[#fafbfe]/40 dark:bg-[#121316]/40 border-t border-[#dedee5] dark:border-[#282937]">
+                  <div className="p-3 sm:p-4 space-y-3 bg-[#fafbfe]/40 dark:bg-[#121316]/40 border-t border-hairline dark:border-[#282937]">
                     {monthGroup.days.map((dayGroup) => (
                       <div
                         key={dayGroup.date}
-                        className="bg-white dark:bg-[#16171f] rounded-[12px] sm:rounded-[14px] border border-[#dedee5] dark:border-[#282937] shadow-micro overflow-hidden"
+                        className="bg-white dark:bg-[#16171f] rounded-[12px] sm:rounded-[14px] border border-hairline dark:border-[#282937] shadow-micro overflow-hidden"
                       >
                         {/* Day Header */}
-                        <div className="flex items-center justify-between px-3.5 py-2 sm:px-4 sm:py-2.5 bg-[#f8f9fc] dark:bg-[#1e202b] border-b border-[#dedee5] dark:border-[#282937]">
+                        <div className="flex items-center justify-between px-3.5 py-2 sm:px-4 sm:py-2.5 bg-[#f8f9fc] dark:bg-[#1e202b] border-b border-hairline dark:border-[#282937]">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-[#101114] dark:text-[#f3f4f8] tracking-tight">
+                            <span className="text-xs font-bold text-ink dark:text-[#f3f4f8] tracking-tight">
                               {formatIndonesianDate(dayGroup.date)}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-semibold text-[#686b82] dark:text-[#9ca0ba]">
+                            <span className="text-[11px] font-semibold text-ink-muted dark:text-[#9ca0ba]">
                               {dayGroup.items.length} transaksi
                             </span>
                             {dayGroup.dayTotal !== 0 && (
@@ -900,7 +900,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                         </div>
 
                         {/* Transactions List within this Date */}
-                        <div className="divide-y divide-[#dedee5] dark:divide-[#282937]/60">
+                        <div className="divide-y divide-hairline dark:divide-[#282937]/60">
                           {dayGroup.items.map((t) => {
                             const isExpense = t.type === 'pengeluaran';
                             const isIncome = t.type === 'pemasukan';
@@ -914,7 +914,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                             return (
                               <div
                                 key={t.id}
-                                className="group px-3.5 py-3 sm:px-4 sm:py-3 flex items-start sm:items-center justify-between gap-3 hover:bg-[#fafbfe] dark:hover:bg-[#1e202b] dark:bg-[#13141c] transition-colors"
+                                className="group px-3.5 py-3 sm:px-4 sm:py-3 flex items-start sm:items-center justify-between gap-3 hover:bg-surface-sunken dark:hover:bg-[#1e202b] dark:bg-[#13141c] transition-colors"
                               >
                                 {/* Left: Category Icon */}
                                 <div className="pt-0.5 sm:pt-0 shrink-0">
@@ -930,16 +930,16 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                                 {/* Middle: Kategori, Akun, and Catatan */}
                                 <div className="flex-1 min-w-0 space-y-1">
                                   <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="font-bold text-sm text-[#101114] dark:text-[#f3f4f8] tracking-tight group-hover:text-[#7132f5] transition-colors">
+                                    <span className="font-bold text-sm text-ink dark:text-[#f3f4f8] tracking-tight group-hover:text-brand-text transition-colors">
                                       {isTransfer ? 'Pindah Akun' : categoryName}
                                     </span>
 
-                                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] bg-[#f0f1f5] border border-[#dedee5] dark:border-[#282937]/80 text-[11px] font-semibold text-[#484b5e]">
+                                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] bg-[#f0f1f5] border border-hairline dark:border-[#282937]/80 text-[11px] font-semibold text-[#484b5e]">
                                       {isTransfer ? (
                                         <>
-                                          <span className="text-[#101114] dark:text-[#f3f4f8] font-bold">{sourceName}</span>
-                                          <ArrowRight className="w-2.5 h-2.5 text-[#7132f5] shrink-0" />
-                                          <span className="text-[#101114] dark:text-[#f3f4f8] font-bold">{destName}</span>
+                                          <span className="text-ink dark:text-[#f3f4f8] font-bold">{sourceName}</span>
+                                          <ArrowRight className="w-2.5 h-2.5 text-brand-text shrink-0" />
+                                          <span className="text-ink dark:text-[#f3f4f8] font-bold">{destName}</span>
                                         </>
                                       ) : (
                                         <span>{sourceName}</span>
@@ -948,11 +948,11 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                                   </div>
 
                                   {t.notes ? (
-                                    <p className="text-xs text-[#686b82] dark:text-[#9ca0ba] leading-snug line-clamp-2">
+                                    <p className="text-xs text-ink-muted dark:text-[#9ca0ba] leading-snug line-clamp-2">
                                       {t.notes}
                                     </p>
                                   ) : (
-                                    <p className="text-[11px] text-[#9497a9] italic">
+                                    <p className="text-[11px] text-ink-subtle italic">
                                       Tanpa catatan
                                     </p>
                                   )}
@@ -967,13 +967,13 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                                           ? 'text-[#e53e3e]'
                                           : isIncome
                                           ? 'text-[#026b3f]'
-                                          : 'text-[#7132f5]'
+                                          : 'text-brand-text'
                                       }`}
                                     >
                                       {isExpense ? '-' : isIncome ? '+' : ''}
                                       {formatCurrency(t.amount)}
                                     </span>
-                                    <span className="text-[10px] font-semibold uppercase tracking-wider text-[#9497a9] block mt-0.5">
+                                    <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-subtle block mt-0.5">
                                       {isTransfer ? 'Transfer' : isExpense ? 'Keluar' : 'Masuk'}
                                     </span>
                                   </div>
@@ -984,7 +984,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
                                       e.stopPropagation();
                                       onEditTransaction(t);
                                     }}
-                                    className="w-8 h-8 rounded-[8px] flex items-center justify-center text-[#9497a9] hover:text-[#7132f5] dark:hover:text-[#a78bfa] hover:bg-[#855bfb]/15 transition-all cursor-pointer active:scale-95 border border-transparent hover:border-[#855bfb]/30"
+                                    className="w-8 h-8 rounded-[8px] flex items-center justify-center text-ink-subtle hover:text-brand-text hover:bg-brand-soft transition-all cursor-pointer active:scale-95 border border-transparent hover:border-[#855bfb]/30"
                                     title="Ubah Transaksi"
                                     aria-label="Ubah Transaksi"
                                   >
